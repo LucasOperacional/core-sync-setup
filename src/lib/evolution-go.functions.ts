@@ -34,6 +34,8 @@ const CHAVES = {
   instancia: "evolution_go_instancia",
   instanceId: "evolution_go_instance_id",
   webhookUrl: "evolution_go_webhook_url",
+  qrCode: "evolution_go_qrcode",
+  qrCodeEm: "evolution_go_qrcode_em",
 } as const;
 
 type Cfg = {
