@@ -609,17 +609,42 @@ function FaltasPage() {
     const absenteeismRate = totalRows > 0 ? ((totalFaltas / totalRows) * 100).toFixed(1) : "0.0";
 
     const faltasPorColaborador = new Map<string, number>();
+    const colaboradorInfo = new Map<
+      string,
+      { nome: string; posto: string; cargo: string; ocorrencias: number; dias: number }
+    >();
     for (const r of data) {
       if (!r.colaborador) continue;
       const val = parseFaltasValue(r.faltas);
       faltasPorColaborador.set(r.colaborador, (faltasPorColaborador.get(r.colaborador) ?? 0) + val);
+      const key = normalize(r.colaborador);
+      const info = colaboradorInfo.get(key);
+      if (info) {
+        info.ocorrencias += 1;
+        info.dias += val;
+        if (!info.posto && r.posto) info.posto = r.posto;
+        if (!info.cargo && r.cargo) info.cargo = r.cargo;
+      } else {
+        colaboradorInfo.set(key, {
+          nome: r.colaborador,
+          posto: r.posto,
+          cargo: r.cargo,
+          ocorrencias: 1,
+          dias: val,
+        });
+      }
     }
-    const barData = Array.from(faltasPorColaborador, ([name, quantidade]) => ({
-      name: name.length > 25 ? name.slice(0, 23) + "…" : name,
-      quantidade,
-    }))
-      .sort((a, b) => b.quantidade - a.quantidade)
-      .slice(0, 10);
+    const barData = Array.from(colaboradorInfo.values())
+      .sort((a, b) => b.dias - a.dias || b.ocorrencias - a.ocorrencias)
+      .slice(0, 10)
+      .map((info) => ({
+        name: info.nome.length > 25 ? info.nome.slice(0, 23) + "…" : info.nome,
+        nomeCompleto: info.nome,
+        posto: info.posto,
+        cargo: info.cargo,
+        ocorrencias: info.ocorrencias,
+        quantidade: info.dias,
+      }));
 
     const faltasPorPosto = new Map<string, number>();
     for (const r of data) {
