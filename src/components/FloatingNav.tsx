@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarX2,
   ClipboardCheck,
+  ClipboardList,
   FileSignature,
   Gauge,
   Home,
