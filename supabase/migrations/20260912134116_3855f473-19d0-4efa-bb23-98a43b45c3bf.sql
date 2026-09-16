@@ -1,0 +1,1 @@
+ALTER TABLE public.movimentacoes_posto ADD COLUMN IF NOT EXISTS assinatura_colaborador text;

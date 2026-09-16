@@ -1,3 +1,5 @@
+import { sanitizeForLog, sanitizeText, sanitizeUrl } from "./privacy/redaction";
+
 type LovableErrorOptions = {
   mechanism?: "manual" | "onerror" | "unhandledrejection" | "react_error_boundary";
   handled?: boolean;
@@ -5,7 +7,6 @@ type LovableErrorOptions = {
 };
 
 type LovableEvents = {
-  track?: (event: string, properties?: Record<string, unknown>) => string | null;
   captureException?: (
     error: unknown,
     context?: Record<string, unknown>,
@@ -27,12 +28,14 @@ declare global {
 export function reportLovableError(error: unknown, context: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;
   window.__lovableEvents?.captureException?.(
-    error,
-    {
+    new Error(
+      sanitizeText(error instanceof Error ? `${error.name}: ${error.message}` : String(error), 300),
+    ),
+    sanitizeForLog({
       source: "react_error_boundary",
-      route: window.location.pathname,
+      route: sanitizeUrl(window.location.pathname),
       ...context,
-    },
+    }) as Record<string, unknown>,
     {
       mechanism: "react_error_boundary",
       handled: false,
@@ -44,16 +47,18 @@ export function reportLovableError(error: unknown, context: Record<string, unkno
   // which is present only inside the editor preview.
   // Loaders and server fns commonly throw a raw Response; String(it) is the
   // opaque "[object Response]", so pull out the status and URL instead.
-  const message =
+  const message = sanitizeText(
     error instanceof Response
-      ? `Response ${error.status}${error.url ? ` at ${error.url}` : ""}`
+      ? `Response ${error.status}${error.url ? ` at ${sanitizeUrl(error.url)}` : ""}`
       : error instanceof Error
         ? error.message
-        : String(error);
-  const stack = error instanceof Error ? error.stack : undefined;
+        : String(error),
+    300,
+  );
+  const stack = error instanceof Error && error.stack ? sanitizeText(error.stack, 2000) : undefined;
   window.__lovableReportRuntimeError?.({
     message,
     ...(stack !== undefined && { stack }),
-    filename: window.location.pathname,
+    filename: sanitizeUrl(window.location.pathname),
   });
 }

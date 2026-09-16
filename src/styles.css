@@ -2,19 +2,17 @@
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 /*
  * Design system definition.
  *
  * The @theme inline block maps CSS custom properties to Tailwind utility
  * classes (e.g. --color-primary -> bg-primary, text-primary).
  *
- * The :root and .dark blocks define the actual color values using oklch.
+ * The :root block defines the actual color values using oklch.
  * All colors MUST use oklch format.
  *
  * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
+ * 1. Add the variable to :root
  * 2. Register it in @theme inline as --color-<name>: var(--<name>)
  */
 
@@ -42,6 +40,12 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -59,77 +63,109 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --shadow-panel: var(--shadow-panel);
+  --shadow-glow: var(--shadow-glow);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─── Tema claro: vermelho + branco, texto cinza escuro ─── */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --radius: 0.5rem;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --background: oklch(0.975 0.002 264);
+  --foreground: oklch(0.19 0.006 264);
+  --card: oklch(0.995 0.001 264);
+  --card-foreground: oklch(0.19 0.006 264);
+  --popover: oklch(0.995 0.001 264);
+  --popover-foreground: oklch(0.19 0.006 264);
+  --primary: oklch(0.54 0.205 24);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.955 0.003 264);
+  --secondary-foreground: oklch(0.24 0.006 264);
+  --muted: oklch(0.95 0.003 264);
+  --muted-foreground: oklch(0.48 0.008 264);
+  --accent: oklch(0.94 0.018 24);
+  --accent-foreground: oklch(0.3 0.08 24);
+  --destructive: oklch(0.54 0.205 24);
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.6 0.17 145);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.62 0.15 75);
+  --warning-foreground: oklch(0.2 0.03 75);
+  --info: oklch(0.55 0.1 245);
+  --info-foreground: oklch(1 0 0);
+  --border: oklch(0.89 0.004 264);
+  --input: oklch(0.85 0.005 264);
+  --ring: oklch(0.54 0.205 24);
+  --chart-1: oklch(0.55 0.21 27);
+  --chart-2: oklch(0.65 0.18 27);
+  --chart-3: oklch(0.45 0.18 27);
+  --chart-4: oklch(0.75 0.14 27);
+  --chart-5: oklch(0.85 0.1 27);
+  --sidebar: oklch(0.18 0.006 264);
+  --sidebar-foreground: oklch(0.95 0.003 264);
+  --sidebar-primary: oklch(0.57 0.21 24);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.24 0.008 264);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.29 0.008 264);
+  --sidebar-ring: oklch(0.57 0.21 24);
+
+  --gradient-hero: var(--card);
+  --shadow-panel: 0 1px 2px oklch(0.15 0 0 / 0.04);
+  --shadow-glow: 0 1px 2px oklch(0.15 0 0 / 0.05);
 }
 
+/* ─── Tema escuro: preto + vermelho, texto branco ─── */
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --background: oklch(0.145 0.004 264);
+  --foreground: oklch(0.92 0.004 264);
+  --card: oklch(0.19 0.005 264);
+  --card-foreground: oklch(0.92 0.004 264);
+  --popover: oklch(0.205 0.006 264);
+  --popover-foreground: oklch(0.92 0.004 264);
+  --primary: oklch(0.58 0.21 24);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.235 0.006 264);
+  --secondary-foreground: oklch(0.9 0.004 264);
+  --muted: oklch(0.225 0.006 264);
+  --muted-foreground: oklch(0.67 0.008 264);
+  --accent: oklch(0.25 0.035 24);
+  --accent-foreground: oklch(0.96 0.008 24);
+  --destructive: oklch(0.61 0.21 24);
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.7 0.18 145);
+  --success-foreground: oklch(0.12 0 0);
+  --warning: oklch(0.72 0.14 75);
+  --warning-foreground: oklch(0.16 0.02 75);
+  --info: oklch(0.7 0.11 245);
+  --info-foreground: oklch(0.14 0.01 245);
+  --border: oklch(0.285 0.006 264);
+  --input: oklch(0.32 0.007 264);
+  --ring: oklch(0.61 0.21 24);
+  --chart-1: oklch(0.6 0.22 27);
+  --chart-2: oklch(0.72 0.18 27);
+  --chart-3: oklch(0.48 0.18 27);
+  --chart-4: oklch(0.68 0.14 27);
+  --chart-5: oklch(0.82 0.1 27);
+  --sidebar: oklch(0.115 0.004 264);
+  --sidebar-foreground: oklch(0.9 0.004 264);
+  --sidebar-primary: oklch(0.61 0.21 24);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.205 0.012 264);
+  --sidebar-accent-foreground: oklch(0.97 0 0);
+  --sidebar-border: oklch(0.24 0.006 264);
+  --sidebar-ring: oklch(0.6 0.22 27);
+
+  --gradient-hero: var(--card);
+  --shadow-panel: 0 1px 2px oklch(0 0 0 / 0.3);
+  --shadow-glow: 0 1px 2px oklch(0 0 0 / 0.35);
 }
 
 @layer base {
@@ -140,5 +176,213 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    font-feature-settings: "tnum" 1, "ss01" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: 0;
+  }
+}
+
+@utility panel {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+}
+
+@utility hero-surface {
+  background-color: var(--color-card);
+}
+
+@layer components {
+  .app-shell,
+  .app-shell aside,
+  .app-workspace {
+    transition-duration: 180ms;
+    transition-timing-function: var(--ease-standard);
+  }
+
+  .app-workspace > main {
+    min-height: 100vh;
+    background-color: var(--color-background);
+    padding-bottom: 3rem;
+  }
+
+  .app-workspace > main > header,
+  .app-workspace .hero-surface {
+    background: var(--color-card) !important;
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: none !important;
+  }
+
+  .app-workspace > main > header > div,
+  .app-workspace > main > section,
+  .app-workspace > main > div:not(.fixed):not(.absolute) {
+    max-width: 88rem;
+  }
+
+  .app-workspace > main > header > div {
+    padding-top: 1.25rem !important;
+    padding-bottom: 1.25rem !important;
+  }
+
+  .app-workspace > main > header a[href="/"] {
+    display: none !important;
+  }
+
+  .app-workspace > main > header svg {
+    flex-shrink: 0;
+  }
+
+  .app-workspace > main > div.mx-auto,
+  .app-workspace > main > section.mx-auto {
+    padding-top: 1.25rem;
+    padding-bottom: 2rem;
+  }
+
+  .app-workspace h1 {
+    font-size: clamp(1.5rem, 2vw, 2rem);
+    line-height: 1.2;
+    font-weight: 650;
+    text-transform: none;
+  }
+
+  .app-workspace h2,
+  .app-workspace h3,
+  .app-workspace h4 {
+    text-transform: none;
+  }
+
+  .app-workspace .shadow-lg,
+  .app-workspace .shadow-xl,
+  .app-workspace .shadow-2xl {
+    box-shadow: var(--shadow-panel) !important;
+  }
+
+  .app-workspace .rounded-3xl,
+  .app-workspace .rounded-2xl {
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .app-workspace .border-dashed {
+    border-width: 1px !important;
+    background-color: color-mix(in oklab, var(--color-muted) 25%, transparent) !important;
+  }
+
+  .app-workspace [class*="tracking-"] {
+    letter-spacing: 0 !important;
+  }
+
+  .app-workspace input,
+  .app-workspace textarea,
+  .app-workspace select {
+    accent-color: var(--color-primary);
+  }
+
+  .app-workspace table thead {
+    background-color: color-mix(in oklab, var(--color-muted) 70%, transparent);
+  }
+
+  .app-workspace table th {
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-muted-foreground);
+  }
+
+  .app-workspace table td {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ─── Mobile hardening (Android + iOS: Samsung, Motorola, iPhone, LG, Xiaomi) ─── */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  html,
+  body {
+    /* Nunca permitir rolagem lateral acidental em telas estreitas.
+       `clip` (com fallback `hidden`) NÃO cria um novo contêiner de rolagem
+       no body — `overflow-x: hidden` travava o arrastar por toque no mobile. */
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  body {
+    /* Respeita entalhes/ilhas das telas (iPhone, Motorola, Xiaomi). */
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  main { padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px)); }
+
+  /* Mídia e conteúdo embutido sempre cabem na largura da tela. */
+  img,
+  svg,
+  video,
+  canvas,
+  iframe {
+    max-width: 100%;
+  }
+
+  /* Somente palavras/URLs muito longas quebram; o texto normal continua
+     legível, sem cortar palavras no meio (o antigo `anywhere` picotava
+     frases inteiras em telas estreitas). */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  span,
+  td,
+  th,
+  li,
+  a {
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: manual;
+  }
+
+  /* Tabelas largas rolam dentro do próprio bloco. */
+  table {
+    max-width: 100%;
+  }
+
+  /* Áreas de toque confortáveis e sem zoom automático no iOS ao focar campos. */
+  @media (max-width: 640px) {
+    button,
+    [role="button"],
+    a.btn {
+      touch-action: manipulation;
+    }
+
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

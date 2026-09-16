@@ -1,0 +1,1 @@
+ALTER TABLE public.crt_lancamentos ADD COLUMN IF NOT EXISTS assinatura_colaborador text;

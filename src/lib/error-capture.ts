@@ -1,3 +1,5 @@
+import { sanitizeText } from "./privacy/redaction";
+
 // Captures the original Error out-of-band so server.ts can recover the stack
 // when h3 has already swallowed the throw into a generic 500 Response.
 
@@ -28,7 +30,8 @@ export function describeError(error: unknown): string {
     parts.push(`${label}${current.stack ?? `${current.name}: ${current.message}`}${status}`);
     current = current.cause;
   }
-  return parts.join("\n").slice(0, DESCRIPTION_LENGTH_LIMIT);
+  // Nenhum dado pessoal, médico ou credencial pode chegar ao pipeline de logs.
+  return sanitizeText(parts.join("\n"), DESCRIPTION_LENGTH_LIMIT);
 }
 
 function describeStatus(error: Error): string {

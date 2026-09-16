@@ -1,0 +1,1 @@
+ALTER TABLE public.roteiros_visita_campo ADD COLUMN IF NOT EXISTS enviado_por_nome text;

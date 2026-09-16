@@ -1,0 +1,97 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789513828476,
+      "tag": "0000_temp_exec_helper",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789514642912,
+      "tag": "0001_create_ferias_usuarios_flags",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789517286387,
+      "tag": "0002_harden_rls_storage_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789517450825,
+      "tag": "0003_harden_rls_round2",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789517529877,
+      "tag": "0004_harden_rls_round3",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789517567487,
+      "tag": "0005_harden_rls_round4",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789520212859,
+      "tag": "0006_create_faltas_nexti_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789523560620,
+      "tag": "0007_whatsapp_delete_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789523906091,
+      "tag": "0008_whatsapp_conversations_foto",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789524122642,
+      "tag": "0009_chat_rooms_private_delete",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789525020937,
+      "tag": "0010_restrict_maintenance_functions",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789525789145,
+      "tag": "0011_whatsapp_conversations_queue",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789526233158,
+      "tag": "0012_whatsapp_audios_storage_policies",
+      "breakpoints": true
+    }
+  ]
+}

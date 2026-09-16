@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.lovable_import_exec(text);

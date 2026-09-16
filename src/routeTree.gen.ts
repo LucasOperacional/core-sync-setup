@@ -9,50 +9,1621 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as InstalarRouteImport } from './routes/instalar'
+import { Route as PoliticaPrivacidadeRouteImport } from './routes/politica-privacidade'
+import { Route as ValidarRouteImport } from './routes/validar'
+import { Route as ValidarMovimentacaoRouteImport } from './routes/validar-movimentacao'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedAberturaDeVagasRouteImport } from './routes/_authenticated/abertura-de-vagas'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAreasRouteImport } from './routes/_authenticated/areas'
+import { Route as AuthenticatedAssinaturaDocumentosRouteImport } from './routes/_authenticated/assinatura-documentos'
+import { Route as AuthenticatedAtestadosRouteImport } from './routes/_authenticated/atestados'
+import { Route as AuthenticatedAvaliacaoGerentesRouteImport } from './routes/_authenticated/avaliacao-gerentes'
+import { Route as AuthenticatedCanaisRouteImport } from './routes/_authenticated/canais'
+import { Route as AuthenticatedChatIaRouteImport } from './routes/_authenticated/chat-ia'
+import { Route as AuthenticatedChatInternoRouteImport } from './routes/_authenticated/chat-interno'
+import { Route as AuthenticatedChecklistAutomaticoRouteImport } from './routes/_authenticated/checklist-automatico'
+import { Route as AuthenticatedControlRouteImport } from './routes/_authenticated/control'
+import { Route as AuthenticatedCoordenacaoRouteImport } from './routes/_authenticated/coordenacao'
+import { Route as AuthenticatedCoordenacaoCrtRouteImport } from './routes/_authenticated/coordenacao-crt'
+import { Route as AuthenticatedCoordenacaoMovimentacoesRouteImport } from './routes/_authenticated/coordenacao-movimentacoes'
+import { Route as AuthenticatedCoordenadorRouteImport } from './routes/_authenticated/coordenador'
+import { Route as AuthenticatedFaltasRouteImport } from './routes/_authenticated/faltas'
+import { Route as AuthenticatedGpsRouteImport } from './routes/_authenticated/gps'
+import { Route as AuthenticatedIaOperacionalRouteImport } from './routes/_authenticated/ia-operacional'
+import { Route as AuthenticatedIndicadoresRouteImport } from './routes/_authenticated/indicadores'
+import { Route as AuthenticatedLgpdRouteImport } from './routes/_authenticated/lgpd'
+import { Route as AuthenticatedLogsAtividadesRouteImport } from './routes/_authenticated/logs-atividades'
+import { Route as AuthenticatedMovimentacaoPostoRouteImport } from './routes/_authenticated/movimentacao-posto'
+import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
+import { Route as AuthenticatedNxsControlRouteImport } from './routes/_authenticated/nxs-control'
+import { Route as AuthenticatedPainelNextiRouteImport } from './routes/_authenticated/painel-nexti'
+import { Route as AuthenticatedPesquisaColaboradorNextiRouteImport } from './routes/_authenticated/pesquisa-colaborador-nexti'
+import { Route as AuthenticatedPesquisaFaltasRouteImport } from './routes/_authenticated/pesquisa-faltas'
+import { Route as AuthenticatedProtocoloFolhasPontoRouteImport } from './routes/_authenticated/protocolo-folhas-ponto'
+import { Route as AuthenticatedProtocoloLimpezaGeralRouteImport } from './routes/_authenticated/protocolo-limpeza-geral'
+import { Route as AuthenticatedRealizadoresRouteImport } from './routes/_authenticated/realizadores'
+import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
+import { Route as AuthenticatedSupervisaoCampoRouteImport } from './routes/_authenticated/supervisao-campo'
+import { Route as AuthenticatedSupervisorRouteImport } from './routes/_authenticated/supervisor'
+import { Route as AuthenticatedSupervisorCampoRouteImport } from './routes/_authenticated/supervisor-campo'
+import { Route as AuthenticatedSupervisorCrtRouteImport } from './routes/_authenticated/supervisor-crt'
+import { Route as AuthenticatedSupervisorFaltasRouteImport } from './routes/_authenticated/supervisor-faltas'
+import { Route as AuthenticatedSupervisorVagasRouteImport } from './routes/_authenticated/supervisor-vagas'
+import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
+import { Route as AuthenticatedVerificadorAtestadosRouteImport } from './routes/_authenticated/verificador-atestados'
+import { Route as AssinarCrtTokenRouteImport } from './routes/assinar-crt.$token'
+import { Route as AssinarMovimentacaoTokenRouteImport } from './routes/assinar-movimentacao.$token'
+import { Route as AssinarTokenRouteImport } from './routes/assinar.$token'
+import { Route as AuthenticatedGerentesIndexRouteImport } from './routes/_authenticated/gerentes.index'
+import { Route as AuthenticatedGerentesSlugRouteImport } from './routes/_authenticated/gerentes.$slug'
+import { Route as AuthenticatedRelatoriosGerenteSlugRouteImport } from './routes/_authenticated/relatorios-gerente.$slug'
+import { Route as AuthenticatedRelatoriosVisitaIdRouteImport } from './routes/_authenticated/relatorios-visita.$id'
+import { Route as ApiPublicEvolutionWebhookRouteImport } from './routes/api/public/evolution-webhook'
+import { Route as ApiPublicMonitorRouteImport } from './routes/api/public/monitor'
+import { Route as ApiPublicMonitorErrorRouteImport } from './routes/api/public/monitor-error'
+import { Route as ApiPublicMonitorHeartbeatRouteImport } from './routes/api/public/monitor-heartbeat'
+import { Route as ApiPublicMonitorRecoveryRouteImport } from './routes/api/public/monitor-recovery'
+import { Route as ApiPublicProjectHealthRouteImport } from './routes/api/public/project-health'
+import { Route as ApiPublicRastreioPingRouteImport } from './routes/api/public/rastreio-ping'
+import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp-webhook'
+import { Route as ApiPublicAssinaturaAssinarRouteImport } from './routes/api/public/assinatura/assinar'
+import { Route as ApiPublicAssinaturaCodigoRouteImport } from './routes/api/public/assinatura/codigo'
+import { Route as ApiPublicAssinaturaDocumentoRouteImport } from './routes/api/public/assinatura/documento'
+import { Route as ApiPublicAssinaturaRecusarRouteImport } from './routes/api/public/assinatura/recusar'
+import { Route as ApiPublicAssinaturaValidarRouteImport } from './routes/api/public/assinatura/validar'
+import { Route as ApiPublicCrtAssinaturaRouteImport } from './routes/api/public/crt/assinatura'
+import { Route as ApiPublicMovimentacaoAssinaturaRouteImport } from './routes/api/public/movimentacao/assinatura'
+import { Route as ApiPublicMovimentacaoValidarRouteImport } from './routes/api/public/movimentacao/validar'
+import { Route as ApiPublicNxsPosicaoRouteImport } from './routes/api/public/nxs/posicao'
+import { Route as ApiPublicPushEnviarRouteImport } from './routes/api/public/push/enviar'
+import { Route as ApiPublicPushProcessarAgendaRouteImport } from './routes/api/public/push/processar-agenda'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstalarRoute = InstalarRouteImport.update({
+  id: '/instalar',
+  path: '/instalar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticaPrivacidadeRoute = PoliticaPrivacidadeRouteImport.update({
+  id: '/politica-privacidade',
+  path: '/politica-privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ValidarRoute = ValidarRouteImport.update({
+  id: '/validar',
+  path: '/validar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ValidarMovimentacaoRoute = ValidarMovimentacaoRouteImport.update({
+  id: '/validar-movimentacao',
+  path: '/validar-movimentacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAberturaDeVagasRoute =
+  AuthenticatedAberturaDeVagasRouteImport.update({
+    id: '/abertura-de-vagas',
+    path: '/abertura-de-vagas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAreasRoute = AuthenticatedAreasRouteImport.update({
+  id: '/areas',
+  path: '/areas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAssinaturaDocumentosRoute =
+  AuthenticatedAssinaturaDocumentosRouteImport.update({
+    id: '/assinatura-documentos',
+    path: '/assinatura-documentos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAtestadosRoute = AuthenticatedAtestadosRouteImport.update({
+  id: '/atestados',
+  path: '/atestados',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAvaliacaoGerentesRoute =
+  AuthenticatedAvaliacaoGerentesRouteImport.update({
+    id: '/avaliacao-gerentes',
+    path: '/avaliacao-gerentes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCanaisRoute = AuthenticatedCanaisRouteImport.update({
+  id: '/canais',
+  path: '/canais',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChatIaRoute = AuthenticatedChatIaRouteImport.update({
+  id: '/chat-ia',
+  path: '/chat-ia',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChatInternoRoute =
+  AuthenticatedChatInternoRouteImport.update({
+    id: '/chat-interno',
+    path: '/chat-interno',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedChecklistAutomaticoRoute =
+  AuthenticatedChecklistAutomaticoRouteImport.update({
+    id: '/checklist-automatico',
+    path: '/checklist-automatico',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedControlRoute = AuthenticatedControlRouteImport.update({
+  id: '/control',
+  path: '/control',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCoordenacaoRoute =
+  AuthenticatedCoordenacaoRouteImport.update({
+    id: '/coordenacao',
+    path: '/coordenacao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCoordenacaoCrtRoute =
+  AuthenticatedCoordenacaoCrtRouteImport.update({
+    id: '/coordenacao-crt',
+    path: '/coordenacao-crt',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCoordenacaoMovimentacoesRoute =
+  AuthenticatedCoordenacaoMovimentacoesRouteImport.update({
+    id: '/coordenacao-movimentacoes',
+    path: '/coordenacao-movimentacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCoordenadorRoute =
+  AuthenticatedCoordenadorRouteImport.update({
+    id: '/coordenador',
+    path: '/coordenador',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFaltasRoute = AuthenticatedFaltasRouteImport.update({
+  id: '/faltas',
+  path: '/faltas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGpsRoute = AuthenticatedGpsRouteImport.update({
+  id: '/gps',
+  path: '/gps',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedIaOperacionalRoute =
+  AuthenticatedIaOperacionalRouteImport.update({
+    id: '/ia-operacional',
+    path: '/ia-operacional',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedIndicadoresRoute =
+  AuthenticatedIndicadoresRouteImport.update({
+    id: '/indicadores',
+    path: '/indicadores',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedLgpdRoute = AuthenticatedLgpdRouteImport.update({
+  id: '/lgpd',
+  path: '/lgpd',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLogsAtividadesRoute =
+  AuthenticatedLogsAtividadesRouteImport.update({
+    id: '/logs-atividades',
+    path: '/logs-atividades',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMovimentacaoPostoRoute =
+  AuthenticatedMovimentacaoPostoRouteImport.update({
+    id: '/movimentacao-posto',
+    path: '/movimentacao-posto',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedNotificacoesRoute =
+  AuthenticatedNotificacoesRouteImport.update({
+    id: '/notificacoes',
+    path: '/notificacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedNxsControlRoute = AuthenticatedNxsControlRouteImport.update({
+  id: '/nxs-control',
+  path: '/nxs-control',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPainelNextiRoute =
+  AuthenticatedPainelNextiRouteImport.update({
+    id: '/painel-nexti',
+    path: '/painel-nexti',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPesquisaColaboradorNextiRoute =
+  AuthenticatedPesquisaColaboradorNextiRouteImport.update({
+    id: '/pesquisa-colaborador-nexti',
+    path: '/pesquisa-colaborador-nexti',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPesquisaFaltasRoute =
+  AuthenticatedPesquisaFaltasRouteImport.update({
+    id: '/pesquisa-faltas',
+    path: '/pesquisa-faltas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProtocoloFolhasPontoRoute =
+  AuthenticatedProtocoloFolhasPontoRouteImport.update({
+    id: '/protocolo-folhas-ponto',
+    path: '/protocolo-folhas-ponto',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProtocoloLimpezaGeralRoute =
+  AuthenticatedProtocoloLimpezaGeralRouteImport.update({
+    id: '/protocolo-limpeza-geral',
+    path: '/protocolo-limpeza-geral',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRealizadoresRoute =
+  AuthenticatedRealizadoresRouteImport.update({
+    id: '/realizadores',
+    path: '/realizadores',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRhRoute = AuthenticatedRhRouteImport.update({
+  id: '/rh',
+  path: '/rh',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSupervisaoCampoRoute =
+  AuthenticatedSupervisaoCampoRouteImport.update({
+    id: '/supervisao-campo',
+    path: '/supervisao-campo',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSupervisorRoute = AuthenticatedSupervisorRouteImport.update({
+  id: '/supervisor',
+  path: '/supervisor',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSupervisorCampoRoute =
+  AuthenticatedSupervisorCampoRouteImport.update({
+    id: '/supervisor-campo',
+    path: '/supervisor-campo',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSupervisorCrtRoute =
+  AuthenticatedSupervisorCrtRouteImport.update({
+    id: '/supervisor-crt',
+    path: '/supervisor-crt',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSupervisorFaltasRoute =
+  AuthenticatedSupervisorFaltasRouteImport.update({
+    id: '/supervisor-faltas',
+    path: '/supervisor-faltas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSupervisorVagasRoute =
+  AuthenticatedSupervisorVagasRouteImport.update({
+    id: '/supervisor-vagas',
+    path: '/supervisor-vagas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedUsuariosRoute = AuthenticatedUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVerificadorAtestadosRoute =
+  AuthenticatedVerificadorAtestadosRouteImport.update({
+    id: '/verificador-atestados',
+    path: '/verificador-atestados',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AssinarCrtTokenRoute = AssinarCrtTokenRouteImport.update({
+  id: '/assinar-crt/$token',
+  path: '/assinar-crt/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssinarMovimentacaoTokenRoute =
+  AssinarMovimentacaoTokenRouteImport.update({
+    id: '/assinar-movimentacao/$token',
+    path: '/assinar-movimentacao/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AssinarTokenRoute = AssinarTokenRouteImport.update({
+  id: '/assinar/$token',
+  path: '/assinar/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedGerentesIndexRoute =
+  AuthenticatedGerentesIndexRouteImport.update({
+    id: '/gerentes/',
+    path: '/gerentes/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGerentesSlugRoute =
+  AuthenticatedGerentesSlugRouteImport.update({
+    id: '/gerentes/$slug',
+    path: '/gerentes/$slug',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRelatoriosGerenteSlugRoute =
+  AuthenticatedRelatoriosGerenteSlugRouteImport.update({
+    id: '/relatorios-gerente/$slug',
+    path: '/relatorios-gerente/$slug',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRelatoriosVisitaIdRoute =
+  AuthenticatedRelatoriosVisitaIdRouteImport.update({
+    id: '/relatorios-visita/$id',
+    path: '/relatorios-visita/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiPublicEvolutionWebhookRoute =
+  ApiPublicEvolutionWebhookRouteImport.update({
+    id: '/api/public/evolution-webhook',
+    path: '/api/public/evolution-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicMonitorRoute = ApiPublicMonitorRouteImport.update({
+  id: '/api/public/monitor',
+  path: '/api/public/monitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMonitorErrorRoute = ApiPublicMonitorErrorRouteImport.update({
+  id: '/api/public/monitor-error',
+  path: '/api/public/monitor-error',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMonitorHeartbeatRoute =
+  ApiPublicMonitorHeartbeatRouteImport.update({
+    id: '/api/public/monitor-heartbeat',
+    path: '/api/public/monitor-heartbeat',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicMonitorRecoveryRoute =
+  ApiPublicMonitorRecoveryRouteImport.update({
+    id: '/api/public/monitor-recovery',
+    path: '/api/public/monitor-recovery',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicProjectHealthRoute = ApiPublicProjectHealthRouteImport.update({
+  id: '/api/public/project-health',
+  path: '/api/public/project-health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicRastreioPingRoute = ApiPublicRastreioPingRouteImport.update({
+  id: '/api/public/rastreio-ping',
+  path: '/api/public/rastreio-ping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWhatsappWebhookRoute =
+  ApiPublicWhatsappWebhookRouteImport.update({
+    id: '/api/public/whatsapp-webhook',
+    path: '/api/public/whatsapp-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAssinaturaAssinarRoute =
+  ApiPublicAssinaturaAssinarRouteImport.update({
+    id: '/api/public/assinatura/assinar',
+    path: '/api/public/assinatura/assinar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAssinaturaCodigoRoute =
+  ApiPublicAssinaturaCodigoRouteImport.update({
+    id: '/api/public/assinatura/codigo',
+    path: '/api/public/assinatura/codigo',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAssinaturaDocumentoRoute =
+  ApiPublicAssinaturaDocumentoRouteImport.update({
+    id: '/api/public/assinatura/documento',
+    path: '/api/public/assinatura/documento',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAssinaturaRecusarRoute =
+  ApiPublicAssinaturaRecusarRouteImport.update({
+    id: '/api/public/assinatura/recusar',
+    path: '/api/public/assinatura/recusar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAssinaturaValidarRoute =
+  ApiPublicAssinaturaValidarRouteImport.update({
+    id: '/api/public/assinatura/validar',
+    path: '/api/public/assinatura/validar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicCrtAssinaturaRoute = ApiPublicCrtAssinaturaRouteImport.update({
+  id: '/api/public/crt/assinatura',
+  path: '/api/public/crt/assinatura',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMovimentacaoAssinaturaRoute =
+  ApiPublicMovimentacaoAssinaturaRouteImport.update({
+    id: '/api/public/movimentacao/assinatura',
+    path: '/api/public/movimentacao/assinatura',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicMovimentacaoValidarRoute =
+  ApiPublicMovimentacaoValidarRouteImport.update({
+    id: '/api/public/movimentacao/validar',
+    path: '/api/public/movimentacao/validar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicNxsPosicaoRoute = ApiPublicNxsPosicaoRouteImport.update({
+  id: '/api/public/nxs/posicao',
+  path: '/api/public/nxs/posicao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPushEnviarRoute = ApiPublicPushEnviarRouteImport.update({
+  id: '/api/public/push/enviar',
+  path: '/api/public/push/enviar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPushProcessarAgendaRoute =
+  ApiPublicPushProcessarAgendaRouteImport.update({
+    id: '/api/public/push/processar-agenda',
+    path: '/api/public/push/processar-agenda',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
+  '/instalar': typeof InstalarRoute
+  '/politica-privacidade': typeof PoliticaPrivacidadeRoute
+  '/validar': typeof ValidarRoute
+  '/validar-movimentacao': typeof ValidarMovimentacaoRoute
+  '/abertura-de-vagas': typeof AuthenticatedAberturaDeVagasRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/areas': typeof AuthenticatedAreasRoute
+  '/assinatura-documentos': typeof AuthenticatedAssinaturaDocumentosRoute
+  '/atestados': typeof AuthenticatedAtestadosRoute
+  '/avaliacao-gerentes': typeof AuthenticatedAvaliacaoGerentesRoute
+  '/canais': typeof AuthenticatedCanaisRoute
+  '/chat-ia': typeof AuthenticatedChatIaRoute
+  '/chat-interno': typeof AuthenticatedChatInternoRoute
+  '/checklist-automatico': typeof AuthenticatedChecklistAutomaticoRoute
+  '/control': typeof AuthenticatedControlRoute
+  '/coordenacao': typeof AuthenticatedCoordenacaoRoute
+  '/coordenacao-crt': typeof AuthenticatedCoordenacaoCrtRoute
+  '/coordenacao-movimentacoes': typeof AuthenticatedCoordenacaoMovimentacoesRoute
+  '/coordenador': typeof AuthenticatedCoordenadorRoute
+  '/faltas': typeof AuthenticatedFaltasRoute
+  '/gps': typeof AuthenticatedGpsRoute
+  '/ia-operacional': typeof AuthenticatedIaOperacionalRoute
+  '/indicadores': typeof AuthenticatedIndicadoresRoute
+  '/lgpd': typeof AuthenticatedLgpdRoute
+  '/logs-atividades': typeof AuthenticatedLogsAtividadesRoute
+  '/movimentacao-posto': typeof AuthenticatedMovimentacaoPostoRoute
+  '/notificacoes': typeof AuthenticatedNotificacoesRoute
+  '/nxs-control': typeof AuthenticatedNxsControlRoute
+  '/painel-nexti': typeof AuthenticatedPainelNextiRoute
+  '/pesquisa-colaborador-nexti': typeof AuthenticatedPesquisaColaboradorNextiRoute
+  '/pesquisa-faltas': typeof AuthenticatedPesquisaFaltasRoute
+  '/protocolo-folhas-ponto': typeof AuthenticatedProtocoloFolhasPontoRoute
+  '/protocolo-limpeza-geral': typeof AuthenticatedProtocoloLimpezaGeralRoute
+  '/realizadores': typeof AuthenticatedRealizadoresRoute
+  '/rh': typeof AuthenticatedRhRoute
+  '/supervisao-campo': typeof AuthenticatedSupervisaoCampoRoute
+  '/supervisor': typeof AuthenticatedSupervisorRoute
+  '/supervisor-campo': typeof AuthenticatedSupervisorCampoRoute
+  '/supervisor-crt': typeof AuthenticatedSupervisorCrtRoute
+  '/supervisor-faltas': typeof AuthenticatedSupervisorFaltasRoute
+  '/supervisor-vagas': typeof AuthenticatedSupervisorVagasRoute
+  '/usuarios': typeof AuthenticatedUsuariosRoute
+  '/verificador-atestados': typeof AuthenticatedVerificadorAtestadosRoute
+  '/assinar-crt/$token': typeof AssinarCrtTokenRoute
+  '/assinar-movimentacao/$token': typeof AssinarMovimentacaoTokenRoute
+  '/assinar/$token': typeof AssinarTokenRoute
+  '/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
+  '/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
+  '/relatorios-visita/$id': typeof AuthenticatedRelatoriosVisitaIdRoute
+  '/api/public/evolution-webhook': typeof ApiPublicEvolutionWebhookRoute
+  '/api/public/monitor': typeof ApiPublicMonitorRoute
+  '/api/public/monitor-error': typeof ApiPublicMonitorErrorRoute
+  '/api/public/monitor-heartbeat': typeof ApiPublicMonitorHeartbeatRoute
+  '/api/public/monitor-recovery': typeof ApiPublicMonitorRecoveryRoute
+  '/api/public/project-health': typeof ApiPublicProjectHealthRoute
+  '/api/public/rastreio-ping': typeof ApiPublicRastreioPingRoute
+  '/api/public/whatsapp-webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/gerentes/': typeof AuthenticatedGerentesIndexRoute
+  '/api/public/assinatura/assinar': typeof ApiPublicAssinaturaAssinarRoute
+  '/api/public/assinatura/codigo': typeof ApiPublicAssinaturaCodigoRoute
+  '/api/public/assinatura/documento': typeof ApiPublicAssinaturaDocumentoRoute
+  '/api/public/assinatura/recusar': typeof ApiPublicAssinaturaRecusarRoute
+  '/api/public/assinatura/validar': typeof ApiPublicAssinaturaValidarRoute
+  '/api/public/crt/assinatura': typeof ApiPublicCrtAssinaturaRoute
+  '/api/public/movimentacao/assinatura': typeof ApiPublicMovimentacaoAssinaturaRoute
+  '/api/public/movimentacao/validar': typeof ApiPublicMovimentacaoValidarRoute
+  '/api/public/nxs/posicao': typeof ApiPublicNxsPosicaoRoute
+  '/api/public/push/enviar': typeof ApiPublicPushEnviarRoute
+  '/api/public/push/processar-agenda': typeof ApiPublicPushProcessarAgendaRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/instalar': typeof InstalarRoute
+  '/politica-privacidade': typeof PoliticaPrivacidadeRoute
+  '/validar': typeof ValidarRoute
+  '/validar-movimentacao': typeof ValidarMovimentacaoRoute
+  '/abertura-de-vagas': typeof AuthenticatedAberturaDeVagasRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/areas': typeof AuthenticatedAreasRoute
+  '/assinatura-documentos': typeof AuthenticatedAssinaturaDocumentosRoute
+  '/atestados': typeof AuthenticatedAtestadosRoute
+  '/avaliacao-gerentes': typeof AuthenticatedAvaliacaoGerentesRoute
+  '/canais': typeof AuthenticatedCanaisRoute
+  '/chat-ia': typeof AuthenticatedChatIaRoute
+  '/chat-interno': typeof AuthenticatedChatInternoRoute
+  '/checklist-automatico': typeof AuthenticatedChecklistAutomaticoRoute
+  '/control': typeof AuthenticatedControlRoute
+  '/coordenacao': typeof AuthenticatedCoordenacaoRoute
+  '/coordenacao-crt': typeof AuthenticatedCoordenacaoCrtRoute
+  '/coordenacao-movimentacoes': typeof AuthenticatedCoordenacaoMovimentacoesRoute
+  '/coordenador': typeof AuthenticatedCoordenadorRoute
+  '/faltas': typeof AuthenticatedFaltasRoute
+  '/gps': typeof AuthenticatedGpsRoute
+  '/ia-operacional': typeof AuthenticatedIaOperacionalRoute
+  '/indicadores': typeof AuthenticatedIndicadoresRoute
+  '/lgpd': typeof AuthenticatedLgpdRoute
+  '/logs-atividades': typeof AuthenticatedLogsAtividadesRoute
+  '/movimentacao-posto': typeof AuthenticatedMovimentacaoPostoRoute
+  '/notificacoes': typeof AuthenticatedNotificacoesRoute
+  '/nxs-control': typeof AuthenticatedNxsControlRoute
+  '/painel-nexti': typeof AuthenticatedPainelNextiRoute
+  '/pesquisa-colaborador-nexti': typeof AuthenticatedPesquisaColaboradorNextiRoute
+  '/pesquisa-faltas': typeof AuthenticatedPesquisaFaltasRoute
+  '/protocolo-folhas-ponto': typeof AuthenticatedProtocoloFolhasPontoRoute
+  '/protocolo-limpeza-geral': typeof AuthenticatedProtocoloLimpezaGeralRoute
+  '/realizadores': typeof AuthenticatedRealizadoresRoute
+  '/rh': typeof AuthenticatedRhRoute
+  '/supervisao-campo': typeof AuthenticatedSupervisaoCampoRoute
+  '/supervisor': typeof AuthenticatedSupervisorRoute
+  '/supervisor-campo': typeof AuthenticatedSupervisorCampoRoute
+  '/supervisor-crt': typeof AuthenticatedSupervisorCrtRoute
+  '/supervisor-faltas': typeof AuthenticatedSupervisorFaltasRoute
+  '/supervisor-vagas': typeof AuthenticatedSupervisorVagasRoute
+  '/usuarios': typeof AuthenticatedUsuariosRoute
+  '/verificador-atestados': typeof AuthenticatedVerificadorAtestadosRoute
+  '/assinar-crt/$token': typeof AssinarCrtTokenRoute
+  '/assinar-movimentacao/$token': typeof AssinarMovimentacaoTokenRoute
+  '/assinar/$token': typeof AssinarTokenRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
+  '/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
+  '/relatorios-visita/$id': typeof AuthenticatedRelatoriosVisitaIdRoute
+  '/api/public/evolution-webhook': typeof ApiPublicEvolutionWebhookRoute
+  '/api/public/monitor': typeof ApiPublicMonitorRoute
+  '/api/public/monitor-error': typeof ApiPublicMonitorErrorRoute
+  '/api/public/monitor-heartbeat': typeof ApiPublicMonitorHeartbeatRoute
+  '/api/public/monitor-recovery': typeof ApiPublicMonitorRecoveryRoute
+  '/api/public/project-health': typeof ApiPublicProjectHealthRoute
+  '/api/public/rastreio-ping': typeof ApiPublicRastreioPingRoute
+  '/api/public/whatsapp-webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/gerentes': typeof AuthenticatedGerentesIndexRoute
+  '/api/public/assinatura/assinar': typeof ApiPublicAssinaturaAssinarRoute
+  '/api/public/assinatura/codigo': typeof ApiPublicAssinaturaCodigoRoute
+  '/api/public/assinatura/documento': typeof ApiPublicAssinaturaDocumentoRoute
+  '/api/public/assinatura/recusar': typeof ApiPublicAssinaturaRecusarRoute
+  '/api/public/assinatura/validar': typeof ApiPublicAssinaturaValidarRoute
+  '/api/public/crt/assinatura': typeof ApiPublicCrtAssinaturaRoute
+  '/api/public/movimentacao/assinatura': typeof ApiPublicMovimentacaoAssinaturaRoute
+  '/api/public/movimentacao/validar': typeof ApiPublicMovimentacaoValidarRoute
+  '/api/public/nxs/posicao': typeof ApiPublicNxsPosicaoRoute
+  '/api/public/push/enviar': typeof ApiPublicPushEnviarRoute
+  '/api/public/push/processar-agenda': typeof ApiPublicPushProcessarAgendaRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/instalar': typeof InstalarRoute
+  '/politica-privacidade': typeof PoliticaPrivacidadeRoute
+  '/validar': typeof ValidarRoute
+  '/validar-movimentacao': typeof ValidarMovimentacaoRoute
+  '/_authenticated/abertura-de-vagas': typeof AuthenticatedAberturaDeVagasRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/areas': typeof AuthenticatedAreasRoute
+  '/_authenticated/assinatura-documentos': typeof AuthenticatedAssinaturaDocumentosRoute
+  '/_authenticated/atestados': typeof AuthenticatedAtestadosRoute
+  '/_authenticated/avaliacao-gerentes': typeof AuthenticatedAvaliacaoGerentesRoute
+  '/_authenticated/canais': typeof AuthenticatedCanaisRoute
+  '/_authenticated/chat-ia': typeof AuthenticatedChatIaRoute
+  '/_authenticated/chat-interno': typeof AuthenticatedChatInternoRoute
+  '/_authenticated/checklist-automatico': typeof AuthenticatedChecklistAutomaticoRoute
+  '/_authenticated/control': typeof AuthenticatedControlRoute
+  '/_authenticated/coordenacao': typeof AuthenticatedCoordenacaoRoute
+  '/_authenticated/coordenacao-crt': typeof AuthenticatedCoordenacaoCrtRoute
+  '/_authenticated/coordenacao-movimentacoes': typeof AuthenticatedCoordenacaoMovimentacoesRoute
+  '/_authenticated/coordenador': typeof AuthenticatedCoordenadorRoute
+  '/_authenticated/faltas': typeof AuthenticatedFaltasRoute
+  '/_authenticated/gps': typeof AuthenticatedGpsRoute
+  '/_authenticated/ia-operacional': typeof AuthenticatedIaOperacionalRoute
+  '/_authenticated/indicadores': typeof AuthenticatedIndicadoresRoute
+  '/_authenticated/lgpd': typeof AuthenticatedLgpdRoute
+  '/_authenticated/logs-atividades': typeof AuthenticatedLogsAtividadesRoute
+  '/_authenticated/movimentacao-posto': typeof AuthenticatedMovimentacaoPostoRoute
+  '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
+  '/_authenticated/nxs-control': typeof AuthenticatedNxsControlRoute
+  '/_authenticated/painel-nexti': typeof AuthenticatedPainelNextiRoute
+  '/_authenticated/pesquisa-colaborador-nexti': typeof AuthenticatedPesquisaColaboradorNextiRoute
+  '/_authenticated/pesquisa-faltas': typeof AuthenticatedPesquisaFaltasRoute
+  '/_authenticated/protocolo-folhas-ponto': typeof AuthenticatedProtocoloFolhasPontoRoute
+  '/_authenticated/protocolo-limpeza-geral': typeof AuthenticatedProtocoloLimpezaGeralRoute
+  '/_authenticated/realizadores': typeof AuthenticatedRealizadoresRoute
+  '/_authenticated/rh': typeof AuthenticatedRhRoute
+  '/_authenticated/supervisao-campo': typeof AuthenticatedSupervisaoCampoRoute
+  '/_authenticated/supervisor': typeof AuthenticatedSupervisorRoute
+  '/_authenticated/supervisor-campo': typeof AuthenticatedSupervisorCampoRoute
+  '/_authenticated/supervisor-crt': typeof AuthenticatedSupervisorCrtRoute
+  '/_authenticated/supervisor-faltas': typeof AuthenticatedSupervisorFaltasRoute
+  '/_authenticated/supervisor-vagas': typeof AuthenticatedSupervisorVagasRoute
+  '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
+  '/_authenticated/verificador-atestados': typeof AuthenticatedVerificadorAtestadosRoute
+  '/assinar-crt/$token': typeof AssinarCrtTokenRoute
+  '/assinar-movimentacao/$token': typeof AssinarMovimentacaoTokenRoute
+  '/assinar/$token': typeof AssinarTokenRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
+  '/_authenticated/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
+  '/_authenticated/relatorios-visita/$id': typeof AuthenticatedRelatoriosVisitaIdRoute
+  '/api/public/evolution-webhook': typeof ApiPublicEvolutionWebhookRoute
+  '/api/public/monitor': typeof ApiPublicMonitorRoute
+  '/api/public/monitor-error': typeof ApiPublicMonitorErrorRoute
+  '/api/public/monitor-heartbeat': typeof ApiPublicMonitorHeartbeatRoute
+  '/api/public/monitor-recovery': typeof ApiPublicMonitorRecoveryRoute
+  '/api/public/project-health': typeof ApiPublicProjectHealthRoute
+  '/api/public/rastreio-ping': typeof ApiPublicRastreioPingRoute
+  '/api/public/whatsapp-webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/_authenticated/gerentes/': typeof AuthenticatedGerentesIndexRoute
+  '/api/public/assinatura/assinar': typeof ApiPublicAssinaturaAssinarRoute
+  '/api/public/assinatura/codigo': typeof ApiPublicAssinaturaCodigoRoute
+  '/api/public/assinatura/documento': typeof ApiPublicAssinaturaDocumentoRoute
+  '/api/public/assinatura/recusar': typeof ApiPublicAssinaturaRecusarRoute
+  '/api/public/assinatura/validar': typeof ApiPublicAssinaturaValidarRoute
+  '/api/public/crt/assinatura': typeof ApiPublicCrtAssinaturaRoute
+  '/api/public/movimentacao/assinatura': typeof ApiPublicMovimentacaoAssinaturaRoute
+  '/api/public/movimentacao/validar': typeof ApiPublicMovimentacaoValidarRoute
+  '/api/public/nxs/posicao': typeof ApiPublicNxsPosicaoRoute
+  '/api/public/push/enviar': typeof ApiPublicPushEnviarRoute
+  '/api/public/push/processar-agenda': typeof ApiPublicPushProcessarAgendaRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/instalar'
+    | '/politica-privacidade'
+    | '/validar'
+    | '/validar-movimentacao'
+    | '/abertura-de-vagas'
+    | '/admin'
+    | '/areas'
+    | '/assinatura-documentos'
+    | '/atestados'
+    | '/avaliacao-gerentes'
+    | '/canais'
+    | '/chat-ia'
+    | '/chat-interno'
+    | '/checklist-automatico'
+    | '/control'
+    | '/coordenacao'
+    | '/coordenacao-crt'
+    | '/coordenacao-movimentacoes'
+    | '/coordenador'
+    | '/faltas'
+    | '/gps'
+    | '/ia-operacional'
+    | '/indicadores'
+    | '/lgpd'
+    | '/logs-atividades'
+    | '/movimentacao-posto'
+    | '/notificacoes'
+    | '/nxs-control'
+    | '/painel-nexti'
+    | '/pesquisa-colaborador-nexti'
+    | '/pesquisa-faltas'
+    | '/protocolo-folhas-ponto'
+    | '/protocolo-limpeza-geral'
+    | '/realizadores'
+    | '/rh'
+    | '/supervisao-campo'
+    | '/supervisor'
+    | '/supervisor-campo'
+    | '/supervisor-crt'
+    | '/supervisor-faltas'
+    | '/supervisor-vagas'
+    | '/usuarios'
+    | '/verificador-atestados'
+    | '/assinar-crt/$token'
+    | '/assinar-movimentacao/$token'
+    | '/assinar/$token'
+    | '/gerentes/$slug'
+    | '/relatorios-gerente/$slug'
+    | '/relatorios-visita/$id'
+    | '/api/public/evolution-webhook'
+    | '/api/public/monitor'
+    | '/api/public/monitor-error'
+    | '/api/public/monitor-heartbeat'
+    | '/api/public/monitor-recovery'
+    | '/api/public/project-health'
+    | '/api/public/rastreio-ping'
+    | '/api/public/whatsapp-webhook'
+    | '/gerentes/'
+    | '/api/public/assinatura/assinar'
+    | '/api/public/assinatura/codigo'
+    | '/api/public/assinatura/documento'
+    | '/api/public/assinatura/recusar'
+    | '/api/public/assinatura/validar'
+    | '/api/public/crt/assinatura'
+    | '/api/public/movimentacao/assinatura'
+    | '/api/public/movimentacao/validar'
+    | '/api/public/nxs/posicao'
+    | '/api/public/push/enviar'
+    | '/api/public/push/processar-agenda'
+    | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/auth'
+    | '/instalar'
+    | '/politica-privacidade'
+    | '/validar'
+    | '/validar-movimentacao'
+    | '/abertura-de-vagas'
+    | '/admin'
+    | '/areas'
+    | '/assinatura-documentos'
+    | '/atestados'
+    | '/avaliacao-gerentes'
+    | '/canais'
+    | '/chat-ia'
+    | '/chat-interno'
+    | '/checklist-automatico'
+    | '/control'
+    | '/coordenacao'
+    | '/coordenacao-crt'
+    | '/coordenacao-movimentacoes'
+    | '/coordenador'
+    | '/faltas'
+    | '/gps'
+    | '/ia-operacional'
+    | '/indicadores'
+    | '/lgpd'
+    | '/logs-atividades'
+    | '/movimentacao-posto'
+    | '/notificacoes'
+    | '/nxs-control'
+    | '/painel-nexti'
+    | '/pesquisa-colaborador-nexti'
+    | '/pesquisa-faltas'
+    | '/protocolo-folhas-ponto'
+    | '/protocolo-limpeza-geral'
+    | '/realizadores'
+    | '/rh'
+    | '/supervisao-campo'
+    | '/supervisor'
+    | '/supervisor-campo'
+    | '/supervisor-crt'
+    | '/supervisor-faltas'
+    | '/supervisor-vagas'
+    | '/usuarios'
+    | '/verificador-atestados'
+    | '/assinar-crt/$token'
+    | '/assinar-movimentacao/$token'
+    | '/assinar/$token'
+    | '/'
+    | '/gerentes/$slug'
+    | '/relatorios-gerente/$slug'
+    | '/relatorios-visita/$id'
+    | '/api/public/evolution-webhook'
+    | '/api/public/monitor'
+    | '/api/public/monitor-error'
+    | '/api/public/monitor-heartbeat'
+    | '/api/public/monitor-recovery'
+    | '/api/public/project-health'
+    | '/api/public/rastreio-ping'
+    | '/api/public/whatsapp-webhook'
+    | '/gerentes'
+    | '/api/public/assinatura/assinar'
+    | '/api/public/assinatura/codigo'
+    | '/api/public/assinatura/documento'
+    | '/api/public/assinatura/recusar'
+    | '/api/public/assinatura/validar'
+    | '/api/public/crt/assinatura'
+    | '/api/public/movimentacao/assinatura'
+    | '/api/public/movimentacao/validar'
+    | '/api/public/nxs/posicao'
+    | '/api/public/push/enviar'
+    | '/api/public/push/processar-agenda'
+    | '/lovable/email/transactional/preview'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/auth'
+    | '/instalar'
+    | '/politica-privacidade'
+    | '/validar'
+    | '/validar-movimentacao'
+    | '/_authenticated/abertura-de-vagas'
+    | '/_authenticated/admin'
+    | '/_authenticated/areas'
+    | '/_authenticated/assinatura-documentos'
+    | '/_authenticated/atestados'
+    | '/_authenticated/avaliacao-gerentes'
+    | '/_authenticated/canais'
+    | '/_authenticated/chat-ia'
+    | '/_authenticated/chat-interno'
+    | '/_authenticated/checklist-automatico'
+    | '/_authenticated/control'
+    | '/_authenticated/coordenacao'
+    | '/_authenticated/coordenacao-crt'
+    | '/_authenticated/coordenacao-movimentacoes'
+    | '/_authenticated/coordenador'
+    | '/_authenticated/faltas'
+    | '/_authenticated/gps'
+    | '/_authenticated/ia-operacional'
+    | '/_authenticated/indicadores'
+    | '/_authenticated/lgpd'
+    | '/_authenticated/logs-atividades'
+    | '/_authenticated/movimentacao-posto'
+    | '/_authenticated/notificacoes'
+    | '/_authenticated/nxs-control'
+    | '/_authenticated/painel-nexti'
+    | '/_authenticated/pesquisa-colaborador-nexti'
+    | '/_authenticated/pesquisa-faltas'
+    | '/_authenticated/protocolo-folhas-ponto'
+    | '/_authenticated/protocolo-limpeza-geral'
+    | '/_authenticated/realizadores'
+    | '/_authenticated/rh'
+    | '/_authenticated/supervisao-campo'
+    | '/_authenticated/supervisor'
+    | '/_authenticated/supervisor-campo'
+    | '/_authenticated/supervisor-crt'
+    | '/_authenticated/supervisor-faltas'
+    | '/_authenticated/supervisor-vagas'
+    | '/_authenticated/usuarios'
+    | '/_authenticated/verificador-atestados'
+    | '/assinar-crt/$token'
+    | '/assinar-movimentacao/$token'
+    | '/assinar/$token'
+    | '/_authenticated/'
+    | '/_authenticated/gerentes/$slug'
+    | '/_authenticated/relatorios-gerente/$slug'
+    | '/_authenticated/relatorios-visita/$id'
+    | '/api/public/evolution-webhook'
+    | '/api/public/monitor'
+    | '/api/public/monitor-error'
+    | '/api/public/monitor-heartbeat'
+    | '/api/public/monitor-recovery'
+    | '/api/public/project-health'
+    | '/api/public/rastreio-ping'
+    | '/api/public/whatsapp-webhook'
+    | '/_authenticated/gerentes/'
+    | '/api/public/assinatura/assinar'
+    | '/api/public/assinatura/codigo'
+    | '/api/public/assinatura/documento'
+    | '/api/public/assinatura/recusar'
+    | '/api/public/assinatura/validar'
+    | '/api/public/crt/assinatura'
+    | '/api/public/movimentacao/assinatura'
+    | '/api/public/movimentacao/validar'
+    | '/api/public/nxs/posicao'
+    | '/api/public/push/enviar'
+    | '/api/public/push/processar-agenda'
+    | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  InstalarRoute: typeof InstalarRoute
+  PoliticaPrivacidadeRoute: typeof PoliticaPrivacidadeRoute
+  ValidarRoute: typeof ValidarRoute
+  ValidarMovimentacaoRoute: typeof ValidarMovimentacaoRoute
+  AssinarCrtTokenRoute: typeof AssinarCrtTokenRoute
+  AssinarMovimentacaoTokenRoute: typeof AssinarMovimentacaoTokenRoute
+  AssinarTokenRoute: typeof AssinarTokenRoute
+  ApiPublicEvolutionWebhookRoute: typeof ApiPublicEvolutionWebhookRoute
+  ApiPublicMonitorRoute: typeof ApiPublicMonitorRoute
+  ApiPublicMonitorErrorRoute: typeof ApiPublicMonitorErrorRoute
+  ApiPublicMonitorHeartbeatRoute: typeof ApiPublicMonitorHeartbeatRoute
+  ApiPublicMonitorRecoveryRoute: typeof ApiPublicMonitorRecoveryRoute
+  ApiPublicProjectHealthRoute: typeof ApiPublicProjectHealthRoute
+  ApiPublicRastreioPingRoute: typeof ApiPublicRastreioPingRoute
+  ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
+  ApiPublicAssinaturaAssinarRoute: typeof ApiPublicAssinaturaAssinarRoute
+  ApiPublicAssinaturaCodigoRoute: typeof ApiPublicAssinaturaCodigoRoute
+  ApiPublicAssinaturaDocumentoRoute: typeof ApiPublicAssinaturaDocumentoRoute
+  ApiPublicAssinaturaRecusarRoute: typeof ApiPublicAssinaturaRecusarRoute
+  ApiPublicAssinaturaValidarRoute: typeof ApiPublicAssinaturaValidarRoute
+  ApiPublicCrtAssinaturaRoute: typeof ApiPublicCrtAssinaturaRoute
+  ApiPublicMovimentacaoAssinaturaRoute: typeof ApiPublicMovimentacaoAssinaturaRoute
+  ApiPublicMovimentacaoValidarRoute: typeof ApiPublicMovimentacaoValidarRoute
+  ApiPublicNxsPosicaoRoute: typeof ApiPublicNxsPosicaoRoute
+  ApiPublicPushEnviarRoute: typeof ApiPublicPushEnviarRoute
+  ApiPublicPushProcessarAgendaRoute: typeof ApiPublicPushProcessarAgendaRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/instalar': {
+      id: '/instalar'
+      path: '/instalar'
+      fullPath: '/instalar'
+      preLoaderRoute: typeof InstalarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-privacidade': {
+      id: '/politica-privacidade'
+      path: '/politica-privacidade'
+      fullPath: '/politica-privacidade'
+      preLoaderRoute: typeof PoliticaPrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/validar': {
+      id: '/validar'
+      path: '/validar'
+      fullPath: '/validar'
+      preLoaderRoute: typeof ValidarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/validar-movimentacao': {
+      id: '/validar-movimentacao'
+      path: '/validar-movimentacao'
+      fullPath: '/validar-movimentacao'
+      preLoaderRoute: typeof ValidarMovimentacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/abertura-de-vagas': {
+      id: '/_authenticated/abertura-de-vagas'
+      path: '/abertura-de-vagas'
+      fullPath: '/abertura-de-vagas'
+      preLoaderRoute: typeof AuthenticatedAberturaDeVagasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/areas': {
+      id: '/_authenticated/areas'
+      path: '/areas'
+      fullPath: '/areas'
+      preLoaderRoute: typeof AuthenticatedAreasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assinatura-documentos': {
+      id: '/_authenticated/assinatura-documentos'
+      path: '/assinatura-documentos'
+      fullPath: '/assinatura-documentos'
+      preLoaderRoute: typeof AuthenticatedAssinaturaDocumentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/atestados': {
+      id: '/_authenticated/atestados'
+      path: '/atestados'
+      fullPath: '/atestados'
+      preLoaderRoute: typeof AuthenticatedAtestadosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/avaliacao-gerentes': {
+      id: '/_authenticated/avaliacao-gerentes'
+      path: '/avaliacao-gerentes'
+      fullPath: '/avaliacao-gerentes'
+      preLoaderRoute: typeof AuthenticatedAvaliacaoGerentesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/canais': {
+      id: '/_authenticated/canais'
+      path: '/canais'
+      fullPath: '/canais'
+      preLoaderRoute: typeof AuthenticatedCanaisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/chat-ia': {
+      id: '/_authenticated/chat-ia'
+      path: '/chat-ia'
+      fullPath: '/chat-ia'
+      preLoaderRoute: typeof AuthenticatedChatIaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/chat-interno': {
+      id: '/_authenticated/chat-interno'
+      path: '/chat-interno'
+      fullPath: '/chat-interno'
+      preLoaderRoute: typeof AuthenticatedChatInternoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/checklist-automatico': {
+      id: '/_authenticated/checklist-automatico'
+      path: '/checklist-automatico'
+      fullPath: '/checklist-automatico'
+      preLoaderRoute: typeof AuthenticatedChecklistAutomaticoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/control': {
+      id: '/_authenticated/control'
+      path: '/control'
+      fullPath: '/control'
+      preLoaderRoute: typeof AuthenticatedControlRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/coordenacao': {
+      id: '/_authenticated/coordenacao'
+      path: '/coordenacao'
+      fullPath: '/coordenacao'
+      preLoaderRoute: typeof AuthenticatedCoordenacaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/coordenacao-crt': {
+      id: '/_authenticated/coordenacao-crt'
+      path: '/coordenacao-crt'
+      fullPath: '/coordenacao-crt'
+      preLoaderRoute: typeof AuthenticatedCoordenacaoCrtRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/coordenacao-movimentacoes': {
+      id: '/_authenticated/coordenacao-movimentacoes'
+      path: '/coordenacao-movimentacoes'
+      fullPath: '/coordenacao-movimentacoes'
+      preLoaderRoute: typeof AuthenticatedCoordenacaoMovimentacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/coordenador': {
+      id: '/_authenticated/coordenador'
+      path: '/coordenador'
+      fullPath: '/coordenador'
+      preLoaderRoute: typeof AuthenticatedCoordenadorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/faltas': {
+      id: '/_authenticated/faltas'
+      path: '/faltas'
+      fullPath: '/faltas'
+      preLoaderRoute: typeof AuthenticatedFaltasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gps': {
+      id: '/_authenticated/gps'
+      path: '/gps'
+      fullPath: '/gps'
+      preLoaderRoute: typeof AuthenticatedGpsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ia-operacional': {
+      id: '/_authenticated/ia-operacional'
+      path: '/ia-operacional'
+      fullPath: '/ia-operacional'
+      preLoaderRoute: typeof AuthenticatedIaOperacionalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/indicadores': {
+      id: '/_authenticated/indicadores'
+      path: '/indicadores'
+      fullPath: '/indicadores'
+      preLoaderRoute: typeof AuthenticatedIndicadoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/lgpd': {
+      id: '/_authenticated/lgpd'
+      path: '/lgpd'
+      fullPath: '/lgpd'
+      preLoaderRoute: typeof AuthenticatedLgpdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/logs-atividades': {
+      id: '/_authenticated/logs-atividades'
+      path: '/logs-atividades'
+      fullPath: '/logs-atividades'
+      preLoaderRoute: typeof AuthenticatedLogsAtividadesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/movimentacao-posto': {
+      id: '/_authenticated/movimentacao-posto'
+      path: '/movimentacao-posto'
+      fullPath: '/movimentacao-posto'
+      preLoaderRoute: typeof AuthenticatedMovimentacaoPostoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notificacoes': {
+      id: '/_authenticated/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof AuthenticatedNotificacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/nxs-control': {
+      id: '/_authenticated/nxs-control'
+      path: '/nxs-control'
+      fullPath: '/nxs-control'
+      preLoaderRoute: typeof AuthenticatedNxsControlRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/painel-nexti': {
+      id: '/_authenticated/painel-nexti'
+      path: '/painel-nexti'
+      fullPath: '/painel-nexti'
+      preLoaderRoute: typeof AuthenticatedPainelNextiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pesquisa-colaborador-nexti': {
+      id: '/_authenticated/pesquisa-colaborador-nexti'
+      path: '/pesquisa-colaborador-nexti'
+      fullPath: '/pesquisa-colaborador-nexti'
+      preLoaderRoute: typeof AuthenticatedPesquisaColaboradorNextiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pesquisa-faltas': {
+      id: '/_authenticated/pesquisa-faltas'
+      path: '/pesquisa-faltas'
+      fullPath: '/pesquisa-faltas'
+      preLoaderRoute: typeof AuthenticatedPesquisaFaltasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/protocolo-folhas-ponto': {
+      id: '/_authenticated/protocolo-folhas-ponto'
+      path: '/protocolo-folhas-ponto'
+      fullPath: '/protocolo-folhas-ponto'
+      preLoaderRoute: typeof AuthenticatedProtocoloFolhasPontoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/protocolo-limpeza-geral': {
+      id: '/_authenticated/protocolo-limpeza-geral'
+      path: '/protocolo-limpeza-geral'
+      fullPath: '/protocolo-limpeza-geral'
+      preLoaderRoute: typeof AuthenticatedProtocoloLimpezaGeralRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/realizadores': {
+      id: '/_authenticated/realizadores'
+      path: '/realizadores'
+      fullPath: '/realizadores'
+      preLoaderRoute: typeof AuthenticatedRealizadoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rh': {
+      id: '/_authenticated/rh'
+      path: '/rh'
+      fullPath: '/rh'
+      preLoaderRoute: typeof AuthenticatedRhRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/supervisao-campo': {
+      id: '/_authenticated/supervisao-campo'
+      path: '/supervisao-campo'
+      fullPath: '/supervisao-campo'
+      preLoaderRoute: typeof AuthenticatedSupervisaoCampoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/supervisor': {
+      id: '/_authenticated/supervisor'
+      path: '/supervisor'
+      fullPath: '/supervisor'
+      preLoaderRoute: typeof AuthenticatedSupervisorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/supervisor-campo': {
+      id: '/_authenticated/supervisor-campo'
+      path: '/supervisor-campo'
+      fullPath: '/supervisor-campo'
+      preLoaderRoute: typeof AuthenticatedSupervisorCampoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/supervisor-crt': {
+      id: '/_authenticated/supervisor-crt'
+      path: '/supervisor-crt'
+      fullPath: '/supervisor-crt'
+      preLoaderRoute: typeof AuthenticatedSupervisorCrtRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/supervisor-faltas': {
+      id: '/_authenticated/supervisor-faltas'
+      path: '/supervisor-faltas'
+      fullPath: '/supervisor-faltas'
+      preLoaderRoute: typeof AuthenticatedSupervisorFaltasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/supervisor-vagas': {
+      id: '/_authenticated/supervisor-vagas'
+      path: '/supervisor-vagas'
+      fullPath: '/supervisor-vagas'
+      preLoaderRoute: typeof AuthenticatedSupervisorVagasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/usuarios': {
+      id: '/_authenticated/usuarios'
+      path: '/usuarios'
+      fullPath: '/usuarios'
+      preLoaderRoute: typeof AuthenticatedUsuariosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/verificador-atestados': {
+      id: '/_authenticated/verificador-atestados'
+      path: '/verificador-atestados'
+      fullPath: '/verificador-atestados'
+      preLoaderRoute: typeof AuthenticatedVerificadorAtestadosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/assinar-crt/$token': {
+      id: '/assinar-crt/$token'
+      path: '/assinar-crt/$token'
+      fullPath: '/assinar-crt/$token'
+      preLoaderRoute: typeof AssinarCrtTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assinar-movimentacao/$token': {
+      id: '/assinar-movimentacao/$token'
+      path: '/assinar-movimentacao/$token'
+      fullPath: '/assinar-movimentacao/$token'
+      preLoaderRoute: typeof AssinarMovimentacaoTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assinar/$token': {
+      id: '/assinar/$token'
+      path: '/assinar/$token'
+      fullPath: '/assinar/$token'
+      preLoaderRoute: typeof AssinarTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/gerentes/': {
+      id: '/_authenticated/gerentes/'
+      path: '/gerentes'
+      fullPath: '/gerentes/'
+      preLoaderRoute: typeof AuthenticatedGerentesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gerentes/$slug': {
+      id: '/_authenticated/gerentes/$slug'
+      path: '/gerentes/$slug'
+      fullPath: '/gerentes/$slug'
+      preLoaderRoute: typeof AuthenticatedGerentesSlugRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/relatorios-gerente/$slug': {
+      id: '/_authenticated/relatorios-gerente/$slug'
+      path: '/relatorios-gerente/$slug'
+      fullPath: '/relatorios-gerente/$slug'
+      preLoaderRoute: typeof AuthenticatedRelatoriosGerenteSlugRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/relatorios-visita/$id': {
+      id: '/_authenticated/relatorios-visita/$id'
+      path: '/relatorios-visita/$id'
+      fullPath: '/relatorios-visita/$id'
+      preLoaderRoute: typeof AuthenticatedRelatoriosVisitaIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/evolution-webhook': {
+      id: '/api/public/evolution-webhook'
+      path: '/api/public/evolution-webhook'
+      fullPath: '/api/public/evolution-webhook'
+      preLoaderRoute: typeof ApiPublicEvolutionWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/monitor': {
+      id: '/api/public/monitor'
+      path: '/api/public/monitor'
+      fullPath: '/api/public/monitor'
+      preLoaderRoute: typeof ApiPublicMonitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/monitor-error': {
+      id: '/api/public/monitor-error'
+      path: '/api/public/monitor-error'
+      fullPath: '/api/public/monitor-error'
+      preLoaderRoute: typeof ApiPublicMonitorErrorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/monitor-heartbeat': {
+      id: '/api/public/monitor-heartbeat'
+      path: '/api/public/monitor-heartbeat'
+      fullPath: '/api/public/monitor-heartbeat'
+      preLoaderRoute: typeof ApiPublicMonitorHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/monitor-recovery': {
+      id: '/api/public/monitor-recovery'
+      path: '/api/public/monitor-recovery'
+      fullPath: '/api/public/monitor-recovery'
+      preLoaderRoute: typeof ApiPublicMonitorRecoveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/project-health': {
+      id: '/api/public/project-health'
+      path: '/api/public/project-health'
+      fullPath: '/api/public/project-health'
+      preLoaderRoute: typeof ApiPublicProjectHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/rastreio-ping': {
+      id: '/api/public/rastreio-ping'
+      path: '/api/public/rastreio-ping'
+      fullPath: '/api/public/rastreio-ping'
+      preLoaderRoute: typeof ApiPublicRastreioPingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/whatsapp-webhook': {
+      id: '/api/public/whatsapp-webhook'
+      path: '/api/public/whatsapp-webhook'
+      fullPath: '/api/public/whatsapp-webhook'
+      preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/assinatura/assinar': {
+      id: '/api/public/assinatura/assinar'
+      path: '/api/public/assinatura/assinar'
+      fullPath: '/api/public/assinatura/assinar'
+      preLoaderRoute: typeof ApiPublicAssinaturaAssinarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/assinatura/codigo': {
+      id: '/api/public/assinatura/codigo'
+      path: '/api/public/assinatura/codigo'
+      fullPath: '/api/public/assinatura/codigo'
+      preLoaderRoute: typeof ApiPublicAssinaturaCodigoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/assinatura/documento': {
+      id: '/api/public/assinatura/documento'
+      path: '/api/public/assinatura/documento'
+      fullPath: '/api/public/assinatura/documento'
+      preLoaderRoute: typeof ApiPublicAssinaturaDocumentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/assinatura/recusar': {
+      id: '/api/public/assinatura/recusar'
+      path: '/api/public/assinatura/recusar'
+      fullPath: '/api/public/assinatura/recusar'
+      preLoaderRoute: typeof ApiPublicAssinaturaRecusarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/assinatura/validar': {
+      id: '/api/public/assinatura/validar'
+      path: '/api/public/assinatura/validar'
+      fullPath: '/api/public/assinatura/validar'
+      preLoaderRoute: typeof ApiPublicAssinaturaValidarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/crt/assinatura': {
+      id: '/api/public/crt/assinatura'
+      path: '/api/public/crt/assinatura'
+      fullPath: '/api/public/crt/assinatura'
+      preLoaderRoute: typeof ApiPublicCrtAssinaturaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/movimentacao/assinatura': {
+      id: '/api/public/movimentacao/assinatura'
+      path: '/api/public/movimentacao/assinatura'
+      fullPath: '/api/public/movimentacao/assinatura'
+      preLoaderRoute: typeof ApiPublicMovimentacaoAssinaturaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/movimentacao/validar': {
+      id: '/api/public/movimentacao/validar'
+      path: '/api/public/movimentacao/validar'
+      fullPath: '/api/public/movimentacao/validar'
+      preLoaderRoute: typeof ApiPublicMovimentacaoValidarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/nxs/posicao': {
+      id: '/api/public/nxs/posicao'
+      path: '/api/public/nxs/posicao'
+      fullPath: '/api/public/nxs/posicao'
+      preLoaderRoute: typeof ApiPublicNxsPosicaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/push/enviar': {
+      id: '/api/public/push/enviar'
+      path: '/api/public/push/enviar'
+      fullPath: '/api/public/push/enviar'
+      preLoaderRoute: typeof ApiPublicPushEnviarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/push/processar-agenda': {
+      id: '/api/public/push/processar-agenda'
+      path: '/api/public/push/processar-agenda'
+      fullPath: '/api/public/push/processar-agenda'
+      preLoaderRoute: typeof ApiPublicPushProcessarAgendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAberturaDeVagasRoute: typeof AuthenticatedAberturaDeVagasRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAreasRoute: typeof AuthenticatedAreasRoute
+  AuthenticatedAssinaturaDocumentosRoute: typeof AuthenticatedAssinaturaDocumentosRoute
+  AuthenticatedAtestadosRoute: typeof AuthenticatedAtestadosRoute
+  AuthenticatedAvaliacaoGerentesRoute: typeof AuthenticatedAvaliacaoGerentesRoute
+  AuthenticatedCanaisRoute: typeof AuthenticatedCanaisRoute
+  AuthenticatedChatIaRoute: typeof AuthenticatedChatIaRoute
+  AuthenticatedChatInternoRoute: typeof AuthenticatedChatInternoRoute
+  AuthenticatedChecklistAutomaticoRoute: typeof AuthenticatedChecklistAutomaticoRoute
+  AuthenticatedControlRoute: typeof AuthenticatedControlRoute
+  AuthenticatedCoordenacaoRoute: typeof AuthenticatedCoordenacaoRoute
+  AuthenticatedCoordenacaoCrtRoute: typeof AuthenticatedCoordenacaoCrtRoute
+  AuthenticatedCoordenacaoMovimentacoesRoute: typeof AuthenticatedCoordenacaoMovimentacoesRoute
+  AuthenticatedCoordenadorRoute: typeof AuthenticatedCoordenadorRoute
+  AuthenticatedFaltasRoute: typeof AuthenticatedFaltasRoute
+  AuthenticatedGpsRoute: typeof AuthenticatedGpsRoute
+  AuthenticatedIaOperacionalRoute: typeof AuthenticatedIaOperacionalRoute
+  AuthenticatedIndicadoresRoute: typeof AuthenticatedIndicadoresRoute
+  AuthenticatedLgpdRoute: typeof AuthenticatedLgpdRoute
+  AuthenticatedLogsAtividadesRoute: typeof AuthenticatedLogsAtividadesRoute
+  AuthenticatedMovimentacaoPostoRoute: typeof AuthenticatedMovimentacaoPostoRoute
+  AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
+  AuthenticatedNxsControlRoute: typeof AuthenticatedNxsControlRoute
+  AuthenticatedPainelNextiRoute: typeof AuthenticatedPainelNextiRoute
+  AuthenticatedPesquisaColaboradorNextiRoute: typeof AuthenticatedPesquisaColaboradorNextiRoute
+  AuthenticatedPesquisaFaltasRoute: typeof AuthenticatedPesquisaFaltasRoute
+  AuthenticatedProtocoloFolhasPontoRoute: typeof AuthenticatedProtocoloFolhasPontoRoute
+  AuthenticatedProtocoloLimpezaGeralRoute: typeof AuthenticatedProtocoloLimpezaGeralRoute
+  AuthenticatedRealizadoresRoute: typeof AuthenticatedRealizadoresRoute
+  AuthenticatedRhRoute: typeof AuthenticatedRhRoute
+  AuthenticatedSupervisaoCampoRoute: typeof AuthenticatedSupervisaoCampoRoute
+  AuthenticatedSupervisorRoute: typeof AuthenticatedSupervisorRoute
+  AuthenticatedSupervisorCampoRoute: typeof AuthenticatedSupervisorCampoRoute
+  AuthenticatedSupervisorCrtRoute: typeof AuthenticatedSupervisorCrtRoute
+  AuthenticatedSupervisorFaltasRoute: typeof AuthenticatedSupervisorFaltasRoute
+  AuthenticatedSupervisorVagasRoute: typeof AuthenticatedSupervisorVagasRoute
+  AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
+  AuthenticatedVerificadorAtestadosRoute: typeof AuthenticatedVerificadorAtestadosRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedGerentesSlugRoute: typeof AuthenticatedGerentesSlugRoute
+  AuthenticatedRelatoriosGerenteSlugRoute: typeof AuthenticatedRelatoriosGerenteSlugRoute
+  AuthenticatedRelatoriosVisitaIdRoute: typeof AuthenticatedRelatoriosVisitaIdRoute
+  AuthenticatedGerentesIndexRoute: typeof AuthenticatedGerentesIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAberturaDeVagasRoute: AuthenticatedAberturaDeVagasRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAreasRoute: AuthenticatedAreasRoute,
+  AuthenticatedAssinaturaDocumentosRoute:
+    AuthenticatedAssinaturaDocumentosRoute,
+  AuthenticatedAtestadosRoute: AuthenticatedAtestadosRoute,
+  AuthenticatedAvaliacaoGerentesRoute: AuthenticatedAvaliacaoGerentesRoute,
+  AuthenticatedCanaisRoute: AuthenticatedCanaisRoute,
+  AuthenticatedChatIaRoute: AuthenticatedChatIaRoute,
+  AuthenticatedChatInternoRoute: AuthenticatedChatInternoRoute,
+  AuthenticatedChecklistAutomaticoRoute: AuthenticatedChecklistAutomaticoRoute,
+  AuthenticatedControlRoute: AuthenticatedControlRoute,
+  AuthenticatedCoordenacaoRoute: AuthenticatedCoordenacaoRoute,
+  AuthenticatedCoordenacaoCrtRoute: AuthenticatedCoordenacaoCrtRoute,
+  AuthenticatedCoordenacaoMovimentacoesRoute:
+    AuthenticatedCoordenacaoMovimentacoesRoute,
+  AuthenticatedCoordenadorRoute: AuthenticatedCoordenadorRoute,
+  AuthenticatedFaltasRoute: AuthenticatedFaltasRoute,
+  AuthenticatedGpsRoute: AuthenticatedGpsRoute,
+  AuthenticatedIaOperacionalRoute: AuthenticatedIaOperacionalRoute,
+  AuthenticatedIndicadoresRoute: AuthenticatedIndicadoresRoute,
+  AuthenticatedLgpdRoute: AuthenticatedLgpdRoute,
+  AuthenticatedLogsAtividadesRoute: AuthenticatedLogsAtividadesRoute,
+  AuthenticatedMovimentacaoPostoRoute: AuthenticatedMovimentacaoPostoRoute,
+  AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
+  AuthenticatedNxsControlRoute: AuthenticatedNxsControlRoute,
+  AuthenticatedPainelNextiRoute: AuthenticatedPainelNextiRoute,
+  AuthenticatedPesquisaColaboradorNextiRoute:
+    AuthenticatedPesquisaColaboradorNextiRoute,
+  AuthenticatedPesquisaFaltasRoute: AuthenticatedPesquisaFaltasRoute,
+  AuthenticatedProtocoloFolhasPontoRoute:
+    AuthenticatedProtocoloFolhasPontoRoute,
+  AuthenticatedProtocoloLimpezaGeralRoute:
+    AuthenticatedProtocoloLimpezaGeralRoute,
+  AuthenticatedRealizadoresRoute: AuthenticatedRealizadoresRoute,
+  AuthenticatedRhRoute: AuthenticatedRhRoute,
+  AuthenticatedSupervisaoCampoRoute: AuthenticatedSupervisaoCampoRoute,
+  AuthenticatedSupervisorRoute: AuthenticatedSupervisorRoute,
+  AuthenticatedSupervisorCampoRoute: AuthenticatedSupervisorCampoRoute,
+  AuthenticatedSupervisorCrtRoute: AuthenticatedSupervisorCrtRoute,
+  AuthenticatedSupervisorFaltasRoute: AuthenticatedSupervisorFaltasRoute,
+  AuthenticatedSupervisorVagasRoute: AuthenticatedSupervisorVagasRoute,
+  AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
+  AuthenticatedVerificadorAtestadosRoute:
+    AuthenticatedVerificadorAtestadosRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedGerentesSlugRoute: AuthenticatedGerentesSlugRoute,
+  AuthenticatedRelatoriosGerenteSlugRoute:
+    AuthenticatedRelatoriosGerenteSlugRoute,
+  AuthenticatedRelatoriosVisitaIdRoute: AuthenticatedRelatoriosVisitaIdRoute,
+  AuthenticatedGerentesIndexRoute: AuthenticatedGerentesIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  InstalarRoute: InstalarRoute,
+  PoliticaPrivacidadeRoute: PoliticaPrivacidadeRoute,
+  ValidarRoute: ValidarRoute,
+  ValidarMovimentacaoRoute: ValidarMovimentacaoRoute,
+  AssinarCrtTokenRoute: AssinarCrtTokenRoute,
+  AssinarMovimentacaoTokenRoute: AssinarMovimentacaoTokenRoute,
+  AssinarTokenRoute: AssinarTokenRoute,
+  ApiPublicEvolutionWebhookRoute: ApiPublicEvolutionWebhookRoute,
+  ApiPublicMonitorRoute: ApiPublicMonitorRoute,
+  ApiPublicMonitorErrorRoute: ApiPublicMonitorErrorRoute,
+  ApiPublicMonitorHeartbeatRoute: ApiPublicMonitorHeartbeatRoute,
+  ApiPublicMonitorRecoveryRoute: ApiPublicMonitorRecoveryRoute,
+  ApiPublicProjectHealthRoute: ApiPublicProjectHealthRoute,
+  ApiPublicRastreioPingRoute: ApiPublicRastreioPingRoute,
+  ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
+  ApiPublicAssinaturaAssinarRoute: ApiPublicAssinaturaAssinarRoute,
+  ApiPublicAssinaturaCodigoRoute: ApiPublicAssinaturaCodigoRoute,
+  ApiPublicAssinaturaDocumentoRoute: ApiPublicAssinaturaDocumentoRoute,
+  ApiPublicAssinaturaRecusarRoute: ApiPublicAssinaturaRecusarRoute,
+  ApiPublicAssinaturaValidarRoute: ApiPublicAssinaturaValidarRoute,
+  ApiPublicCrtAssinaturaRoute: ApiPublicCrtAssinaturaRoute,
+  ApiPublicMovimentacaoAssinaturaRoute: ApiPublicMovimentacaoAssinaturaRoute,
+  ApiPublicMovimentacaoValidarRoute: ApiPublicMovimentacaoValidarRoute,
+  ApiPublicNxsPosicaoRoute: ApiPublicNxsPosicaoRoute,
+  ApiPublicPushEnviarRoute: ApiPublicPushEnviarRoute,
+  ApiPublicPushProcessarAgendaRoute: ApiPublicPushProcessarAgendaRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
