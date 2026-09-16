@@ -285,11 +285,11 @@ export const evolutionGoStatus = createServerFn({ method: "POST" })
           return typeof img === "string" && img ? img : null;
         };
 
-        qrCode = await lerQr();
+        qrCode = (await lerQr()) ?? (await lerQrCodeSalvo());
 
-        // O QR Code só é gerado depois que a sessão é iniciada no servidor.
-        // Quando a instância não está conectada, iniciamos a sessão e
-        // tentamos ler o QR Code novamente.
+        // O QR Code só é gerado depois que a sessão é iniciada no servidor e,
+        // na prática, chega pelo webhook (o GET /instance/qr costuma responder
+        // "no QR code available"). Iniciamos a sessão e aguardamos o webhook.
         if (!qrCode) {
           await evolutionFetch(cfg, "/instance/connect", {
             method: "POST",
@@ -300,9 +300,9 @@ export const evolutionGoStatus = createServerFn({ method: "POST" })
               ...(cfg.webhookUrl ? { webhookUrl: cfg.webhookUrl } : {}),
             }),
           });
-          for (let i = 0; i < 6 && !qrCode; i += 1) {
-            await new Promise((r) => setTimeout(r, 1000));
-            qrCode = await lerQr();
+          for (let i = 0; i < 8 && !qrCode; i += 1) {
+            await new Promise((r) => setTimeout(r, 1500));
+            qrCode = (await lerQr()) ?? (await lerQrCodeSalvo());
           }
         }
       }
