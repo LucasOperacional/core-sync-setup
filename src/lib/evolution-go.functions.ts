@@ -354,6 +354,204 @@ export const evolutionGoInstancias = createServerFn({ method: "POST" })
     },
   );
 
+export type InstanciaEvolution = {
+  nome: string;
+  id: string;
+  conectada: boolean;
+  ativa: boolean;
+};
+
+/** Lê a lista completa de instâncias do servidor (usa a chave global). */
+async function listarInstanciasBrutas(cfg: Cfg): Promise<Array<Record<string, unknown>>> {
+  const { status, corpo } = await evolutionFetch({ ...cfg, token: "" }, "/instance/all");
+  if (status >= 400) throw new Error(mensagemErro(status, corpo));
+  const bruto = rec(corpo)["data"] ?? rec(corpo)["instances"] ?? corpo;
+  return Array.isArray(bruto) ? bruto.map(rec) : [];
+}
+
+function dadosInstancia(o: Record<string, unknown>) {
+  return {
+    nome: String(o["name"] ?? o["Name"] ?? o["instance"] ?? "").trim(),
+    id: String(o["id"] ?? o["ID"] ?? o["instanceId"] ?? o["InstanceId"] ?? "").trim(),
+    token: String(o["token"] ?? o["Token"] ?? "").trim(),
+    conectada: o["connected"] === true || o["Connected"] === true,
+  };
+}
+
+/** Lista as instâncias do servidor com id, conexão e qual está em uso. */
+export const evolutionGoListarInstancias = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(
+    async ({
+      context,
+    }): Promise<{ ok: boolean; instancias: InstanciaEvolution[]; erro?: string }> => {
+      if (!(await ehAdmin(context)))
+        return { ok: false, instancias: [], erro: "Apenas administradores." };
+      const cfg = await lerConfig();
+      if (!cfg.baseUrl || !cfg.apiKey)
+        return { ok: false, instancias: [], erro: "Configure a URL e a chave global primeiro." };
+      try {
+        const lista = await listarInstanciasBrutas(cfg);
+        return {
+          ok: true,
+          instancias: lista.map((o) => {
+            const d = dadosInstancia(o);
+            return {
+              nome: d.nome,
+              id: d.id,
+              conectada: d.conectada,
+              ativa: Boolean(cfg.instancia) && d.nome.toLowerCase() === cfg.instancia.toLowerCase(),
+            };
+          }),
+        };
+      } catch (e) {
+        return { ok: false, instancias: [], erro: e instanceof Error ? e.message : String(e) };
+      }
+    },
+  );
+
+/** Define qual instância o sistema vai usar (guarda nome, id e token). */
+export const evolutionGoSelecionarInstancia = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { nome: string }) => {
+    const nome = String(input?.nome ?? "").trim();
+    if (!nome) throw new Error("Informe a instância.");
+    return { nome };
+  })
+  .handler(async ({ data, context }): Promise<{ ok: boolean; erro?: string }> => {
+    if (!(await ehAdmin(context))) return { ok: false, erro: "Apenas administradores." };
+    const cfg = await lerConfig();
+    if (!cfg.baseUrl || !cfg.apiKey) return { ok: false, erro: "Evolution Go não configurado." };
+    try {
+      const lista = await listarInstanciasBrutas(cfg);
+      const alvo = lista
+        .map(dadosInstancia)
+        .find((d) => d.nome.toLowerCase() === data.nome.toLowerCase());
+      if (!alvo) return { ok: false, erro: "Instância não encontrada no servidor." };
+      await salvarChave(CHAVES.instancia, alvo.nome);
+      await salvarChave(CHAVES.instanceId, alvo.id);
+      await salvarChave(CHAVES.token, alvo.token);
+      await guardarQrCode("");
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, erro: e instanceof Error ? e.message : String(e) };
+    }
+  });
+
+/**
+ * Cria várias instâncias de uma vez (POST /instance/create com a chave global).
+ * Depois de criar, busca o id e o token de cada uma, registra o recebedor de
+ * mensagens e deixa a primeira instância nova pronta para uso.
+ */
+export const evolutionGoCriarInstancias = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { prefixo: string; quantidade: number; webhookUrl?: string }) => {
+    const prefixo = String(input?.prefixo ?? "").trim();
+    const quantidade = Math.min(20, Math.max(1, Number(input?.quantidade ?? 1) || 1));
+    if (!/^[\w.-]{2,40}$/.test(prefixo))
+      throw new Error("Use um nome simples (letras, números, - ou _).");
+    return { prefixo, quantidade, webhookUrl: String(input?.webhookUrl ?? "").trim() };
+  })
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{
+      ok: boolean;
+      criadas: Array<{ nome: string; id: string; configurada: boolean; erro?: string }>;
+      erro?: string;
+    }> => {
+      if (!(await ehAdmin(context))) return { ok: false, criadas: [], erro: "Apenas administradores." };
+      const cfg = await lerConfig();
+      if (!cfg.baseUrl || !cfg.apiKey)
+        return { ok: false, criadas: [], erro: "Configure a URL e a chave global primeiro." };
+
+      const webhookUrl = data.webhookUrl || cfg.webhookUrl;
+      const criadas: Array<{ nome: string; id: string; configurada: boolean; erro?: string }> = [];
+      try {
+        const existentes = new Set(
+          (await listarInstanciasBrutas(cfg)).map((o) => dadosInstancia(o).nome.toLowerCase()),
+        );
+
+        let sufixo = 1;
+        for (let i = 0; i < data.quantidade; i += 1) {
+          let nome = data.quantidade === 1 && !existentes.has(data.prefixo.toLowerCase())
+            ? data.prefixo
+            : `${data.prefixo}-${sufixo}`;
+          while (existentes.has(nome.toLowerCase())) {
+            sufixo += 1;
+            nome = `${data.prefixo}-${sufixo}`;
+          }
+          existentes.add(nome.toLowerCase());
+          sufixo += 1;
+
+          const { status, corpo } = await evolutionFetch(
+            { ...cfg, token: "" },
+            "/instance/create",
+            { method: "POST", body: JSON.stringify({ name: nome }) },
+          );
+          if (status >= 400) {
+            criadas.push({ nome, id: "", configurada: false, erro: mensagemErro(status, corpo) });
+            continue;
+          }
+          const d = dadosInstancia(rec(rec(corpo)["data"] ?? corpo));
+          let { id, token } = d;
+
+          // Alguns servidores não devolvem id/token na criação: buscamos na lista.
+          if (!id || !token) {
+            const achado = (await listarInstanciasBrutas(cfg))
+              .map(dadosInstancia)
+              .find((x) => x.nome.toLowerCase() === nome.toLowerCase());
+            if (achado) {
+              id = id || achado.id;
+              token = token || achado.token;
+            }
+          }
+
+          let configurada = false;
+          let erro: string | undefined;
+          if (id && token && webhookUrl) {
+            const conn = await evolutionFetch(
+              { ...cfg, token },
+              "/instance/connect",
+              {
+                method: "POST",
+                headers: { instanceId: id },
+                body: JSON.stringify({
+                  webhookUrl,
+                  subscribe: ["MESSAGE", "SEND_MESSAGE", "CONNECTION", "QRCODE"],
+                  immediate: true,
+                }),
+              },
+            );
+            configurada = conn.status < 400;
+            if (!configurada) erro = mensagemErro(conn.status, conn.corpo);
+          }
+          criadas.push({ nome, id, configurada, ...(erro ? { erro } : {}) });
+        }
+
+        // Se ainda não havia instância em uso, ativa a primeira criada com id.
+        const primeira = criadas.find((c) => c.id);
+        if (primeira && !cfg.instancia) {
+          const achado = (await listarInstanciasBrutas(cfg))
+            .map(dadosInstancia)
+            .find((x) => x.nome.toLowerCase() === primeira.nome.toLowerCase());
+          if (achado) {
+            await salvarChave(CHAVES.instancia, achado.nome);
+            await salvarChave(CHAVES.instanceId, achado.id);
+            await salvarChave(CHAVES.token, achado.token);
+          }
+        }
+        if (webhookUrl && webhookUrl !== cfg.webhookUrl)
+          await salvarChave(CHAVES.webhookUrl, webhookUrl);
+
+        return { ok: true, criadas };
+      } catch (e) {
+        return { ok: false, criadas, erro: e instanceof Error ? e.message : String(e) };
+      }
+    },
+  );
+
 /** Envia uma mensagem de texto pelo Evolution Go (POST /send/text). */
 export const evolutionGoEnviarTexto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
