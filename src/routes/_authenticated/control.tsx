@@ -33,6 +33,10 @@ import {
 
 import { KpiCard } from "@/components/KpiCard";
 import {
+  QualidadeTempoSupervisores,
+  formatarDuracao,
+} from "@/components/QualidadeTempoSupervisores";
+import {
   chartQuestionKey,
   classificarResposta,
   deduplicarVisitas,
@@ -479,8 +483,8 @@ function ControlDashboard() {
                 conteudo: (
                   <KpiCard
                     label="Tempo médio"
-                    value={`${indicadores.tempoMedio} min`}
-                    hint="Da chegada ao encerramento"
+                    value={formatarDuracao(indicadores.tempoMedio || null)}
+                    hint={`Tempo exato da chegada ao encerramento (${indicadores.tempoMedio} min)`}
                     icon={Clock}
                     tone="accent"
                   />
@@ -506,6 +510,13 @@ function ControlDashboard() {
                     tone="accent"
                   />
                 ),
+              },
+
+              {
+                key: "qualidade-tempo-supervisores",
+                titulo: "Qualidade e tempo por supervisor",
+                tamanho: "grande",
+                conteudo: <QualidadeTempoSupervisores visitas={filtradas} />,
               },
 
               {
