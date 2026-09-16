@@ -304,53 +304,142 @@ export function AbaUsuariosNexti() {
                 Pré-visualizar
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[85vh] max-w-5xl overflow-hidden">
+            <DialogContent className="max-h-[90vh] max-w-6xl overflow-hidden">
               <DialogHeader>
-                <DialogTitle>Pré-visualização do envio para a NEXTI</DialogTitle>
+                <DialogTitle>Pré-visualização e validação do envio para a NEXTI</DialogTitle>
                 <DialogDescription>
-                  Estes são os dados que serão enviados para cadastro na NEXTI, exatamente como
-                  foram lidos da planilha. Empresa, cargo, posto e escala precisam existir com o
-                  mesmo nome na NEXTI.
+                  Conferência completa antes do envio: linhas com erro são bloqueadas e precisam ser
+                  corrigidas na planilha. Avisos indicam ajustes automáticos que serão aplicados.
                 </DialogDescription>
               </DialogHeader>
-              <ScrollArea className="h-[60vh] rounded-md border">
+
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                {validando && (
+                  <Badge variant="secondary" className="gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Validando na NEXTI...
+                  </Badge>
+                )}
+                <Badge className="bg-emerald-600">{resumoValidacao.ok} prontos</Badge>
+                <Badge className="bg-amber-500">{resumoValidacao.comAviso} com aviso</Badge>
+                <Badge variant="destructive">{resumoValidacao.comErro} com erro</Badge>
+                <Badge variant="secondary">{linhas.length} na planilha</Badge>
+              </div>
+
+              <ScrollArea className="h-[58vh] rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10">#</TableHead>
+                      <TableHead className="w-40">Situação</TableHead>
                       {CAMPOS.map((c) => (
                         <TableHead key={c.chave}>{c.rotulo}</TableHead>
                       ))}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {linhas.map((linha, i) => (
-                      <TableRow key={linha.id}>
-                        <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                        {CAMPOS.map((c) => (
-                          <TableCell key={c.chave} className="whitespace-nowrap text-xs">
-                            {linha[c.chave] || <span className="text-muted-foreground">—</span>}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
+                    {linhas.map((linha, i) => {
+                      const v = validacaoDe(i);
+                      const temErro = (v?.erros.length ?? 0) > 0;
+                      const temAviso = (v?.avisos.length ?? 0) > 0;
+                      return (
+                        <>
+                          <TableRow
+                            key={linha.id}
+                            className={temErro ? "bg-destructive/5" : undefined}
+                          >
+                            <TableCell className="text-muted-foreground">{i + 1}</TableCell>
+                            <TableCell className="whitespace-nowrap text-xs">
+                              {!v ? (
+                                <span className="text-muted-foreground">Aguardando</span>
+                              ) : temErro ? (
+                                <span className="flex items-center gap-1 font-medium text-destructive">
+                                  <XCircle className="h-3.5 w-3.5" /> Corrigir
+                                </span>
+                              ) : temAviso ? (
+                                <span className="flex items-center gap-1 font-medium text-amber-600">
+                                  <AlertTriangle className="h-3.5 w-3.5" /> Aviso
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1 font-medium text-emerald-600">
+                                  <CheckCircle2 className="h-3.5 w-3.5" /> Pronto
+                                </span>
+                              )}
+                              {v && (
+                                <button
+                                  type="button"
+                                  className="mt-1 block text-[11px] underline text-muted-foreground"
+                                  onClick={() => setDetalhe(detalhe === i ? null : i)}
+                                >
+                                  {detalhe === i ? "ocultar dados" : "ver dados do envio"}
+                                </button>
+                              )}
+                            </TableCell>
+                            {CAMPOS.map((c) => {
+                              const resolvido =
+                                c.chave === "empresa" || c.chave === "cargo" || c.chave === "posto" || c.chave === "escala"
+                                  ? v?.resolvido[c.chave]
+                                  : undefined;
+                              return (
+                                <TableCell key={c.chave} className="whitespace-nowrap text-xs">
+                                  {linha[c.chave] || <span className="text-muted-foreground">—</span>}
+                                  {resolvido && normalizar(resolvido) !== normalizar(linha[c.chave]) && (
+                                    <span className="block text-[11px] text-emerald-600">
+                                      → {resolvido}
+                                    </span>
+                                  )}
+                                </TableCell>
+                              );
+                            })}
+                          </TableRow>
+                          {v && (temErro || temAviso || detalhe === i) && (
+                            <TableRow key={`${linha.id}-detalhe`}>
+                              <TableCell colSpan={CAMPOS.length + 2} className="space-y-1 py-2">
+                                {v.erros.map((erro) => (
+                                  <p key={erro} className="text-xs text-destructive">
+                                    • {erro}
+                                  </p>
+                                ))}
+                                {v.avisos.map((aviso) => (
+                                  <p key={aviso} className="text-xs text-amber-600">
+                                    • {aviso}
+                                  </p>
+                                ))}
+                                {detalhe === i && (
+                                  <pre className="mt-1 overflow-x-auto rounded bg-muted/40 p-2 font-mono text-[11px]">
+                                    {JSON.stringify(v.payload, null, 2)}
+                                  </pre>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </ScrollArea>
+
               <div className="flex items-center justify-between gap-3 pt-2">
                 <p className="text-xs text-muted-foreground">
-                  {linhas.length} colaborador(es) prontos para cadastro.
+                  {resumoValidacao.comErro > 0
+                    ? `${resumoValidacao.comErro} linha(s) com erro não serão enviadas — corrija a planilha e importe de novo.`
+                    : `${linhas.length} colaborador(es) prontos para cadastro.`}
                 </p>
                 <Button
                   className="gap-2"
-                  disabled={enviando || linhas.length === 0}
+                  disabled={
+                    enviando ||
+                    validando ||
+                    linhas.length === 0 ||
+                    resumoValidacao.ok + resumoValidacao.comAviso === 0
+                  }
                   onClick={() => {
                     setPreviewAberto(false);
                     void enviarTodos();
                   }}
                 >
                   <Upload className="h-4 w-4" />
-                  Confirmar e cadastrar na NEXTI
+                  Enviar {resumoValidacao.ok + resumoValidacao.comAviso} válidos para a NEXTI
                 </Button>
               </div>
             </DialogContent>
