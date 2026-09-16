@@ -151,3 +151,142 @@ export const registrarCheckinMesa = createServerFn({ method: "POST" })
     if (error) return { ok: false, erro: error.message };
     return { ok: true };
   });
+
+// ---------------------------------------------------------------------------
+// Postos vindos direto da API da NEXTI (para o campo "Nome do posto")
+// ---------------------------------------------------------------------------
+
+export type PostoNexti = {
+  nextiId: number | null;
+  nome: string;
+  cliente: string | null;
+  localidade: string | null;
+};
+
+export type PostosNextiResultado = { ok: boolean; postos: PostoNexti[]; erro?: string };
+
+type RecNexti = Record<string, unknown>;
+
+function ehRec(v: unknown): v is RecNexti {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function escolher(obj: RecNexti, chaves: string[]): unknown {
+  const lower = new Map(Object.keys(obj).map((k) => [k.toLowerCase(), k]));
+  for (const k of chaves) {
+    const real = lower.get(k.toLowerCase());
+    if (!real) continue;
+    const valor = obj[real];
+    if (valor !== undefined && valor !== null && valor !== "") return valor;
+  }
+  return undefined;
+}
+
+function texto(v: unknown): string | null {
+  if (typeof v === "string") return v.trim() || null;
+  if (typeof v === "number") return String(v);
+  if (ehRec(v)) {
+    const nome = escolher(v, ["name", "nome", "description", "fantasyName"]);
+    if (typeof nome === "string") return nome.trim() || null;
+  }
+  return null;
+}
+
+function listaDoPayload(payload: unknown): RecNexti[] {
+  if (Array.isArray(payload)) return payload.filter(ehRec);
+  if (!ehRec(payload)) return [];
+  for (const k of ["content", "data", "items", "list", "records", "result", "results", "rows"]) {
+    const v = payload[k];
+    if (Array.isArray(v)) return v.filter(ehRec);
+    if (ehRec(v)) {
+      const aninhado = listaDoPayload(v);
+      if (aninhado.length > 0) return aninhado;
+    }
+  }
+  return [];
+}
+
+/** Lê os postos de serviço direto da API da NEXTI (com fallback no cache local). */
+export const buscarPostosNexti = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<PostosNextiResultado> => {
+    const ctx = context as { supabase: any };
+    const encontrados = new Map<string, PostoNexti>();
+
+    const guardar = (p: PostoNexti) => {
+      const chave = p.nome.toLowerCase();
+      if (!chave || encontrados.has(chave)) return;
+      encontrados.set(chave, p);
+    };
+
+    let erro: string | undefined;
+
+    try {
+      const { loadConfig, normalizeBaseUrl, requestNexti } = await import("@/lib/nexti.functions");
+      const bruta = await loadConfig(ctx.supabase);
+      const config = { ...bruta, baseUrl: normalizeBaseUrl(bruta.baseUrl) };
+
+      const endpoints = ["/api/workplaces/all", "/workplaces/all", "/api/workplace/all"];
+      for (const endpoint of endpoints) {
+        try {
+          const coletados: RecNexti[] = [];
+          for (let page = 0; page < 40; page++) {
+            const resposta = await requestNexti({
+              config,
+              endpoint,
+              method: "GET",
+              query: { page, size: 200 },
+            });
+            const lista = listaDoPayload(resposta.data);
+            if (lista.length === 0) break;
+            coletados.push(...lista);
+            if (lista.length < 200) break;
+          }
+          if (coletados.length === 0) continue;
+          for (const item of coletados) {
+            const nome = texto(escolher(item, ["name", "nome", "description", "workplaceName"]));
+            if (!nome) continue;
+            const idBruto = escolher(item, ["id", "nextiId", "workplaceId", "code"]);
+            const id = Number(idBruto);
+            const cidade = texto(escolher(item, ["city", "cidade"]));
+            const uf = texto(escolher(item, ["state", "uf", "estado"]));
+            guardar({
+              nextiId: Number.isFinite(id) ? id : null,
+              nome,
+              cliente: texto(escolher(item, ["clientName", "cliente", "customerName"])),
+              localidade: [cidade, uf].filter(Boolean).join(" / ") || null,
+            });
+          }
+          break;
+        } catch (e) {
+          erro = e instanceof Error ? e.message : String(e);
+        }
+      }
+    } catch (e) {
+      erro = e instanceof Error ? e.message : String(e);
+    }
+
+    if (encontrados.size === 0) {
+      const { data: cache } = await ctx.supabase
+        .from("nexti_workplaces")
+        .select("nexti_id, name, city, state")
+        .order("name", { ascending: true })
+        .limit(5000);
+      for (const p of (cache ?? []) as RecNexti[]) {
+        const nome = texto(p["name"]);
+        if (!nome) continue;
+        const cidade = texto(p["city"]);
+        const uf = texto(p["state"]);
+        guardar({
+          nextiId: Number(p["nexti_id"]) || null,
+          nome,
+          cliente: null,
+          localidade: [cidade, uf].filter(Boolean).join(" / ") || null,
+        });
+      }
+    }
+
+    const postos = [...encontrados.values()].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    if (postos.length > 0) return { ok: true, postos };
+    return erro ? { ok: false, postos, erro } : { ok: false, postos };
+  });
