@@ -552,16 +552,27 @@ function montarCadastro(
   if (!limpar(p.cargo)) avisos.push("Cargo não informado.");
   if (limpar(p.escala) && !escala) erros.push(`Escala "${p.escala}" não existe na NEXTI.`);
 
-  // Regra: posto não localizado pelo nome exato → lotar direto em "NOVAS ADMISSÕES".
+  // Regra: posto não localizado pelo nome → tenta pelo código externo (matrícula)
+  // da escala compatível; se ainda assim não achar, lota em "NOVAS ADMISSÕES".
   const destinoNovas = acharOpcao(paraOpcoes(listas.postosRaw), POSTO_NOVAS_ADMISSOES);
   if (limpar(p.posto) && !posto) {
-    if (destinoNovas) {
+    const escalaRaw = escala
+      ? listas.escalasRaw.find((e) => Number(e["id"] ?? 0) === escala!.id)
+      : undefined;
+    const pelaEscala = acharPostoPelaEscala(listas.postosRaw, escalaRaw, escala);
+    if (pelaEscala) {
+      posto = pelaEscala;
+      avisos.push(
+        `Posto "${p.posto}" identificado pelo código da escala${escala?.externalId ? ` (${escala.externalId})` : ""}: "${pelaEscala.nome}".`,
+      );
+    } else if (destinoNovas) {
       avisos.push(`Posto "${p.posto}" não localizado — será lotado em "${destinoNovas.nome}".`);
       posto = destinoNovas;
     } else {
       erros.push(`Posto "${p.posto}" não encontrado e não existe o posto "${POSTO_NOVAS_ADMISSOES}" na NEXTI.`);
     }
-  } else if (posto) {
+  }
+  if (posto && posto.id !== destinoNovas?.id) {
     const item = listas.postosRaw.find((w) => Number(w["id"] ?? 0) === posto!.id);
     const vagas = Number(item?.["vacantJob"] ?? 0);
     const ocupadas = ativosPorPosto.get(posto.id) ?? 0;
