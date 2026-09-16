@@ -180,12 +180,19 @@ export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
       ) : (
         <ul className="mt-4 space-y-2">
           {linhas.map((s) => {
-            const expandido = aberto === s.nome;
+            const expandido = !fechados.has(s.nome);
             return (
               <li key={s.nome} className="rounded-xl border border-border/70">
                 <button
                   type="button"
-                  onClick={() => setAberto(expandido ? null : s.nome)}
+                  onClick={() =>
+                    setFechados((prev) => {
+                      const next = new Set(prev);
+                      if (expandido) next.add(s.nome);
+                      else next.delete(s.nome);
+                      return next;
+                    })
+                  }
                   className="flex w-full flex-wrap items-center gap-3 p-3 text-left"
                 >
                   <ChevronDown
