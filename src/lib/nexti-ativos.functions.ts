@@ -1198,6 +1198,7 @@ export type LinhaDashboardFaltas = {
   dataFim: string;
   faltas: string;
   tipo: string;
+  motivo: string;
 };
 
 export type DashboardFaltasNextiResultado = {
@@ -1273,6 +1274,7 @@ export const carregarFaltasDashboardNexti = createServerFn({ method: "POST" })
           dataFim: fim,
           faltas: String(diasDeFalta(inicio, fim)),
           tipo: f.tipo.toUpperCase(),
+          motivo: f.motivo,
         };
       });
 
