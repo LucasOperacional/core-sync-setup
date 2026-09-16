@@ -346,7 +346,8 @@ function acharEscalaCompativel(
     if (pontos <= 0) continue;
     if (!melhor || pontos > melhor.pontos) {
       const opcao: OpcaoNexti = { id, nome };
-      if (typeof item["externalId"] === "string") opcao.externalId = item["externalId"];
+      const codigo = codigoExternoDe(item);
+      if (codigo) opcao.externalId = codigo;
       melhor = { opcao, pontos };
     }
   }
