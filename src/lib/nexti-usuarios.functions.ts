@@ -107,6 +107,29 @@ async function listarTudo(
   return itens;
 }
 
+/**
+ * Código externo (matrícula) do registro na NEXTI. A API usa nomes diferentes
+ * conforme o recurso e a versão, por isso procuramos todos os conhecidos.
+ */
+function codigoExternoDe(item: Record<string, unknown>): string {
+  const chaves = [
+    "externalId",
+    "externalCode",
+    "externalScheduleId",
+    "externalWorkplaceId",
+    "code",
+    "enrolment",
+    "registration",
+    "matricula",
+  ];
+  for (const chave of chaves) {
+    const valor = item[chave];
+    if (typeof valor === "string" && valor.trim()) return valor.trim();
+    if (typeof valor === "number" && Number.isFinite(valor)) return String(valor);
+  }
+  return "";
+}
+
 function paraOpcoes(
   itens: Record<string, unknown>[],
   campoNome: string[] = ["name"],
@@ -118,7 +141,8 @@ function paraOpcoes(
         id: Number(item["id"] ?? 0),
         nome: nomeChave ? String(item[nomeChave]) : "",
       };
-      if (typeof item["externalId"] === "string") opcao.externalId = item["externalId"];
+      const codigo = codigoExternoDe(item);
+      if (codigo) opcao.externalId = codigo;
       return opcao;
     })
     .filter((o) => o.id > 0 && o.nome);
