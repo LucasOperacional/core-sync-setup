@@ -386,6 +386,50 @@ function acharPostoCompativel(
   return melhor && melhor.pontos >= 4 ? melhor : null;
 }
 
+/**
+ * Regra: depois de achar a escala mais compatível, usa o código externo
+ * (matrícula) da escala para identificar o posto na NEXTI — pelo posto
+ * vinculado à escala, pelo mesmo código externo ou por prefixo do código.
+ */
+function acharPostoPelaEscala(
+  postosRaw: Record<string, unknown>[],
+  escalaRaw: Record<string, unknown> | undefined,
+  escala: OpcaoNexti | null,
+): OpcaoNexti | null {
+  if (!escala) return null;
+
+  const codigo = normalizar(escala.externalId ?? "");
+  const vinculado = Number(
+    escalaRaw?.["workplaceId"] ?? escalaRaw?.["workPlaceId"] ?? 0,
+  );
+  const codigoVinculado = normalizar(
+    typeof escalaRaw?.["externalWorkplaceId"] === "string"
+      ? (escalaRaw["externalWorkplaceId"] as string)
+      : "",
+  );
+
+  for (const item of postosRaw) {
+    const id = Number(item["id"] ?? 0);
+    const nome = typeof item["name"] === "string" ? item["name"] : "";
+    if (!id || !nome) continue;
+    const externalId = normalizar(
+      typeof item["externalId"] === "string" ? item["externalId"] : "",
+    );
+
+    const bate =
+      (vinculado && id === vinculado) ||
+      (codigoVinculado && externalId === codigoVinculado) ||
+      (codigo && externalId && (externalId === codigo || codigo.startsWith(externalId)));
+
+    if (!bate) continue;
+    const opcao: OpcaoNexti = { id, nome };
+    if (externalId) opcao.externalId = String(item["externalId"]);
+    return opcao;
+  }
+
+  return null;
+}
+
 type ListasNexti = {
   empresasRaw: Record<string, unknown>[];
   cargosRaw: Record<string, unknown>[];
@@ -508,16 +552,27 @@ function montarCadastro(
   if (!limpar(p.cargo)) avisos.push("Cargo não informado.");
   if (limpar(p.escala) && !escala) erros.push(`Escala "${p.escala}" não existe na NEXTI.`);
 
-  // Regra: posto não localizado pelo nome exato → lotar direto em "NOVAS ADMISSÕES".
+  // Regra: posto não localizado pelo nome → tenta pelo código externo (matrícula)
+  // da escala compatível; se ainda assim não achar, lota em "NOVAS ADMISSÕES".
   const destinoNovas = acharOpcao(paraOpcoes(listas.postosRaw), POSTO_NOVAS_ADMISSOES);
   if (limpar(p.posto) && !posto) {
-    if (destinoNovas) {
+    const escalaRaw = escala
+      ? listas.escalasRaw.find((e) => Number(e["id"] ?? 0) === escala!.id)
+      : undefined;
+    const pelaEscala = acharPostoPelaEscala(listas.postosRaw, escalaRaw, escala);
+    if (pelaEscala) {
+      posto = pelaEscala;
+      avisos.push(
+        `Posto "${p.posto}" identificado pelo código da escala${escala?.externalId ? ` (${escala.externalId})` : ""}: "${pelaEscala.nome}".`,
+      );
+    } else if (destinoNovas) {
       avisos.push(`Posto "${p.posto}" não localizado — será lotado em "${destinoNovas.nome}".`);
       posto = destinoNovas;
     } else {
       erros.push(`Posto "${p.posto}" não encontrado e não existe o posto "${POSTO_NOVAS_ADMISSOES}" na NEXTI.`);
     }
-  } else if (posto) {
+  }
+  if (posto && posto.id !== destinoNovas?.id) {
     const item = listas.postosRaw.find((w) => Number(w["id"] ?? 0) === posto!.id);
     const vagas = Number(item?.["vacantJob"] ?? 0);
     const ocupadas = ativosPorPosto.get(posto.id) ?? 0;
