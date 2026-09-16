@@ -1060,7 +1060,7 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
           personId: existente.id,
           mensagem: atualizado.ok
             ? `Colaborador já existia na NEXTI (matrícula interna ${existente.id}) — cadastro atualizado.${extra}${infoVinculo}`
-            : `Colaborador já existe na NEXTI (matrícula interna ${existente.id}), mas a atualização falhou: ${atualizado.erro}.${extra}`,
+            : `Colaborador já existe na NEXTI (cadastro interno ${existente.id}) e a NEXTI recusou a alteração: ${atualizado.erro}. Isso costuma acontecer quando o cadastro foi desligado/removido na NEXTI e ainda está bloqueado para edição — reative o cadastro na NEXTI (ou apague-o definitivamente) e importe de novo.${extra}`,
         };
       }
 
