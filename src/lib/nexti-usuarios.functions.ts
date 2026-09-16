@@ -561,7 +561,14 @@ function montarCadastro(
       : {}),
     ...(cargo ? { careerId: cargo.id } : {}),
     ...(posto ? { workplaceId: posto.id } : {}),
-    ...(escala ? { scheduleId: escala.id } : {}),
+    // A NEXTI aceita a escala com nomes diferentes conforme a versão da API.
+    ...(escala
+      ? {
+          scheduleId: escala.id,
+          workScheduleId: escala.id,
+          ...(escala.externalId ? { externalScheduleId: escala.externalId } : {}),
+        }
+      : {}),
     ...(nascimento ? { birthDate: nascimento } : {}),
     ...(admissao ? { admissionDate: admissao } : {}),
     ...(limpar(p.mae) ? { mothersName: limpar(p.mae).toUpperCase() } : {}),
