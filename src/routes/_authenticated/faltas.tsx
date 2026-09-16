@@ -756,6 +756,7 @@ function FaltasPage() {
   }, [filteredData]);
 
   const [gerenteAberto, setGerenteAberto] = useState<string | null>(null);
+  const [tabelaLimite, setTabelaLimite] = useState(100);
 
   function clearFilters() {
     setFilterPosto("");
@@ -1516,7 +1517,7 @@ function FaltasPage() {
                               </tr>
                             </thead>
                             <tbody>
-                              {filteredData.map((r, idx) => (
+                              {filteredData.slice(0, tabelaLimite).map((r, idx) => (
                                 <tr
                                   key={idx}
                                   className="border-b border-border transition-colors hover:bg-muted/50"
