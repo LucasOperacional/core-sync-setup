@@ -206,6 +206,7 @@ export function ImportAtestadosCard() {
               onClick={() => {
                 localStorage.removeItem(ATESTADOS_STORAGE_KEY);
                 setCurrentRows(0);
+                setRelatorios([]);
                 window.dispatchEvent(new Event("atestados-sync"));
                 setLastResult({ success: true, message: "Dados importados removidos." });
               }}
