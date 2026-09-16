@@ -1443,8 +1443,8 @@ function FaltasPage() {
                                   stroke="var(--color-muted-foreground)"
                                   fontSize={10}
                                 />
-                                <Tooltip content={<ChartTooltipContent />} />
-                                <Bar dataKey="quantidade" name="Faltas" radius={4}>
+                                <Tooltip content={<TopColaboradorTooltip />} />
+                                <Bar dataKey="quantidade" name="Dias de falta" radius={4}>
                                   {stats.barData.map((_, idx) => (
                                     <Cell key={idx} fill={paletteColor(idx)} />
                                   ))}
