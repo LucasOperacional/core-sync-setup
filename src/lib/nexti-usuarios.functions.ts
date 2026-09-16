@@ -168,6 +168,76 @@ function limpar(v?: string): string {
   return String(v ?? "").trim();
 }
 
+/** Extrai horários (HH:MM) de um texto: "07:00 as 19:00", "7h às 19h", "0700-1900". */
+function extrairHorarios(texto: string): string[] {
+  const base = normalizar(texto);
+  const achados: string[] = [];
+  const re = /(\d{1,2})\s*(?::|h|hs|hrs)\s*(\d{2})?|(\d{4})(?!\d)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(base)) !== null) {
+    let hh = 0;
+    let mm = 0;
+    if (m[3]) {
+      hh = Number(m[3].slice(0, 2));
+      mm = Number(m[3].slice(2, 4));
+    } else {
+      hh = Number(m[1]);
+      mm = Number(m[2] ?? "0");
+    }
+    if (hh > 23 || mm > 59) continue;
+    achados.push(`${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`);
+  }
+  return achados;
+}
+
+/** Extrai o tipo de jornada: 12x36, 5x2, 6x1... */
+function extrairJornada(texto: string): string | null {
+  const m = normalizar(texto).match(/(\d{1,2})\s*[x×]\s*(\d{1,2})/);
+  return m ? `${Number(m[1])}x${Number(m[2])}` : null;
+}
+
+/** Junta nome e todos os campos textuais/numéricos do registro da escala. */
+function textoDaEscala(item: Record<string, unknown>): string {
+  return Object.values(item)
+    .filter((v) => typeof v === "string" || typeof v === "number")
+    .join(" ");
+}
+
+/**
+ * Regra: quando a coluna "escala" traz um horário (ex.: "07:00 ÀS 19:00 12X36")
+ * em vez do nome exato, procura na NEXTI uma escala com os mesmos horários.
+ */
+function acharEscalaPorHorario(
+  escalasRaw: Record<string, unknown>[],
+  termo?: string,
+): OpcaoNexti | null {
+  const bruto = limpar(termo);
+  if (!bruto) return null;
+  const horarios = extrairHorarios(bruto);
+  if (horarios.length === 0) return null;
+  const jornada = extrairJornada(bruto);
+
+  let melhor: { opcao: OpcaoNexti; pontos: number } | null = null;
+  for (const item of escalasRaw) {
+    const id = Number(item["id"] ?? 0);
+    const nome = typeof item["name"] === "string" ? item["name"] : "";
+    if (!id || !nome) continue;
+    const texto = textoDaEscala(item);
+    const horariosEscala = extrairHorarios(texto);
+    let pontos = 0;
+    for (const h of horarios) if (horariosEscala.includes(h)) pontos += 2;
+    if (pontos === 0) continue;
+    const jornadaEscala = extrairJornada(texto);
+    if (jornada && jornadaEscala === jornada) pontos += 3;
+    else if (jornada && jornadaEscala && jornadaEscala !== jornada) pontos -= 2;
+    if (pontos <= 0) continue;
+    const opcao: OpcaoNexti = { id, nome };
+    if (typeof item["externalId"] === "string") opcao.externalId = item["externalId"];
+    if (!melhor || pontos > melhor.pontos) melhor = { opcao, pontos };
+  }
+  return melhor?.opcao ?? null;
+}
+
 /** Posto padrão para quem entra sem vaga no posto informado. */
 const POSTO_NOVAS_ADMISSOES = "NOVAS ADMISSÕES";
 
@@ -221,7 +291,16 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
       );
       const cargo = acharOpcao(paraOpcoes(cargosRaw), p.cargo);
       let posto = acharOpcao(paraOpcoes(postosRaw), p.posto);
-      const escala = acharOpcao(paraOpcoes(escalasRaw), p.escala);
+      let escala = acharOpcao(paraOpcoes(escalasRaw), p.escala);
+      // Regra: se o nome não bate, tenta casar pelo horário informado na coluna "escala".
+      let avisoEscala = "";
+      if (limpar(p.escala) && !escala) {
+        const porHorario = acharEscalaPorHorario(escalasRaw, p.escala);
+        if (porHorario) {
+          escala = porHorario;
+          avisoEscala = ` Escala "${p.escala}" casada pelo horário com "${porHorario.nome}".`;
+        }
+      }
 
       const faltando: string[] = [];
       if (limpar(p.empresa) && !empresa) faltando.push(`empresa "${p.empresa}"`);
@@ -312,14 +391,14 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
           nome,
           ok: true,
           personId,
-          mensagem: `Cadastrado na NEXTI (matrícula interna ${personId}).${avisoPosto}`,
+          mensagem: `Cadastrado na NEXTI (matrícula interna ${personId}).${avisoPosto}${avisoEscala}`,
         };
       }
       return {
         nome,
         ok: false,
         personId,
-        mensagem: `A NEXTI respondeu ${res.status} sem confirmar o cadastro.${avisoPosto}`,
+        mensagem: `A NEXTI respondeu ${res.status} sem confirmar o cadastro.${avisoPosto}${avisoEscala}`,
       };
     } catch (error) {
       return {
