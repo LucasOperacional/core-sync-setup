@@ -2,6 +2,27 @@ import { useMemo, useState } from "react";
 import { ChevronDown, Clock, MapPin } from "lucide-react";
 
 import { classificarResposta, parseDateBR, type Visit } from "@/lib/report-parser";
+import { gerenteAreaACanonico } from "@/lib/gerentes-area-a";
+
+type Detalhe = {
+  id: string;
+  data: string;
+  inicio: string;
+  fim: string;
+  duracao: number | null;
+  qualidade: number;
+  supervisor: string;
+  gerente: string;
+};
+
+type BlocoGerente = {
+  gerente: string;
+  visitas: number;
+  minutos: number;
+  mediaMin: number | null;
+  qualidade: number;
+  detalhes: Detalhe[];
+};
 
 type LinhaLocal = {
   local: string;
@@ -10,15 +31,7 @@ type LinhaLocal = {
   mediaMin: number | null;
   qualidade: number;
   supervisores: string[];
-  detalhes: {
-    id: string;
-    data: string;
-    inicio: string;
-    fim: string;
-    duracao: number | null;
-    qualidade: number;
-    supervisor: string;
-  }[];
+  gerentes: BlocoGerente[];
 };
 
 function duracaoValida(v: Visit) {
