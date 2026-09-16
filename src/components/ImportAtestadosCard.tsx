@@ -234,6 +234,8 @@ export function ImportAtestadosCard() {
           )}
         </div>
 
+        <ImportValidacaoRelatorio relatorios={relatorios} />
+
         {dragOver && (
           <div className="mt-3 flex items-center justify-center rounded-lg border-2 border-dashed border-purple-500/50 bg-purple-500/5 py-6 text-sm font-medium text-purple-400">
             Solte os arquivos aqui para importar
