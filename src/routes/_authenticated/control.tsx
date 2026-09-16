@@ -514,10 +514,14 @@ function ControlDashboard() {
 
               {
                 key: "qualidade-tempo-supervisores",
-                titulo: "Qualidade e tempo por supervisor",
+                titulo: "Qualidade e tempo por local de visita",
                 tamanho: "grande",
                 conteudo: (
-                  <QualidadeTempoSupervisores visitas={filtradas} linkPara="/qualidade-tempo" />
+                  <QualidadeTempoSupervisores
+                    visitas={filtradas}
+                    linkPara="/qualidade-tempo"
+                    fechado
+                  />
                 ),
               },
 
