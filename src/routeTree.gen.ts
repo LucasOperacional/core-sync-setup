@@ -37,6 +37,7 @@ import { Route as AuthenticatedIaOperacionalRouteImport } from './routes/_authen
 import { Route as AuthenticatedIndicadoresRouteImport } from './routes/_authenticated/indicadores'
 import { Route as AuthenticatedLgpdRouteImport } from './routes/_authenticated/lgpd'
 import { Route as AuthenticatedLogsAtividadesRouteImport } from './routes/_authenticated/logs-atividades'
+import { Route as AuthenticatedMesaOperacionalRouteImport } from './routes/_authenticated/mesa-operacional'
 import { Route as AuthenticatedMovimentacaoPostoRouteImport } from './routes/_authenticated/movimentacao-posto'
 import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
 import { Route as AuthenticatedNxsControlRouteImport } from './routes/_authenticated/nxs-control'
@@ -233,6 +234,12 @@ const AuthenticatedLogsAtividadesRoute =
   AuthenticatedLogsAtividadesRouteImport.update({
     id: '/logs-atividades',
     path: '/logs-atividades',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMesaOperacionalRoute =
+  AuthenticatedMesaOperacionalRouteImport.update({
+    id: '/mesa-operacional',
+    path: '/mesa-operacional',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMovimentacaoPostoRoute =
@@ -527,6 +534,7 @@ export interface FileRoutesByFullPath {
   '/indicadores': typeof AuthenticatedIndicadoresRoute
   '/lgpd': typeof AuthenticatedLgpdRoute
   '/logs-atividades': typeof AuthenticatedLogsAtividadesRoute
+  '/mesa-operacional': typeof AuthenticatedMesaOperacionalRoute
   '/movimentacao-posto': typeof AuthenticatedMovimentacaoPostoRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/nxs-control': typeof AuthenticatedNxsControlRoute
@@ -601,6 +609,7 @@ export interface FileRoutesByTo {
   '/indicadores': typeof AuthenticatedIndicadoresRoute
   '/lgpd': typeof AuthenticatedLgpdRoute
   '/logs-atividades': typeof AuthenticatedLogsAtividadesRoute
+  '/mesa-operacional': typeof AuthenticatedMesaOperacionalRoute
   '/movimentacao-posto': typeof AuthenticatedMovimentacaoPostoRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/nxs-control': typeof AuthenticatedNxsControlRoute
@@ -678,6 +687,7 @@ export interface FileRoutesById {
   '/_authenticated/indicadores': typeof AuthenticatedIndicadoresRoute
   '/_authenticated/lgpd': typeof AuthenticatedLgpdRoute
   '/_authenticated/logs-atividades': typeof AuthenticatedLogsAtividadesRoute
+  '/_authenticated/mesa-operacional': typeof AuthenticatedMesaOperacionalRoute
   '/_authenticated/movimentacao-posto': typeof AuthenticatedMovimentacaoPostoRoute
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/_authenticated/nxs-control': typeof AuthenticatedNxsControlRoute
@@ -756,6 +766,7 @@ export interface FileRouteTypes {
     | '/indicadores'
     | '/lgpd'
     | '/logs-atividades'
+    | '/mesa-operacional'
     | '/movimentacao-posto'
     | '/notificacoes'
     | '/nxs-control'
@@ -830,6 +841,7 @@ export interface FileRouteTypes {
     | '/indicadores'
     | '/lgpd'
     | '/logs-atividades'
+    | '/mesa-operacional'
     | '/movimentacao-posto'
     | '/notificacoes'
     | '/nxs-control'
@@ -906,6 +918,7 @@ export interface FileRouteTypes {
     | '/_authenticated/indicadores'
     | '/_authenticated/lgpd'
     | '/_authenticated/logs-atividades'
+    | '/_authenticated/mesa-operacional'
     | '/_authenticated/movimentacao-posto'
     | '/_authenticated/notificacoes'
     | '/_authenticated/nxs-control'
@@ -1183,6 +1196,13 @@ declare module '@tanstack/react-router' {
       path: '/logs-atividades'
       fullPath: '/logs-atividades'
       preLoaderRoute: typeof AuthenticatedLogsAtividadesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mesa-operacional': {
+      id: '/_authenticated/mesa-operacional'
+      path: '/mesa-operacional'
+      fullPath: '/mesa-operacional'
+      preLoaderRoute: typeof AuthenticatedMesaOperacionalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/movimentacao-posto': {
@@ -1532,6 +1552,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndicadoresRoute: typeof AuthenticatedIndicadoresRoute
   AuthenticatedLgpdRoute: typeof AuthenticatedLgpdRoute
   AuthenticatedLogsAtividadesRoute: typeof AuthenticatedLogsAtividadesRoute
+  AuthenticatedMesaOperacionalRoute: typeof AuthenticatedMesaOperacionalRoute
   AuthenticatedMovimentacaoPostoRoute: typeof AuthenticatedMovimentacaoPostoRoute
   AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
   AuthenticatedNxsControlRoute: typeof AuthenticatedNxsControlRoute
@@ -1582,6 +1603,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndicadoresRoute: AuthenticatedIndicadoresRoute,
   AuthenticatedLgpdRoute: AuthenticatedLgpdRoute,
   AuthenticatedLogsAtividadesRoute: AuthenticatedLogsAtividadesRoute,
+  AuthenticatedMesaOperacionalRoute: AuthenticatedMesaOperacionalRoute,
   AuthenticatedMovimentacaoPostoRoute: AuthenticatedMovimentacaoPostoRoute,
   AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
   AuthenticatedNxsControlRoute: AuthenticatedNxsControlRoute,
