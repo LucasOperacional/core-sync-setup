@@ -99,6 +99,8 @@ export function CentralArquivosDashboards() {
   const [ocupadoArquivo, setOcupadoArquivo] = useState<string | null>(null);
   const [detalhe, setDetalhe] = useState<ArquivoImportado | null>(null);
   const [historico, setHistorico] = useState<HistoricoSincronizacao[]>([]);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [apagandoLote, setApagandoLote] = useState(false);
 
   // filtros
   const [filtroDashboard, setFiltroDashboard] = useState<"TODOS" | DashboardDestino>("TODOS");
@@ -217,8 +219,50 @@ export function CentralArquivosDashboards() {
     } else {
       toast.error("Não foi possível excluir o arquivo.");
     }
+    setSelecionados((s) => s.filter((id) => id !== arquivo.id));
     await recarregar();
   }
+
+  function alternarSelecao(id: string) {
+    setSelecionados((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  }
+
+  function alternarTodos() {
+    const ids = filtrados.map((a) => a.id);
+    const todos = ids.length > 0 && ids.every((id) => selecionados.includes(id));
+    setSelecionados(todos ? [] : ids);
+  }
+
+  async function handleExcluirSelecionados() {
+    const alvos = filtrados.filter((a) => selecionados.includes(a.id));
+    if (alvos.length === 0) return;
+    if (
+      !window.confirm(
+        `Excluir definitivamente ${alvos.length} arquivo(s) importado(s)? Esta ação não pode ser desfeita.`,
+      )
+    )
+      return;
+    setApagandoLote(true);
+    let sucesso = 0;
+    let falhas = 0;
+    for (const arquivo of alvos) {
+      const ok = await excluirArquivoImportado(arquivo);
+      if (ok) {
+        sucesso += 1;
+        if (detalhe?.id === arquivo.id) setDetalhe(null);
+      } else {
+        falhas += 1;
+      }
+    }
+    setApagandoLote(false);
+    setSelecionados([]);
+    if (sucesso > 0) toast.success(`${sucesso} arquivo(s) excluído(s).`);
+    if (falhas > 0) toast.error(`${falhas} arquivo(s) não puderam ser excluídos.`);
+    await recarregar();
+  }
+
+  const todosSelecionados =
+    filtrados.length > 0 && filtrados.every((a) => selecionados.includes(a.id));
 
   return (
     <section className="space-y-5">
@@ -426,6 +470,37 @@ export function CentralArquivosDashboards() {
             />
           </div>
 
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              {selecionados.length > 0
+                ? `${selecionados.length} arquivo(s) selecionado(s)`
+                : "Selecione arquivos para apagar em lote."}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={alternarTodos}
+                disabled={filtrados.length === 0 || apagandoLote}
+                className="inline-flex items-center gap-2 rounded-md border border-input px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent disabled:opacity-40"
+              >
+                {todosSelecionados ? "Limpar seleção" : "Selecionar todos"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleExcluirSelecionados()}
+                disabled={selecionados.length === 0 || apagandoLote}
+                className="inline-flex items-center gap-2 rounded-md border border-destructive/40 px-3 py-1.5 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-40"
+              >
+                {apagandoLote ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+                Apagar selecionados
+              </button>
+            </div>
+          </div>
+
           {carregando ? (
             <p className="py-8 text-center text-sm text-muted-foreground">Carregando arquivos...</p>
           ) : filtrados.length === 0 ? (
@@ -437,6 +512,15 @@ export function CentralArquivosDashboards() {
               <table className="w-full min-w-[900px] text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
+                    <th className="w-10 px-3 py-2 font-medium">
+                      <input
+                        type="checkbox"
+                        checked={todosSelecionados}
+                        onChange={alternarTodos}
+                        aria-label="Selecionar todos os arquivos"
+                        className="size-4 accent-current"
+                      />
+                    </th>
                     <th className="px-3 py-2 font-medium">Arquivo</th>
                     <th className="px-3 py-2 font-medium">Dashboard</th>
                     <th className="px-3 py-2 font-medium">Importação</th>
@@ -450,6 +534,15 @@ export function CentralArquivosDashboards() {
                 <tbody>
                   {filtrados.map((a) => (
                     <tr key={a.id} className="border-b border-border/60">
+                      <td className="px-3 py-2">
+                        <input
+                          type="checkbox"
+                          checked={selecionados.includes(a.id)}
+                          onChange={() => alternarSelecao(a.id)}
+                          aria-label={`Selecionar ${a.nome_original}`}
+                          className="size-4 accent-current"
+                        />
+                      </td>
                       <td className="px-3 py-2">
                         <p className="max-w-[220px] truncate font-medium" title={a.nome_original}>
                           {a.nome_original}
