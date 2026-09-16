@@ -244,7 +244,7 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
           avisoPosto = ` Posto "${p.posto}" não encontrado — lotado em "${destinoNovas.nome}".`;
           posto = destinoNovas;
         } else {
-          avisoPosto = ` Posto "${p.posto}" não encontrado e não encontrei o posto "${POSTO_NOVAS_ADMISSÕES}" na NEXTI.`;
+          avisoPosto = ` Posto "${p.posto}" não encontrado e não encontrei o posto "${POSTO_NOVAS_ADMISSOES}" na NEXTI.`;
         }
       } else if (posto) {
         const semVaga = await postoSemVaga(postosRaw, posto.id);
@@ -253,7 +253,7 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
             avisoPosto = ` Posto "${posto.nome}" sem vaga — lotado em "${destinoNovas.nome}".`;
             posto = destinoNovas;
           } else {
-            avisoPosto = ` Posto "${posto.nome}" sem vaga e não encontrei o posto "${POSTO_NOVAS_ADMISSÕES}" na NEXTI.`;
+            avisoPosto = ` Posto "${posto.nome}" sem vaga e não encontrei o posto "${POSTO_NOVAS_ADMISSOES}" na NEXTI.`;
           }
         }
       }
