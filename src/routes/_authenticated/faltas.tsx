@@ -446,7 +446,7 @@ function FaltasPage() {
         return;
       }
       const tabela: ParsedRow[] = [
-        ["POSTO", "COLABORADOR", "CARGO", "GERENTE", "DATA INICIO", "DATA FIM", "FALTAS", "TIPO"],
+        ["POSTO", "COLABORADOR", "CARGO", "GERENTE", "DATA INICIO", "DATA FIM", "FALTAS", "TIPO", "MOTIVO"],
         ...res.linhas.map((l) => [
           l.posto,
           l.colaborador,
@@ -456,6 +456,7 @@ function FaltasPage() {
           l.dataFim,
           l.faltas,
           l.tipo,
+          l.motivo,
         ]),
       ];
       setRows(tabela);
