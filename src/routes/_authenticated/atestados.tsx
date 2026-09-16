@@ -27,7 +27,7 @@ import {
   X,
 } from "lucide-react";
 import { KpiCard } from "@/components/KpiCard";
-import { ConsultaAtestadosPorNome } from "@/components/ConsultaAtestadosPorNome";
+
 
 import { WidgetBoard } from "@/components/widgets/WidgetBoard";
 
@@ -490,19 +490,6 @@ function AtestadosPage() {
                 ),
               },
               {
-                key: "kpi-atestados",
-                titulo: "Atestados",
-                tamanho: "pequeno" as const,
-                conteudo: (
-                  <KpiCard
-                    label="Atestados"
-                    value={String(stats.total)}
-                    hint={`${stats.postos} posto(s)`}
-                    icon={ClipboardCheck}
-                  />
-                ),
-              },
-              {
                 key: "kpi-dias",
                 titulo: "Dias de afastamento",
                 tamanho: "pequeno" as const,
@@ -557,12 +544,7 @@ function AtestadosPage() {
                   />
                 ),
               },
-              {
-                key: "consulta-por-nome",
-                titulo: "Consultar atestados por nome",
-                tamanho: "grande" as const,
-                conteudo: <ConsultaAtestadosPorNome registros={dados} />,
-              },
+
 
               ...(stats.serie.length > 1
                 ? [
