@@ -33,6 +33,7 @@ import {
 
 import { KpiCard } from "@/components/KpiCard";
 import { DesempenhoGerentesArea } from "@/components/DesempenhoGerentesArea";
+import { gerenteAreaACanonico } from "@/lib/gerentes-area-a";
 import {
   QualidadeTempoSupervisores,
   formatarDuracao,
