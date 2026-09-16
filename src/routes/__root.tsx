@@ -7,16 +7,28 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { OperationalAI } from "../lib/operational-ai";
 import { Toaster } from "../components/ui/sonner";
-import { ChatAssistant } from "../components/ChatAssistant";
-import { CompartilharLocalizacaoCard as RastreioSempreAtivo } from "../components/CompartilharLocalizacaoCard";
-import { RegistroAtividadeAuto } from "../components/RegistroAtividadeAuto";
-import { SinoNotificacoes } from "../components/SinoNotificacoes";
+
+/* Recursos que acompanham todas as telas são carregados depois da primeira
+   pintura: a página abre mais rápido e nada é perdido. */
+const ChatAssistant = lazy(() =>
+  import("../components/ChatAssistant").then((m) => ({ default: m.ChatAssistant })),
+);
+const RastreioSempreAtivo = lazy(() =>
+  import("../components/CompartilharLocalizacaoCard").then((m) => ({
+    default: m.CompartilharLocalizacaoCard,
+  })),
+);
+const RegistroAtividadeAuto = lazy(() =>
+  import("../components/RegistroAtividadeAuto").then((m) => ({ default: m.RegistroAtividadeAuto })),
+);
+const SinoNotificacoes = lazy(() =>
+  import("../components/SinoNotificacoes").then((m) => ({ default: m.SinoNotificacoes })),
+);
 
 /* ─── 404 Page ─── */
 
