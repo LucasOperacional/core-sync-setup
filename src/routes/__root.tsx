@@ -7,26 +7,34 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { OperationalAI } from "../lib/operational-ai";
+import { Toaster } from "../components/ui/sonner";
+import { ChatAssistant } from "../components/ChatAssistant";
+import { CompartilharLocalizacaoCard as RastreioSempreAtivo } from "../components/CompartilharLocalizacaoCard";
+import { RegistroAtividadeAuto } from "../components/RegistroAtividadeAuto";
+import { SinoNotificacoes } from "../components/SinoNotificacoes";
+
+/* ─── 404 Page ─── */
 
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          A página que você procura não existe ou foi movida.
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            Voltar ao início
           </Link>
         </div>
       </div>
@@ -34,21 +42,55 @@ function NotFoundComponent() {
   );
 }
 
+/* ─── Global Error Boundary ─── */
+
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
   const router = useRouter();
+
   useEffect(() => {
+    // Log technical details to console for debugging — never expose to user.
+    console.error("[ErrorBoundary]", {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+    });
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+
+    // Register with IA Operacional
+    try {
+      OperationalAI.getInstance().captureError({
+        errorType: "root_error_boundary",
+        message: error?.message ?? "Unknown root error",
+        technicalDetails: error?.stack,
+        severity: "critical",
+        component: "__root.tsx",
+      });
+    } catch {
+      // IA module not available — ignore
+    }
   }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
+        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-destructive/10">
+          <svg
+            className="size-8 text-destructive"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">Algo deu errado</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          Ocorreu um erro inesperado. Tente novamente ou volte à página inicial.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -58,13 +100,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            Tentar novamente
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            Voltar ao início
           </a>
         </div>
       </div>
@@ -72,40 +114,89 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+/* ─── Loading Screen ─── */
+
+function PendingComponent() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="text-center">
+        <div className="mx-auto mb-4 size-10 animate-spin rounded-full border-4 border-muted border-t-primary" />
+        <p className="text-sm text-muted-foreground">Carregando...</p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Route Definition ─── */
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1, viewport-fit=cover",
+      },
+      { title: "CIOP" },
+      { name: "description", content: "CIOP — Painel Central Operacional" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { name: "theme-color", content: "#0F172A" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "CIOP" },
+      { property: "og:title", content: "CIOP" },
+      { property: "og:description", content: "CIOP — Painel Central Operacional" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
+  pendingComponent: PendingComponent,
 });
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR" className="dark" style={{ colorScheme: "dark" }}>
       <head>
         <HeadContent />
+        <style>
+          {`
+            /* Ocultar badge automático de marca d'água da plataforma */
+            #lovable-badge,
+            .lovable-badge,
+            a[href*="lovable.dev"] {
+              display: none !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+            }
+          `}
+        </style>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("tema-app");if(t==="claro"){document.documentElement.classList.remove("dark");document.documentElement.style.colorScheme="light";}}catch(e){}`,
+          }}
+        />
       </head>
+
       <body>
         {children}
         <Scripts />
@@ -116,11 +207,45 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [mounted, setMounted] = useState(false);
+
+  // Initialize the IA Operacional global listeners once at the app root.
+  useEffect(() => {
+    setMounted(true);
+
+    const ai = OperationalAI.getInstance();
+    ai.init();
+    ai.restoreFormData();
+
+    // Mark the signed-in user as online as soon as the app is opened.
+    void import("../lib/presence").then(({ startPresence }) => startPresence());
+
+    // Regra geral: as APIs ligadas pelo superadmin valem para todos os usuários
+    // e para todos os cards. Falha aqui nunca interrompe a tela.
+    void import("../lib/api-globais")
+      .then(({ aplicarApisGlobais }) => aplicarApisGlobais())
+      .catch(() => {});
+
+    // Captura de erros técnicos para o monitoramento central (sem dados pessoais).
+    void import("../lib/monitor-client")
+      .then(({ instalarCapturaErros }) => instalarCapturaErros())
+      .catch(() => {});
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      {mounted && <SinoNotificacoes />}
+      <Toaster />
+      {mounted && <RegistroAtividadeAuto />}
+      {mounted && <ChatAssistant />}
+      {/* Rastreio do supervisor: fica ativo em qualquer página, invisível. */}
+      {mounted && (
+        <div className="hidden">
+          <RastreioSempreAtivo />
+        </div>
+      )}
     </QueryClientProvider>
   );
 }

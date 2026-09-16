@@ -1,0 +1,1 @@
+ALTER TABLE public.roteiros_visita_campo ADD COLUMN IF NOT EXISTS motivo TEXT NOT NULL DEFAULT '';

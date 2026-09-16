@@ -1,0 +1,12 @@
+DROP POLICY IF EXISTS nexti_persons_select ON public.nexti_persons;
+CREATE POLICY nexti_persons_select ON public.nexti_persons FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS nexti_workplaces_select ON public.nexti_workplaces;
+CREATE POLICY nexti_workplaces_select ON public.nexti_workplaces FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS nexti_absences_select ON public.nexti_absences;
+CREATE POLICY nexti_absences_select ON public.nexti_absences FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS nexti_clockings_select ON public.nexti_clockings;
+CREATE POLICY nexti_clockings_select ON public.nexti_clockings FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS nexti_sync_runs_select ON public.nexti_sync_runs;
+CREATE POLICY nexti_sync_runs_select ON public.nexti_sync_runs FOR SELECT TO authenticated USING (true);
+GRANT SELECT ON public.nexti_persons, public.nexti_workplaces, public.nexti_absences, public.nexti_clockings, public.nexti_sync_runs TO authenticated;
+GRANT ALL ON public.nexti_persons, public.nexti_workplaces, public.nexti_absences, public.nexti_clockings, public.nexti_sync_runs, public.nexti_config TO service_role;

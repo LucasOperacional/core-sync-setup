@@ -1,0 +1,1 @@
+UPDATE public.nexti_config SET base_url = 'https://api.nexti.com', token_endpoint = COALESCE(NULLIF(token_endpoint,''), '/security/oauth/token'), test_endpoint = COALESCE(NULLIF(test_endpoint,''), '/api/persons/all?size=1'), updated_at = now() WHERE id = true;

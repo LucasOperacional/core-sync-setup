@@ -1,0 +1,422 @@
+import { useMemo, useState } from "react";
+import * as XLSX from "xlsx";
+import { useServerFn } from "@tanstack/react-start";
+import { CheckCircle2, Eye, Loader2, ScrollText, Trash2, Upload, UserPlus, XCircle } from "lucide-react";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "sonner";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { cadastrarPessoaNexti, type PessoaCadastro } from "@/lib/nexti-usuarios.functions";
+
+type LinhaUsuario = PessoaCadastro & {
+  id: string;
+  status: "pendente" | "enviando" | "ok" | "erro";
+  mensagem?: string;
+};
+
+const CAMPOS: { chave: keyof PessoaCadastro; rotulo: string; termos: string[] }[] = [
+  { chave: "nome", rotulo: "Nome", termos: ["nome", "colaborador", "funcionario"] },
+  { chave: "cpf", rotulo: "CPF", termos: ["cpf"] },
+  { chave: "pis", rotulo: "PIS", termos: ["pis", "nis", "pasep"] },
+  { chave: "matricula", rotulo: "Matrícula", termos: ["matricula", "enrolment", "registro"] },
+  { chave: "email", rotulo: "E-mail", termos: ["email", "e-mail"] },
+  { chave: "genero", rotulo: "Sexo", termos: ["sexo", "genero"] },
+  { chave: "nascimento", rotulo: "Nascimento", termos: ["nascimento", "data nasc"] },
+  { chave: "admissao", rotulo: "Admissão", termos: ["admissao", "data adm"] },
+  { chave: "empresa", rotulo: "Empresa", termos: ["empresa", "company", "cliente"] },
+  { chave: "cargo", rotulo: "Cargo", termos: ["cargo", "funcao", "career"] },
+  { chave: "posto", rotulo: "Posto", termos: ["posto", "local", "lotacao", "workplace"] },
+  { chave: "escala", rotulo: "Escala", termos: ["escala", "horario", "schedule", "jornada"] },
+  { chave: "mae", rotulo: "Nome da mãe", termos: ["mae"] },
+  { chave: "pai", rotulo: "Nome do pai", termos: ["pai"] },
+  { chave: "rg", rotulo: "RG", termos: ["rg", "identidade"] },
+];
+
+function normalizar(texto: unknown): string {
+  return String(texto ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function valorTexto(valor: unknown): string {
+  if (valor === null || valor === undefined) return "";
+  if (valor instanceof Date) {
+    const d = String(valor.getDate()).padStart(2, "0");
+    const m = String(valor.getMonth() + 1).padStart(2, "0");
+    return `${d}/${m}/${valor.getFullYear()}`;
+  }
+  return String(valor).trim();
+}
+
+type LinhaLog = { id: string; hora: string; texto: string; tipo: "info" | "ok" | "erro" };
+
+export function AbaUsuariosNexti() {
+  const [linhas, setLinhas] = useState<LinhaUsuario[]>([]);
+  const [arquivoNome, setArquivoNome] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [busca, setBusca] = useState("");
+  const [logs, setLogs] = useState<LinhaLog[]>([]);
+  const [previewAberto, setPreviewAberto] = useState(false);
+  const cadastrar = useServerFn(cadastrarPessoaNexti);
+
+  const registrar = (texto: string, tipo: LinhaLog["tipo"] = "info") => {
+    setLogs((atual) => [
+      {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        hora: new Date().toLocaleTimeString("pt-BR"),
+        texto,
+        tipo,
+      },
+      ...atual,
+    ]);
+  };
+
+  const filtradas = useMemo(() => {
+    const termo = normalizar(busca);
+    if (!termo) return linhas;
+    return linhas.filter((l) =>
+      [l.nome, l.cpf, l.matricula, l.cargo, l.posto, l.empresa]
+        .map(normalizar)
+        .some((v) => v.includes(termo)),
+    );
+  }, [linhas, busca]);
+
+  const totais = useMemo(
+    () => ({
+      total: linhas.length,
+      ok: linhas.filter((l) => l.status === "ok").length,
+      erro: linhas.filter((l) => l.status === "erro").length,
+    }),
+    [linhas],
+  );
+
+  const processarArquivo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setArquivoNome(file.name);
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const wb = XLSX.read(evt.target?.result, { type: "binary", cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]!]!;
+        const dados = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
+        const cabecalho = (dados[0] ?? []).map((c) => normalizar(c));
+        const indices = new Map<keyof PessoaCadastro, number>();
+        for (const campo of CAMPOS) {
+          const idx = cabecalho.findIndex((c) => campo.termos.some((t) => c.includes(t)));
+          if (idx >= 0) indices.set(campo.chave, idx);
+        }
+        if (!indices.has("nome")) {
+          toast.error("Não encontrei a coluna de nome na planilha.");
+          return;
+        }
+        const novas: LinhaUsuario[] = dados
+          .slice(1)
+          .filter((r) => Array.isArray(r) && r.length > 0)
+          .map((r, i) => {
+            const pessoa: PessoaCadastro = { nome: "", cpf: "" };
+            for (const [chave, idx] of indices) {
+              (pessoa as Record<string, string>)[chave] = valorTexto(r[idx]);
+            }
+            return { ...pessoa, id: `${i}-${pessoa.nome}`, status: "pendente" as const };
+          })
+          .filter((l) => l.nome);
+        setLinhas(novas);
+        registrar(`Planilha "${file.name}" lida: ${novas.length} colaboradores.`);
+        toast.success(`${novas.length} colaboradores lidos da planilha.`);
+      } catch {
+        registrar(`Não consegui ler a planilha "${file.name}".`, "erro");
+        toast.error("Não consegui ler a planilha. Use .xlsx, .xls ou .csv.");
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = "";
+  };
+
+  const enviarTodos = async () => {
+    const pendentes = linhas.filter((l) => l.status !== "ok");
+    if (!pendentes.length) {
+      toast.info("Nenhum colaborador pendente para cadastrar.");
+      return;
+    }
+    setEnviando(true);
+    let sucesso = 0;
+    registrar(`Início do envio de ${pendentes.length} colaboradores para a NEXTI.`);
+    for (const linha of pendentes) {
+      setLinhas((atual) =>
+        atual.map((l) => (l.id === linha.id ? { ...l, status: "enviando", mensagem: "" } : l)),
+      );
+      registrar(`Enviando "${linha.nome}" para a NEXTI...`);
+      const { id: _id, status: _s, mensagem: _m, ...pessoa } = linha;
+      try {
+        const res = await cadastrar({ data: { pessoa } });
+        if (res.ok) sucesso += 1;
+        registrar(`${linha.nome}: ${res.mensagem}`, res.ok ? "ok" : "erro");
+        setLinhas((atual) =>
+          atual.map((l) =>
+            l.id === linha.id
+              ? { ...l, status: res.ok ? "ok" : "erro", mensagem: res.mensagem }
+              : l,
+          ),
+        );
+      } catch (error) {
+        const msg = (error as Error)?.message ?? "Falha no envio.";
+        registrar(`${linha.nome}: ${msg}`, "erro");
+        setLinhas((atual) =>
+          atual.map((l) => (l.id === linha.id ? { ...l, status: "erro", mensagem: msg } : l)),
+        );
+      }
+    }
+    setEnviando(false);
+    registrar(
+      `Envio finalizado: ${sucesso} de ${pendentes.length} cadastrados na NEXTI.`,
+      sucesso === pendentes.length ? "ok" : "erro",
+    );
+    toast.success(`${sucesso} de ${pendentes.length} colaboradores cadastrados na NEXTI.`);
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+        <div className="space-y-1">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <UserPlus className="h-4 w-4 text-primary" />
+            Usuários — cadastro na NEXTI
+          </CardTitle>
+          <CardDescription>
+            Importe a planilha com os dados de cadastro e envie os colaboradores direto para a
+            NEXTI.
+          </CardDescription>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {totais.total > 0 && <Badge variant="secondary">{totais.total} na lista</Badge>}
+          {totais.ok > 0 && <Badge className="bg-emerald-600">{totais.ok} cadastrados</Badge>}
+          {totais.erro > 0 && <Badge variant="destructive">{totais.erro} com erro</Badge>}
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
+          <div className="space-y-1">
+            <Label htmlFor="arquivo-usuarios">Planilha de cadastro (.xlsx, .xls, .csv)</Label>
+            <Input
+              id="arquivo-usuarios"
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={processarArquivo}
+            />
+          </div>
+          <Dialog open={previewAberto} onOpenChange={setPreviewAberto}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="self-end gap-2" disabled={linhas.length === 0}>
+                <Eye className="h-4 w-4" />
+                Pré-visualizar
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[85vh] max-w-5xl overflow-hidden">
+              <DialogHeader>
+                <DialogTitle>Pré-visualização do envio para a NEXTI</DialogTitle>
+                <DialogDescription>
+                  Estes são os dados que serão enviados para cadastro na NEXTI, exatamente como
+                  foram lidos da planilha. Empresa, cargo, posto e escala precisam existir com o
+                  mesmo nome na NEXTI.
+                </DialogDescription>
+              </DialogHeader>
+              <ScrollArea className="h-[60vh] rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10">#</TableHead>
+                      {CAMPOS.map((c) => (
+                        <TableHead key={c.chave}>{c.rotulo}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {linhas.map((linha, i) => (
+                      <TableRow key={linha.id}>
+                        <TableCell className="text-muted-foreground">{i + 1}</TableCell>
+                        {CAMPOS.map((c) => (
+                          <TableCell key={c.chave} className="whitespace-nowrap text-xs">
+                            {linha[c.chave] || <span className="text-muted-foreground">—</span>}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+              <div className="flex items-center justify-between gap-3 pt-2">
+                <p className="text-xs text-muted-foreground">
+                  {linhas.length} colaborador(es) prontos para cadastro.
+                </p>
+                <Button
+                  className="gap-2"
+                  disabled={enviando || linhas.length === 0}
+                  onClick={() => {
+                    setPreviewAberto(false);
+                    void enviarTodos();
+                  }}
+                >
+                  <Upload className="h-4 w-4" />
+                  Confirmar e cadastrar na NEXTI
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Button
+            className="self-end gap-2"
+            onClick={enviarTodos}
+            disabled={enviando || linhas.length === 0}
+          >
+            {enviando ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            Cadastrar na NEXTI
+          </Button>
+          <Button
+            variant="outline"
+            className="self-end gap-2"
+            onClick={() => {
+              setLinhas([]);
+              setArquivoNome("");
+            }}
+            disabled={enviando || linhas.length === 0}
+          >
+            <Trash2 className="h-4 w-4" />
+            Limpar
+          </Button>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Colunas reconhecidas automaticamente: {CAMPOS.map((c) => c.rotulo).join(", ")}. Empresa,
+          cargo, posto e escala são casados pelo nome cadastrado na NEXTI.
+          {arquivoNome ? ` Arquivo: ${arquivoNome}.` : ""}
+        </p>
+
+        {linhas.length > 0 && (
+          <>
+            <Separator />
+            <Input
+              placeholder="Buscar por nome, CPF, matrícula, cargo ou posto..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+            <ScrollArea className="h-[420px] rounded-md border">
+              <div className="divide-y">
+                {filtradas.map((linha) => (
+                  <div key={linha.id} className="flex items-start gap-3 p-3 text-sm">
+                    <span className="mt-0.5">
+                      {linha.status === "ok" ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      ) : linha.status === "erro" ? (
+                        <XCircle className="h-4 w-4 text-destructive" />
+                      ) : linha.status === "enviando" ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      ) : (
+                        <UserPlus className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{linha.nome}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {[
+                          linha.matricula && `Matrícula ${linha.matricula}`,
+                          linha.cpf && `CPF ${linha.cpf}`,
+                          linha.cargo,
+                          linha.posto,
+                          linha.empresa,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                      {linha.mensagem && (
+                        <p
+                          className={
+                            linha.status === "erro"
+                              ? "mt-1 text-xs text-destructive"
+                              : "mt-1 text-xs text-emerald-600"
+                          }
+                        >
+                          {linha.mensagem}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {filtradas.length === 0 && (
+                  <p className="p-4 text-sm text-muted-foreground">
+                    Nenhum colaborador encontrado com esse termo.
+                  </p>
+                )}
+              </div>
+            </ScrollArea>
+          </>
+        )}
+
+        <Separator />
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <Label className="flex items-center gap-2">
+              <ScrollText className="h-4 w-4 text-primary" />
+              Log de envio para a NEXTI
+            </Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLogs([])}
+              disabled={logs.length === 0}
+            >
+              Limpar log
+            </Button>
+          </div>
+          <ScrollArea className="h-[220px] rounded-md border bg-muted/30">
+            <div className="space-y-1 p-3 font-mono text-xs">
+              {logs.length === 0 && (
+                <p className="text-muted-foreground">
+                  Nenhum envio registrado ainda. O andamento aparece aqui.
+                </p>
+              )}
+              {logs.map((l) => (
+                <p
+                  key={l.id}
+                  className={
+                    l.tipo === "erro"
+                      ? "text-destructive"
+                      : l.tipo === "ok"
+                        ? "text-emerald-600"
+                        : "text-muted-foreground"
+                  }
+                >
+                  [{l.hora}] {l.texto}
+                </p>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default AbaUsuariosNexti;

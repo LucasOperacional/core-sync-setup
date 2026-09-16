@@ -1,0 +1,1 @@
+ALTER TABLE public.solicitacoes_vagas ADD COLUMN IF NOT EXISTS fiscal_responsavel text;
