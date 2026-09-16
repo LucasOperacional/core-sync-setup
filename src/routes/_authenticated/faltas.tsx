@@ -793,6 +793,20 @@ function FaltasPage() {
     );
   }
 
+  function limparTodosOsDados() {
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("Tem certeza de que deseja apagar todos os dados importados desta página?")
+    ) {
+      return;
+    }
+    localStorage.removeItem(FALTAS_STORAGE_KEY);
+    setRows([]);
+    setSearchTerm("");
+    setTabelaLimite(100);
+    clearFilters();
+  }
+
   return (
     <main className="min-h-screen bg-background">
       <header className="border-b border-border">
