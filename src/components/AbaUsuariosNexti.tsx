@@ -45,23 +45,10 @@ type LinhaUsuario = PessoaCadastro & {
   mensagem?: string;
 };
 
-const CAMPOS: { chave: keyof PessoaCadastro; rotulo: string; termos: string[] }[] = [
-  { chave: "nome", rotulo: "Nome", termos: ["nome", "colaborador", "funcionario"] },
-  { chave: "cpf", rotulo: "CPF", termos: ["cpf"] },
-  { chave: "pis", rotulo: "PIS", termos: ["pis", "nis", "pasep"] },
-  { chave: "matricula", rotulo: "Matrícula", termos: ["matricula", "enrolment", "registro"] },
-  { chave: "email", rotulo: "E-mail", termos: ["email", "e-mail"] },
-  { chave: "genero", rotulo: "Sexo", termos: ["sexo", "genero"] },
-  { chave: "nascimento", rotulo: "Nascimento", termos: ["nascimento", "data nasc"] },
-  { chave: "admissao", rotulo: "Admissão", termos: ["admissao", "data adm"] },
-  { chave: "empresa", rotulo: "Empresa", termos: ["empresa", "company", "cliente"] },
-  { chave: "cargo", rotulo: "Cargo", termos: ["cargo", "funcao", "career"] },
-  { chave: "posto", rotulo: "Posto", termos: ["posto", "local", "lotacao", "workplace"] },
-  { chave: "escala", rotulo: "Escala", termos: ["escala", "horario", "schedule", "jornada"] },
-  { chave: "mae", rotulo: "Nome da mãe", termos: ["mae"] },
-  { chave: "pai", rotulo: "Nome do pai", termos: ["pai"] },
-  { chave: "rg", rotulo: "RG", termos: ["rg", "identidade"] },
-];
+const CAMPOS: { chave: keyof PessoaCadastro; rotulo: string }[] = REGRAS_COLUNAS.map((r) => ({
+  chave: r.chave,
+  rotulo: r.rotulo,
+})).sort((a, b) => a.rotulo.localeCompare(b.rotulo, "pt-BR"));
 
 function normalizar(texto: unknown): string {
   return String(texto ?? "")
@@ -70,16 +57,6 @@ function normalizar(texto: unknown): string {
     .toLowerCase()
     .replace(/\s+/g, " ")
     .trim();
-}
-
-function valorTexto(valor: unknown): string {
-  if (valor === null || valor === undefined) return "";
-  if (valor instanceof Date) {
-    const d = String(valor.getDate()).padStart(2, "0");
-    const m = String(valor.getMonth() + 1).padStart(2, "0");
-    return `${d}/${m}/${valor.getFullYear()}`;
-  }
-  return String(valor).trim();
 }
 
 type LinhaLog = { id: string; hora: string; texto: string; tipo: "info" | "ok" | "erro" };
