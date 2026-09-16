@@ -509,6 +509,13 @@ function ControlDashboard() {
               },
 
               {
+                key: "qualidade-tempo-supervisores",
+                titulo: "Qualidade e tempo por supervisor",
+                tamanho: "grande",
+                conteudo: <QualidadeTempoSupervisores visitas={filtradas} />,
+              },
+
+              {
                 key: "grafico-visitas-dia",
                 titulo: "Visitas por dia",
                 tamanho: "medio",
