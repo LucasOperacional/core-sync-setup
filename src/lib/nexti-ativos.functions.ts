@@ -869,10 +869,20 @@ export const cadastrarAusenciaNexti = createServerFn({ method: "POST" })
 /* Busca de faltas diretamente na NEXTI (sem gravar no banco)         */
 /* ------------------------------------------------------------------ */
 
+export type FaltaNextiItem = {
+  colaborador: string;
+  cargo: string;
+  periodo: string;
+  tipo: string;
+  posto: string;
+  matricula: string;
+};
+
 let cacheFaltas: {
-  lista: Array<{ colaborador: string; cargo: string; periodo: string; tipo: string }>;
+  lista: FaltaNextiItem[];
   em: number;
 } | null = null;
+
 
 function dataHoraConsultaNexti(data: Date): string {
   const dois = (valor: number) => String(valor).padStart(2, "0");
@@ -1004,9 +1014,10 @@ function extrairPeriodo(f: Rec): string {
 }
 
 async function carregarFaltasNexti(supabaseClient: unknown): Promise<{
-  lista: Array<{ colaborador: string; cargo: string; periodo: string; tipo: string }>;
+  lista: FaltaNextiItem[];
   em: number;
 }> {
+
   if (cacheFaltas && Date.now() - cacheFaltas.em < CACHE_MS) {
     return cacheFaltas;
   }
@@ -1039,7 +1050,7 @@ async function carregarFaltasNexti(supabaseClient: unknown): Promise<{
     if (id !== null && nome) situacoesPorId.set(id, nome);
   }
 
-  const lista: Array<{ colaborador: string; cargo: string; periodo: string; tipo: string }> = [];
+  const lista: FaltaNextiItem[] = [];
   const vistos = new Set<string>();
 
   for (const f of faltasRaw) {
@@ -1064,7 +1075,15 @@ async function carregarFaltasNexti(supabaseClient: unknown): Promise<{
     if (vistos.has(chave)) continue;
     vistos.add(chave);
 
-    lista.push({ colaborador, cargo, periodo, tipo });
+    lista.push({
+      colaborador,
+      cargo,
+      periodo,
+      tipo,
+      posto: pessoa?.posto ?? "",
+      matricula: pessoa?.matricula ?? personExternalId,
+    });
+
   }
 
   lista.sort((a, b) => b.periodo.localeCompare(a.periodo, "pt-BR"));
@@ -1127,3 +1146,112 @@ export const pesquisarFaltasNexti = createServerFn({ method: "POST" })
       }
     },
   );
+
+/* ------------------------------------------------------------------ */
+/* Dashboard de faltas alimentado direto pela API da NEXTI            */
+/* ------------------------------------------------------------------ */
+
+export type LinhaDashboardFaltas = {
+  posto: string;
+  colaborador: string;
+  cargo: string;
+  gerente: string;
+  dataInicio: string;
+  dataFim: string;
+  faltas: string;
+  tipo: string;
+};
+
+export type DashboardFaltasNextiResultado = {
+  ok: boolean;
+  linhas: LinhaDashboardFaltas[];
+  total: number;
+  sincronizadoEm: string | null;
+  erro?: string;
+};
+
+function partesPeriodo(periodo: string): { inicio: string; fim: string } {
+  const partes = periodo.split("—").map((p) => p.trim());
+  const inicio = partes[0] && /\d{2}\/\d{2}\/\d{4}/.test(partes[0]) ? partes[0] : "";
+  const fim = partes[1] && /\d{2}\/\d{2}\/\d{4}/.test(partes[1]) ? partes[1] : inicio;
+  return { inicio, fim };
+}
+
+function diasDeFalta(inicio: string, fim: string): number {
+  const converter = (valor: string): Date | null => {
+    const m = valor.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!m) return null;
+    return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  };
+  const di = converter(inicio);
+  const df = converter(fim) ?? di;
+  if (!di || !df) return 1;
+  const dias = Math.round((df.getTime() - di.getTime()) / 86400000) + 1;
+  return dias > 0 && dias < 400 ? dias : 1;
+}
+
+/**
+ * Monta as linhas do dashboard de faltas puxando tudo da API da NEXTI
+ * (ausências + colaboradores + postos) e completando o gerente de área
+ * pelo vínculo posto → gerente já cadastrado no banco.
+ */
+export const carregarFaltasDashboardNexti = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { forcarSincronizar?: boolean } | undefined) => ({
+    forcarSincronizar: input?.forcarSincronizar === true,
+  }))
+  .handler(async ({ data, context }): Promise<DashboardFaltasNextiResultado> => {
+    const ctx = context as { supabase: any };
+    try {
+      if (data.forcarSincronizar) cacheFaltas = null;
+      const { lista, em } = await carregarFaltasNexti(ctx.supabase);
+
+      const gerentePorPosto = new Map<string, string>();
+      try {
+        const { data: vinculos } = await ctx.supabase
+          .from("areas_gerentes_postos")
+          .select("gerente_nome, posto_nome")
+          .limit(50000);
+        for (const v of (vinculos ?? []) as Array<{
+          gerente_nome: string;
+          posto_nome: string;
+        }>) {
+          if (v.posto_nome && v.gerente_nome) {
+            gerentePorPosto.set(normalizar(v.posto_nome), v.gerente_nome);
+          }
+        }
+      } catch {
+        /* segue sem o gerente */
+      }
+
+      const linhas: LinhaDashboardFaltas[] = lista.map((f) => {
+        const { inicio, fim } = partesPeriodo(f.periodo);
+        return {
+          posto: f.posto,
+          colaborador: f.colaborador,
+          cargo: f.cargo,
+          gerente: gerentePorPosto.get(normalizar(f.posto)) ?? "",
+          dataInicio: inicio,
+          dataFim: fim,
+          faltas: String(diasDeFalta(inicio, fim)),
+          tipo: f.tipo.toUpperCase(),
+        };
+      });
+
+      return {
+        ok: true,
+        linhas,
+        total: linhas.length,
+        sincronizadoEm: new Date(em).toISOString(),
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        linhas: [],
+        total: 0,
+        sincronizadoEm: null,
+        erro:
+          error instanceof Error ? error.message : "Falha ao carregar o dashboard pela API NEXTI.",
+      };
+    }
+  });

@@ -33,6 +33,8 @@ import {
   YAxis,
 } from "recharts";
 import { type ParsedRow } from "@/lib/file-parsers";
+import { carregarFaltasDashboardNexti } from "@/lib/nexti-ativos.functions";
+
 import { sincronizarFaltasLancadas } from "@/lib/faltas-lancamentos.functions";
 import { extrairTodosRegistros, temCabecalho } from "@/lib/tabular-extract";
 import { KpiCard } from "@/components/KpiCard";
@@ -347,6 +349,10 @@ function FaltasPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [nextiCarregando, setNextiCarregando] = useState(false);
+  const [nextiErro, setNextiErro] = useState<string | null>(null);
+  const [nextiEm, setNextiEm] = useState<string | null>(null);
+
 
   const [showFilters, setShowFilters] = useState(false);
   const [filterPosto, setFilterPosto] = useState("");
@@ -376,9 +382,49 @@ function FaltasPage() {
     }
   };
 
+  // Carrega o dashboard direto da API da NEXTI
+  const puxarDaNexti = useCallback(async (forcar: boolean) => {
+    setNextiCarregando(true);
+    setNextiErro(null);
+    try {
+      const res = await carregarFaltasDashboardNexti({ data: { forcarSincronizar: forcar } });
+      if (!res.ok) throw new Error(res.erro || "Falha ao consultar a NEXTI.");
+      if (res.linhas.length === 0) {
+        setNextiErro("A NEXTI não retornou nenhuma ausência no período consultado.");
+        return;
+      }
+      const tabela: ParsedRow[] = [
+        ["POSTO", "COLABORADOR", "CARGO", "GERENTE", "DATA INICIO", "DATA FIM", "FALTAS", "TIPO"],
+        ...res.linhas.map((l) => [
+          l.posto,
+          l.colaborador,
+          l.cargo,
+          l.gerente,
+          l.dataInicio,
+          l.dataFim,
+          l.faltas,
+          l.tipo,
+        ]),
+      ];
+      setRows(tabela);
+      setNextiEm(res.sincronizadoEm);
+      try {
+        localStorage.setItem(FALTAS_STORAGE_KEY, JSON.stringify(tabela));
+      } catch {
+        /* armazenamento cheio: segue só em memória */
+      }
+    } catch (err) {
+      setNextiErro(err instanceof Error ? err.message : "Falha ao consultar a NEXTI.");
+    } finally {
+      setNextiCarregando(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadFromStorage();
-  }, []);
+    void puxarDaNexti(false);
+  }, [puxarDaNexti]);
+
 
   // Listen for storage changes (if admin imports in another tab)
   useEffect(() => {
@@ -722,6 +768,20 @@ function FaltasPage() {
             >
               <RefreshCw className="size-4" /> Atualizar
             </button>
+            <button
+              type="button"
+              onClick={() => void puxarDaNexti(true)}
+              disabled={nextiCarregando}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+            >
+              {nextiCarregando ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RefreshCw className="size-4" />
+              )}
+              {nextiCarregando ? "Buscando na NEXTI..." : "Puxar da NEXTI"}
+            </button>
+
             {columnsDetected && filteredData.length > 0 ? (
               <button
                 type="button"
@@ -736,7 +796,17 @@ function FaltasPage() {
       </header>
 
       <div className="mx-auto max-w-7xl space-y-8 px-6 py-10">
+        {nextiErro ? (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+            {nextiErro}
+          </div>
+        ) : nextiEm ? (
+          <p className="text-xs text-muted-foreground">
+            Dados carregados da NEXTI em {new Date(nextiEm).toLocaleString("pt-BR")}.
+          </p>
+        ) : null}
         {/* No data state */}
+
 
         {!hasData && (
           <div className="flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed border-border bg-secondary/50 p-10 text-center">
