@@ -390,6 +390,18 @@ function TopColaboradorTooltip({ active, payload }: any) {
           ))}
         </div>
       )}
+      {Array.isArray(d.motivosReais) && d.motivosReais.length > 0 && (
+        <div className="mt-1 border-t border-border pt-1">
+          <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Justificativa registrada
+          </p>
+          {d.motivosReais.map((m: string, idx: number) => (
+            <p key={idx} className="max-w-[260px] whitespace-normal text-xs text-foreground">
+              {m}
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -661,7 +673,7 @@ function FaltasPage() {
     const faltasPorColaborador = new Map<string, number>();
     const colaboradorInfo = new Map<
       string,
-      { nome: string; posto: string; cargo: string; ocorrencias: number; dias: number; motivos: Map<string, number> }
+      { nome: string; posto: string; cargo: string; ocorrencias: number; dias: number; motivos: Map<string, number>; motivosReais: Set<string> }
     >();
     for (const r of data) {
       if (!r.colaborador) continue;
@@ -674,6 +686,7 @@ function FaltasPage() {
         info.ocorrencias += 1;
         info.dias += val;
         info.motivos.set(motivo, (info.motivos.get(motivo) ?? 0) + 1);
+        if (r.motivo) info.motivosReais.add(r.motivo);
         if (!info.posto && r.posto) info.posto = r.posto;
         if (!info.cargo && r.cargo) info.cargo = r.cargo;
       } else {
@@ -684,6 +697,7 @@ function FaltasPage() {
           ocorrencias: 1,
           dias: val,
           motivos: new Map([[motivo, 1]]),
+          motivosReais: new Set(r.motivo ? [r.motivo] : []),
         });
       }
     }
@@ -700,6 +714,7 @@ function FaltasPage() {
         motivos: Array.from(info.motivos, ([nome, qtd]) => ({ nome, qtd })).sort(
           (a, b) => b.qtd - a.qtd,
         ),
+        motivosReais: Array.from(info.motivosReais),
       }));
 
     const faltasPorPosto = new Map<string, number>();
