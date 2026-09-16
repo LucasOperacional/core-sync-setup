@@ -27,7 +27,7 @@ import {
   X,
 } from "lucide-react";
 import { KpiCard } from "@/components/KpiCard";
-
+import { ConsultaAtestadosPorNome } from "@/components/ConsultaAtestadosPorNome";
 
 import { WidgetBoard } from "@/components/widgets/WidgetBoard";
 
