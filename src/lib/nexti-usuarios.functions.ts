@@ -689,6 +689,26 @@ async function buscarPessoaExistente(
       `/api/persons/registration/${encodeURIComponent(matricula)}`,
     );
 
+  const corresponde = (candidato: Record<string, unknown>) => {
+    // A NEXTI às vezes responde HTTP 200 com { id: 200, message: "não encontrado" }.
+    // Esse "id" é um código da mensagem, não o identificador de uma pessoa.
+    const temDadosDePessoa = ["name", "cpf", "enrolment", "externalId", "companyId"].some(
+      (campo) => candidato[campo] !== undefined && candidato[campo] !== null,
+    );
+    if (!temDadosDePessoa) return false;
+    const cpfRetornado = soDigitos(String(candidato["cpf"] ?? candidato["document"] ?? ""));
+    const matriculaRetornada = limpar(
+      String(
+        candidato["enrolment"] ??
+          candidato["externalId"] ??
+          candidato["registration"] ??
+          candidato["registerNumber"] ??
+          "",
+      ),
+    );
+    return Boolean((cpf && cpfRetornado === cpf) || (matricula && matriculaRetornada === matricula));
+  };
+
   for (const endpoint of tentativas) {
     try {
       const res = await requestNexti({ config, endpoint, method: "GET" });
@@ -710,10 +730,36 @@ async function buscarPessoaExistente(
       for (const c of candidatos) {
         if (!isRec(c)) continue;
         const id = Number(c["id"] ?? 0);
-        if (id > 0) return { id, nome: String(c["name"] ?? c["nome"] ?? "") };
+        if (id > 0 && corresponde(c)) {
+          return { id, nome: String(c["name"] ?? c["nome"] ?? "") };
+        }
       }
     } catch {
       /* tenta o próximo formato de consulta */
+    }
+  }
+
+  // Algumas instalações não oferecem consulta direta por CPF/matrícula.
+  // Nesse caso, usa a listagem com filtro e confirma os identificadores antes de atualizar.
+  for (const filtro of [cpf, matricula].filter(Boolean)) {
+    try {
+      const res = await requestNexti({
+        config,
+        endpoint: "/api/persons/all",
+        method: "GET",
+        query: { page: 0, size: 100, filter: filtro },
+      });
+      const candidatos =
+        isRec(res.data) && Array.isArray(res.data["content"])
+          ? (res.data["content"] as unknown[])
+          : [];
+      for (const c of candidatos) {
+        if (!isRec(c) || !corresponde(c)) continue;
+        const id = Number(c["id"] ?? 0);
+        if (id > 0) return { id, nome: String(c["name"] ?? c["nome"] ?? "") };
+      }
+    } catch {
+      /* tenta o próximo filtro */
     }
   }
   return null;
@@ -725,27 +771,34 @@ async function atualizarPessoa(
   personId: number,
   payload: Record<string, string | number | boolean>,
 ): Promise<{ ok: boolean; erro?: string }> {
-  const corpo = { ...payload, id: personId, ignoreValidation: true };
-  const tentativas: Array<{ endpoint: string; method: "PUT" | "POST" }> = [
-    { endpoint: "/api/persons", method: "PUT" },
-    { endpoint: `/api/persons/${personId}`, method: "PUT" },
-  ];
-  let ultimoErro = "sem resposta da NEXTI";
-  for (const t of tentativas) {
-    try {
-      const res = await requestNexti({
-        config,
-        endpoint: t.endpoint,
-        method: t.method,
-        body: corpo,
-      });
-      if (res.status >= 200 && res.status < 300) return { ok: true };
-      ultimoErro = `${t.endpoint} respondeu ${res.status}`;
-    } catch (error) {
-      ultimoErro = (error as Error)?.message ?? "erro desconhecido";
-    }
+  try {
+    const consulta = await requestNexti({
+      config,
+      endpoint: `/api/persons/${personId}`,
+      method: "GET",
+    });
+    const raiz = isRec(consulta.data) ? consulta.data : null;
+    const atual = raiz && isRec(raiz["value"]) ? raiz["value"] : raiz;
+    const temPessoa =
+      atual && ["name", "cpf", "enrolment", "externalId", "companyId"].some((campo) => atual[campo] !== undefined);
+    if (!atual || !temPessoa) return { ok: false, erro: "A NEXTI não encontrou o cadastro para atualização." };
+
+    // A atualização de pessoas exige o registro completo já existente. Preserva os
+    // campos obrigatórios da NEXTI e substitui somente os dados vindos da planilha.
+    const corpo = { ...atual, ...payload, id: personId, ignoreValidation: true };
+    delete corpo["message"];
+    const res = await requestNexti({
+      config,
+      endpoint: `/api/persons/${personId}`,
+      method: "PUT",
+      body: corpo as Record<string, string | number | boolean>,
+    });
+    return res.status >= 200 && res.status < 300
+      ? { ok: true }
+      : { ok: false, erro: `/api/persons/${personId} respondeu ${res.status}` };
+  } catch (error) {
+    return { ok: false, erro: (error as Error)?.message ?? "erro desconhecido" };
   }
-  return { ok: false, erro: ultimoErro };
 }
 
 
@@ -808,7 +861,7 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
         const existente = await buscarPessoaExistente(
           config,
           String(payload["cpf"] ?? payload["document"] ?? ""),
-          String(payload["externalId"] ?? payload["registerNumber"] ?? ""),
+          String(payload["enrolment"] ?? payload["externalId"] ?? ""),
         );
         if (!existente) {
           return {
@@ -820,7 +873,7 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
         }
 
         const atualizado = await atualizarPessoa(config, existente.id, payload);
-        const infoVinculo = await vincular(existente.id);
+        const infoVinculo = atualizado.ok ? await vincular(existente.id) : "";
         return {
           nome,
           ok: atualizado.ok,
