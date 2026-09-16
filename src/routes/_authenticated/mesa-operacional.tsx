@@ -17,6 +17,7 @@ import { normalizarNome } from "@/lib/gerentes-area-a";
 import { COORDENADORES, coordenadorDoGerente, rotuloCoordenador } from "@/lib/coordenadores";
 import {
   buscarPostosNexti,
+  importarPostosMesaLote,
   cadastrarPostoMesa,
   hojeBrasilia,
   listarPostosMesa,
@@ -54,6 +55,7 @@ function MesaOperacionalPage() {
   const remover = useServerFn(removerPostoMesa);
   const marcar = useServerFn(registrarCheckinMesa);
   const carregarNexti = useServerFn(buscarPostosNexti);
+  const importarLote = useServerFn(importarPostosMesaLote);
 
   const [dia, setDia] = useState(() => hojeBrasilia());
   const [busca, setBusca] = useState("");
@@ -61,6 +63,10 @@ function MesaOperacionalPage() {
   const [novoGerente, setNovoGerente] = useState<string>(AREAS_GERENTES[0]);
   const [novaLocalidade, setNovaLocalidade] = useState("");
   const [novoCliente, setNovoCliente] = useState("");
+  const [loteGerente, setLoteGerente] = useState<string>(AREAS_GERENTES[0]);
+  const [loteBusca, setLoteBusca] = useState("");
+  const [loteSelecao, setLoteSelecao] = useState<string[]>([]);
+  const [loteTexto, setLoteTexto] = useState("");
 
   const nexti = useQuery({
     queryKey: ["mesa-postos-nexti"],
@@ -125,6 +131,74 @@ function MesaOperacionalPage() {
       atualizar();
     },
   });
+
+  const loteMut = useMutation({
+    mutationFn: (lista: { nome: string; gerenteNome: string; localidade?: string; cliente?: string }[]) =>
+      importarLote({ data: { postos: lista } }),
+    onSuccess: (r) => {
+      if (!r.ok) {
+        toast.error(r.erro || "Não foi possível importar os postos");
+        return;
+      }
+      toast.success(
+        `${r.criados} posto(s) cadastrado(s)` +
+          (r.repetidos ? ` · ${r.repetidos} já existia(m)` : "") +
+          (r.falhas ? ` · ${r.falhas} com erro` : ""),
+      );
+      setLoteSelecao([]);
+      setLoteTexto("");
+      atualizar();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao importar"),
+  });
+
+  const nextiFiltrados = useMemo(() => {
+    const termo = normalizarNome(loteBusca);
+    const base = termo
+      ? postosNexti.filter(
+          (p) =>
+            normalizarNome(p.nome).includes(termo) ||
+            normalizarNome(p.cliente ?? "").includes(termo) ||
+            normalizarNome(p.localidade ?? "").includes(termo),
+        )
+      : postosNexti;
+    return base.slice(0, 400);
+  }, [postosNexti, loteBusca]);
+
+  const enviarLote = () => {
+    const daNexti = postosNexti
+      .filter((p) => loteSelecao.includes(p.nome))
+      .map((p) => ({
+        nome: p.nome,
+        gerenteNome: loteGerente,
+        localidade: p.localidade ?? undefined,
+        cliente: p.cliente ?? undefined,
+      }));
+
+    const digitados = loteTexto
+      .split(/\r?\n/)
+      .map((linha) => linha.trim())
+      .filter((linha) => linha.length >= 2)
+      .map((linha) => {
+        const partes = linha.split(/[;|]/).map((x) => x.trim());
+        const nome = partes[0] ?? "";
+        const gerenteDigitado = partes[1];
+        const gerente = gerenteDigitado
+          ? (AREAS_GERENTES.find(
+              (g) => normalizarNome(g) === normalizarNome(gerenteDigitado),
+            ) ?? loteGerente)
+          : loteGerente;
+        return { nome, gerenteNome: gerente, cliente: partes[2] || undefined };
+      })
+      .filter((p) => p.nome.length >= 2);
+
+    const lista = [...daNexti, ...digitados];
+    if (lista.length === 0) {
+      toast.error("Selecione postos da NEXTI ou cole a lista de postos");
+      return;
+    }
+    loteMut.mutate(lista);
+  };
 
   const postos = data?.postos ?? [];
 
@@ -290,6 +364,126 @@ function MesaOperacionalPage() {
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Building2 className="size-4" />
+              Importar postos em lote
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">
+                  Gerente de área para os postos importados
+                </label>
+                <select
+                  value={loteGerente}
+                  onChange={(e) => setLoteGerente(e.target.value)}
+                  className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  {AREAS_GERENTES.map((g) => (
+                    <option key={g} value={g}>
+                      {g}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Buscar postos da NEXTI
+                </label>
+                <Input
+                  className="mt-1"
+                  value={loteBusca}
+                  onChange={(e) => setLoteBusca(e.target.value)}
+                  placeholder="Filtrar por posto, cliente ou cidade"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setLoteSelecao(nextiFiltrados.map((p) => p.nome))}
+                disabled={nextiFiltrados.length === 0}
+              >
+                Selecionar todos ({nextiFiltrados.length})
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setLoteSelecao([])}
+                disabled={loteSelecao.length === 0}
+              >
+                Limpar seleção
+              </Button>
+              <span>{loteSelecao.length} selecionado(s)</span>
+            </div>
+
+            <div className="max-h-64 overflow-y-auto rounded-md border">
+              {nexti.isLoading ? (
+                <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
+                  <Loader2 className="size-4 animate-spin" /> Carregando postos da NEXTI...
+                </div>
+              ) : nextiFiltrados.length === 0 ? (
+                <p className="p-3 text-sm text-muted-foreground">
+                  Nenhum posto encontrado na NEXTI.
+                </p>
+              ) : (
+                <ul className="divide-y">
+                  {nextiFiltrados.map((p) => (
+                    <li key={`${p.nextiId ?? p.nome}`} className="flex items-center gap-3 p-2">
+                      <Checkbox
+                        checked={loteSelecao.includes(p.nome)}
+                        onCheckedChange={(v) =>
+                          setLoteSelecao((atual) =>
+                            v === true
+                              ? [...new Set([...atual, p.nome])]
+                              : atual.filter((n) => n !== p.nome),
+                          )
+                        }
+                        aria-label={`Selecionar ${p.nome}`}
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm">{p.nome}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {[p.cliente, p.localidade].filter(Boolean).join(" · ") || "—"}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                Ou cole a lista (um posto por linha; opcional "Posto;Gerente;Cliente")
+              </label>
+              <textarea
+                value={loteTexto}
+                onChange={(e) => setLoteTexto(e.target.value)}
+                rows={4}
+                className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm"
+                placeholder={"POSTO SHOPPING FLAMBOYANT\nPOSTO CENTRO;GABRIEL MENDANHA CABRAL"}
+              />
+            </div>
+
+            <Button type="button" onClick={enviarLote} disabled={loteMut.isPending}>
+              {loteMut.isPending ? (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              ) : (
+                <Plus className="mr-2 size-4" />
+              )}
+              Cadastrar em lote
+            </Button>
           </CardContent>
         </Card>
 
