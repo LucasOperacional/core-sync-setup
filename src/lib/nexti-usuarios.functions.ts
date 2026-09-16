@@ -508,22 +508,11 @@ function montarCadastro(
   if (!limpar(p.cargo)) avisos.push("Cargo não informado.");
   if (limpar(p.escala) && !escala) erros.push(`Escala "${p.escala}" não existe na NEXTI.`);
 
-  // Regra: posto não encontrado pelo nome exato → usar o mais compatível da NEXTI.
-  if (limpar(p.posto) && !posto) {
-    const compativel = acharPostoCompativel(listas.postosRaw, p.posto);
-    if (compativel) {
-      posto = compativel.opcao;
-      avisos.push(
-        `Posto "${p.posto}" não existe com esse nome — usado o mais compatível: "${compativel.opcao.nome}".`,
-      );
-    }
-  }
-
-  // Regra: posto não encontrado ou sem vaga livre → lotar em "NOVAS ADMISSÕES".
+  // Regra: posto não localizado pelo nome exato → lotar direto em "NOVAS ADMISSÕES".
   const destinoNovas = acharOpcao(paraOpcoes(listas.postosRaw), POSTO_NOVAS_ADMISSOES);
   if (limpar(p.posto) && !posto) {
     if (destinoNovas) {
-      avisos.push(`Posto "${p.posto}" não encontrado — será lotado em "${destinoNovas.nome}".`);
+      avisos.push(`Posto "${p.posto}" não localizado — será lotado em "${destinoNovas.nome}".`);
       posto = destinoNovas;
     } else {
       erros.push(`Posto "${p.posto}" não encontrado e não existe o posto "${POSTO_NOVAS_ADMISSOES}" na NEXTI.`);
