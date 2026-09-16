@@ -892,12 +892,25 @@ async function buscarPessoaExistente(
   return null;
 }
 
+/** Campos de desligamento que impedem a alteração de um cadastro na NEXTI. */
+const CAMPOS_DESLIGAMENTO = [
+  "dismissalDate",
+  "demissionDate",
+  "terminationDate",
+  "dismissalReason",
+  "dismissalReasonId",
+  "deletedAt",
+  "deleted",
+  "excluded",
+];
+
 /** Atualiza o cadastro de um colaborador que já existe na NEXTI. */
 async function atualizarPessoa(
   config: Awaited<ReturnType<typeof loadConfig>>,
   personId: number,
   payload: Record<string, string | number | boolean>,
 ): Promise<{ ok: boolean; erro?: string }> {
+  let atual: Record<string, unknown> | null = null;
   try {
     const consulta = await requestNexti({
       config,
@@ -905,32 +918,64 @@ async function atualizarPessoa(
       method: "GET",
     });
     const raiz = isRec(consulta.data) ? consulta.data : null;
-    const atual = raiz && isRec(raiz["value"]) ? raiz["value"] : raiz;
+    const encontrado = raiz && isRec(raiz["value"]) ? raiz["value"] : raiz;
     const temPessoa =
-      atual && ["name", "cpf", "enrolment", "externalId", "companyId"].some((campo) => atual[campo] !== undefined);
-    if (!atual || !temPessoa) return { ok: false, erro: "A NEXTI não encontrou o cadastro para atualização." };
-
-    // A atualização de pessoas exige o registro completo já existente. Preserva os
-    // campos obrigatórios da NEXTI e substitui somente os dados vindos da planilha.
-    const corpo: Record<string, unknown> = {
-      ...atual,
-      ...payload,
-      id: personId,
-      ignoreValidation: true,
-    };
-    delete corpo["message"];
-    const res = await requestNexti({
-      config,
-      endpoint: `/api/persons/${personId}`,
-      method: "PUT",
-      body: corpo as Record<string, string | number | boolean>,
-    });
-    return res.status >= 200 && res.status < 300
-      ? { ok: true }
-      : { ok: false, erro: `/api/persons/${personId} respondeu ${res.status}` };
-  } catch (error) {
-    return { ok: false, erro: (error as Error)?.message ?? "erro desconhecido" };
+      encontrado &&
+      ["name", "cpf", "enrolment", "externalId", "companyId"].some(
+        (campo) => encontrado[campo] !== undefined,
+      );
+    if (encontrado && temPessoa) atual = encontrado;
+  } catch {
+    /* segue sem o registro atual */
   }
+  if (!atual) return { ok: false, erro: "A NEXTI não encontrou o cadastro para atualização." };
+
+  // A atualização de pessoas exige o registro completo já existente. Preserva os
+  // campos obrigatórios da NEXTI e substitui somente os dados vindos da planilha.
+  const base: Record<string, unknown> = {
+    ...atual,
+    ...payload,
+    id: personId,
+    ignoreValidation: true,
+  };
+  delete base["message"];
+
+  // Quando o colaborador foi desligado/removido na NEXTI, o cadastro continua lá e
+  // qualquer alteração é recusada (409) até que a situação volte para ativo e as
+  // marcas de desligamento saiam do corpo enviado.
+  const reativado: Record<string, unknown> = { ...base };
+  for (const campo of CAMPOS_DESLIGAMENTO) delete reativado[campo];
+  reativado["pessoaSituationId"] = 1;
+  if (atual["active"] !== undefined) reativado["active"] = true;
+
+  const tentativas: Array<{ endpoint: string; corpo: Record<string, unknown> }> = [
+    { endpoint: `/api/persons/${personId}`, corpo: base },
+    { endpoint: `/api/persons/${personId}`, corpo: reativado },
+  ];
+  const externo = String(payload["externalId"] ?? atual["externalId"] ?? "");
+  if (externo) {
+    tentativas.push({
+      endpoint: `/api/persons/externalId/${encodeURIComponent(externo)}`,
+      corpo: reativado,
+    });
+  }
+
+  let ultimoErro = "erro desconhecido";
+  for (const tentativa of tentativas) {
+    try {
+      const res = await requestNexti({
+        config,
+        endpoint: tentativa.endpoint,
+        method: "PUT",
+        body: tentativa.corpo as Record<string, string | number | boolean>,
+      });
+      if (res.status >= 200 && res.status < 300) return { ok: true };
+      ultimoErro = `${tentativa.endpoint} respondeu ${res.status}`;
+    } catch (error) {
+      ultimoErro = (error as Error)?.message ?? "erro desconhecido";
+    }
+  }
+  return { ok: false, erro: ultimoErro };
 }
 
 
@@ -1015,7 +1060,7 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
           personId: existente.id,
           mensagem: atualizado.ok
             ? `Colaborador já existia na NEXTI (matrícula interna ${existente.id}) — cadastro atualizado.${extra}${infoVinculo}`
-            : `Colaborador já existe na NEXTI (matrícula interna ${existente.id}), mas a atualização falhou: ${atualizado.erro}.${extra}`,
+            : `Colaborador já existe na NEXTI (cadastro interno ${existente.id}) e a NEXTI recusou a alteração: ${atualizado.erro}. Isso costuma acontecer quando o cadastro foi desligado/removido na NEXTI e ainda está bloqueado para edição — reative o cadastro na NEXTI (ou apague-o definitivamente) e importe de novo.${extra}`,
         };
       }
 
