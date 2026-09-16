@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 
 import { KpiCard } from "@/components/KpiCard";
+import { DesempenhoGerentesArea } from "@/components/DesempenhoGerentesArea";
 import {
   QualidadeTempoSupervisores,
   formatarDuracao,
