@@ -3,13 +3,13 @@ import { ChevronDown, Clock, MapPin } from "lucide-react";
 
 import { classificarResposta, parseDateBR, type Visit } from "@/lib/report-parser";
 
-type LinhaPosto = {
-  posto: string;
+type LinhaLocal = {
+  local: string;
   visitas: number;
   minutos: number;
+  mediaMin: number | null;
   qualidade: number;
-  itens: number;
-  naoConformes: number;
+  supervisores: string[];
   detalhes: {
     id: string;
     data: string;
@@ -17,20 +17,8 @@ type LinhaPosto = {
     fim: string;
     duracao: number | null;
     qualidade: number;
+    supervisor: string;
   }[];
-};
-
-type LinhaSupervisor = {
-  nome: string;
-  visitas: number;
-  minutos: number;
-  mediaMin: number | null;
-  menorMin: number | null;
-  maiorMin: number | null;
-  qualidade: number;
-  itens: number;
-  naoConformes: number;
-  postos: LinhaPosto[];
 };
 
 function duracaoValida(v: Visit) {
@@ -78,86 +66,64 @@ function contar(v: Visit) {
 export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
   const [fechados, setFechados] = useState<Set<string>>(new Set());
 
-  const linhas = useMemo<LinhaSupervisor[]>(() => {
-    const porSupervisor = new Map<string, Visit[]>();
+  const linhas = useMemo<LinhaLocal[]>(() => {
+    const porLocal = new Map<string, Visit[]>();
     for (const v of visitas) {
-      const nome = v.responsavel.trim() || "Não informado";
-      const lista = porSupervisor.get(nome) ?? [];
+      const local = (v.posto || v.local || v.cliente).trim() || "Local não informado";
+      const lista = porLocal.get(local) ?? [];
       lista.push(v);
-      porSupervisor.set(nome, lista);
+      porLocal.set(local, lista);
     }
 
-    return Array.from(porSupervisor.entries())
-      .map(([nome, lista]) => {
-        const duracoes = lista.map(duracaoValida).filter((d): d is number => d != null);
+    return Array.from(porLocal.entries())
+      .map(([local, vs]) => {
         let itens = 0;
         let naoConformes = 0;
+        let minutos = 0;
+        const duracoes: number[] = [];
+        const supervisores = new Set<string>();
 
-        const porPosto = new Map<string, Visit[]>();
-        for (const v of lista) {
-          const c = contar(v);
-          itens += c.itens;
-          naoConformes += c.naoConformes;
-          const posto = (v.posto || v.local || v.cliente).trim() || "Posto não informado";
-          const arr = porPosto.get(posto) ?? [];
-          arr.push(v);
-          porPosto.set(posto, arr);
-        }
-
-        const postos: LinhaPosto[] = Array.from(porPosto.entries())
-          .map(([posto, vs]) => {
-            let pItens = 0;
-            let pNao = 0;
-            let minutos = 0;
-            const detalhes = vs
-              .slice()
-              .sort(
-                (a, b) =>
-                  (parseDateBR(b.inicio)?.getTime() ?? 0) - (parseDateBR(a.inicio)?.getTime() ?? 0),
-              )
-              .map((v) => {
-                const c = contar(v);
-                pItens += c.itens;
-                pNao += c.naoConformes;
-                const dur = duracaoValida(v);
-                if (dur) minutos += dur;
-                return {
-                  id: v.id,
-                  data: dataDe(v.inicio),
-                  inicio: horaDe(v.inicio),
-                  fim: horaDe(v.fim),
-                  duracao: dur,
-                  qualidade: c.itens > 0 ? Math.round((c.conformes / c.itens) * 100) : 0,
-                };
-              });
+        const detalhes = vs
+          .slice()
+          .sort(
+            (a, b) =>
+              (parseDateBR(b.inicio)?.getTime() ?? 0) - (parseDateBR(a.inicio)?.getTime() ?? 0),
+          )
+          .map((v) => {
+            const c = contar(v);
+            itens += c.itens;
+            naoConformes += c.naoConformes;
+            const dur = duracaoValida(v);
+            if (dur) {
+              minutos += dur;
+              duracoes.push(dur);
+            }
+            const supervisor = v.responsavel.trim() || "Não informado";
+            supervisores.add(supervisor);
             return {
-              posto,
-              visitas: vs.length,
-              minutos,
-              itens: pItens,
-              naoConformes: pNao,
-              qualidade: pItens > 0 ? Math.round(((pItens - pNao) / pItens) * 100) : 0,
-              detalhes,
+              id: v.id,
+              data: dataDe(v.inicio),
+              inicio: horaDe(v.inicio),
+              fim: horaDe(v.fim),
+              duracao: dur,
+              qualidade: c.itens > 0 ? Math.round((c.conformes / c.itens) * 100) : 0,
+              supervisor,
             };
-          })
-          .sort((a, b) => b.visitas - a.visitas || a.posto.localeCompare(b.posto, "pt-BR"));
+          });
 
         return {
-          nome,
-          visitas: lista.length,
-          minutos: duracoes.reduce((a, b) => a + b, 0),
+          local,
+          visitas: vs.length,
+          minutos,
           mediaMin: duracoes.length
             ? Math.round(duracoes.reduce((a, b) => a + b, 0) / duracoes.length)
             : null,
-          menorMin: duracoes.length ? Math.min(...duracoes) : null,
-          maiorMin: duracoes.length ? Math.max(...duracoes) : null,
-          itens,
-          naoConformes,
           qualidade: itens > 0 ? Math.round(((itens - naoConformes) / itens) * 100) : 0,
-          postos,
+          supervisores: Array.from(supervisores).sort((a, b) => a.localeCompare(b, "pt-BR")),
+          detalhes,
         };
       })
-      .sort((a, b) => b.visitas - a.visitas || a.nome.localeCompare(b.nome, "pt-BR"));
+      .sort((a, b) => b.visitas - a.visitas || a.local.localeCompare(b.local, "pt-BR"));
   }, [visitas]);
 
   return (
@@ -165,10 +131,10 @@ export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
       <div className="flex items-start gap-2">
         <Clock className="mt-0.5 size-4 text-primary" />
         <div>
-          <h2 className="text-sm font-semibold">Qualidade e tempo por supervisor</h2>
+          <h2 className="text-sm font-semibold">Qualidade e tempo por local de visita</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Percentual de qualidade das visitas e o tempo exato gasto por cada supervisor em cada
-            posto. Clique no supervisor para ver posto a posto, com horário de entrada e saída.
+            Todos os locais visitados, com data, horário de entrada e saída, tempo exato no posto e
+            qualidade de cada visita. Clique no local para recolher ou expandir.
           </p>
         </div>
       </div>
@@ -179,17 +145,17 @@ export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
         </p>
       ) : (
         <ul className="mt-4 space-y-2">
-          {linhas.map((s) => {
-            const expandido = !fechados.has(s.nome);
+          {linhas.map((l) => {
+            const expandido = !fechados.has(l.local);
             return (
-              <li key={s.nome} className="rounded-xl border border-border/70">
+              <li key={l.local} className="rounded-xl border border-border/70">
                 <button
                   type="button"
                   onClick={() =>
                     setFechados((prev) => {
                       const next = new Set(prev);
-                      if (expandido) next.add(s.nome);
-                      else next.delete(s.nome);
+                      if (expandido) next.add(l.local);
+                      else next.delete(l.local);
                       return next;
                     })
                   }
@@ -200,68 +166,52 @@ export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
                       expandido ? "rotate-180" : ""
                     }`}
                   />
-                  <span className="min-w-[10rem] flex-1 text-xs font-semibold">{s.nome}</span>
+                  <MapPin className="size-3.5 shrink-0 text-primary" />
+                  <span className="min-w-[10rem] flex-1 text-xs font-semibold">{l.local}</span>
                   <span className="text-[11px] text-muted-foreground">
-                    {s.visitas} visita(s) · {s.postos.length} posto(s)
+                    {l.visitas} visita(s) · {l.supervisores.length} supervisor(es)
                   </span>
                   <span className="text-[11px] text-muted-foreground">
-                    Total {formatarDuracao(s.minutos || null)} · média{" "}
-                    {formatarDuracao(s.mediaMin)}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">
-                    Menor {formatarDuracao(s.menorMin)} · maior {formatarDuracao(s.maiorMin)}
+                    Total {formatarDuracao(l.minutos || null)} · média{" "}
+                    {formatarDuracao(l.mediaMin)}
                   </span>
                   <span
-                    className={`rounded-md px-2 py-1 text-xs font-semibold ${tomQualidade(s.qualidade)}`}
+                    className={`rounded-md px-2 py-1 text-xs font-semibold ${tomQualidade(l.qualidade)}`}
                   >
-                    {s.qualidade}% qualidade
+                    {l.qualidade}% qualidade
                   </span>
                 </button>
 
                 {expandido ? (
-                  <div className="space-y-3 border-t border-border/70 p-3">
-                    {s.postos.map((p) => (
-                      <div key={p.posto} className="rounded-lg bg-secondary/30 p-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <MapPin className="size-3 text-primary" />
-                          <span className="text-[11px] font-semibold">{p.posto}</span>
-                          <span className="text-[11px] text-muted-foreground">
-                            {p.visitas} visita(s) · tempo total {formatarDuracao(p.minutos || null)}
-                          </span>
-                          <span
-                            className={`ml-auto rounded px-1.5 py-0.5 text-[11px] font-semibold ${tomQualidade(p.qualidade)}`}
-                          >
-                            {p.qualidade}%
-                          </span>
-                        </div>
-                        <div className="mt-2 overflow-x-auto">
-                          <table className="w-full min-w-[30rem] text-left text-[11px]">
-                            <thead className="text-muted-foreground">
-                              <tr className="border-b border-border/60">
-                                <th className="py-1 pr-3 font-medium">Data</th>
-                                <th className="py-1 pr-3 font-medium">Entrada</th>
-                                <th className="py-1 pr-3 font-medium">Saída</th>
-                                <th className="py-1 pr-3 font-medium">Tempo no posto</th>
-                                <th className="py-1 font-medium">Qualidade</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {p.detalhes.map((d) => (
-                                <tr key={d.id} className="border-b border-border/40 last:border-0">
-                                  <td className="py-1 pr-3 whitespace-nowrap">{d.data}</td>
-                                  <td className="py-1 pr-3 whitespace-nowrap">{d.inicio}</td>
-                                  <td className="py-1 pr-3 whitespace-nowrap">{d.fim}</td>
-                                  <td className="py-1 pr-3 whitespace-nowrap">
-                                    {formatarDuracao(d.duracao)}
-                                  </td>
-                                  <td className="py-1 font-semibold">{d.qualidade}%</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="border-t border-border/70 p-3">
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[36rem] text-left text-[11px]">
+                        <thead className="text-muted-foreground">
+                          <tr className="border-b border-border/60">
+                            <th className="py-1 pr-3 font-medium">Data</th>
+                            <th className="py-1 pr-3 font-medium">Entrada</th>
+                            <th className="py-1 pr-3 font-medium">Saída</th>
+                            <th className="py-1 pr-3 font-medium">Tempo no posto</th>
+                            <th className="py-1 pr-3 font-medium">Supervisor</th>
+                            <th className="py-1 font-medium">Qualidade</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {l.detalhes.map((d) => (
+                            <tr key={d.id} className="border-b border-border/40 last:border-0">
+                              <td className="py-1 pr-3 whitespace-nowrap">{d.data}</td>
+                              <td className="py-1 pr-3 whitespace-nowrap">{d.inicio}</td>
+                              <td className="py-1 pr-3 whitespace-nowrap">{d.fim}</td>
+                              <td className="py-1 pr-3 whitespace-nowrap">
+                                {formatarDuracao(d.duracao)}
+                              </td>
+                              <td className="py-1 pr-3">{d.supervisor}</td>
+                              <td className="py-1 font-semibold">{d.qualidade}%</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 ) : null}
               </li>
