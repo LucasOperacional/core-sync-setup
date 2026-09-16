@@ -382,15 +382,18 @@ function FaltasPage() {
     }
   };
 
-  // Carrega o dashboard direto da API da NEXTI
-  const puxarDaNexti = useCallback(async (forcar: boolean) => {
-    setNextiCarregando(true);
+  // Carrega o dashboard direto da API da NEXTI.
+  // `silencioso` atualiza em segundo plano, sem travar a tela.
+  const puxarDaNexti = useCallback(async (forcar: boolean, silencioso = false) => {
+    if (!silencioso) setNextiCarregando(true);
     setNextiErro(null);
     try {
       const res = await carregarFaltasDashboardNexti({ data: { forcarSincronizar: forcar } });
       if (!res.ok) throw new Error(res.erro || "Falha ao consultar a NEXTI.");
       if (res.linhas.length === 0) {
-        setNextiErro("A NEXTI não retornou nenhuma ausência no período consultado.");
+        if (!silencioso) {
+          setNextiErro("A NEXTI não retornou nenhuma ausência no período consultado.");
+        }
         return;
       }
       const tabela: ParsedRow[] = [
@@ -414,18 +417,20 @@ function FaltasPage() {
         /* armazenamento cheio: segue só em memória */
       }
     } catch (err) {
-      setNextiErro(err instanceof Error ? err.message : "Falha ao consultar a NEXTI.");
+      if (!silencioso) {
+        setNextiErro(err instanceof Error ? err.message : "Falha ao consultar a NEXTI.");
+      }
     } finally {
-      setNextiCarregando(false);
+      if (!silencioso) setNextiCarregando(false);
     }
   }, []);
 
   useEffect(() => {
-    // Mostra o último conteúdo salvo enquanto busca os dados reais e, em
-    // seguida, força uma leitura nova na NEXTI para atualizar todos os cards.
+    // Abre instantaneamente com o último conteúdo salvo e atualiza em segundo
+    // plano reaproveitando o cache do servidor (sem forçar nova varredura).
     loadFromStorage();
-    void puxarDaNexti(true);
-    const id = window.setInterval(() => void puxarDaNexti(true), 5 * 60 * 1000);
+    void puxarDaNexti(false, true);
+    const id = window.setInterval(() => void puxarDaNexti(true, true), 5 * 60 * 1000);
     return () => window.clearInterval(id);
   }, [puxarDaNexti]);
 
