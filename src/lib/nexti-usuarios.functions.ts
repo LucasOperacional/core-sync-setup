@@ -867,7 +867,10 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
         const vinculo = await vincularEscala(
           config,
           personId,
+          String(payload["externalId"] ?? payload["enrolment"] ?? ""),
           escalaId,
+          String(payload["externalScheduleId"] ?? ""),
+          Number(payload["rotationCode"] ?? 1),
           String(payload["admissionDate"] ?? ""),
         );
         return vinculo.ok
