@@ -566,12 +566,14 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
       const listas = await carregarListas(config);
       const postoId = acharOpcao(paraOpcoes(listas.postosRaw), p.posto)?.id ?? 0;
       const ativos = await contarAtivosPorPosto(postoId ? [postoId] : []);
-      const { nome, erros, avisos, payload } = montarCadastro(p, listas, ativos);
+      const { nome, erros, avisos, payload, resolvido } = montarCadastro(p, listas, ativos);
 
       if (erros.length) {
         return { nome, ok: false, personId: null, mensagem: erros.join(" ") };
       }
-      const extra = avisos.length ? ` ${avisos.join(" ")}` : "";
+      // A escala escolhida (exata ou a mais compatível) é a que vai no cadastro.
+      const infoEscala = resolvido.escala ? ` Escala usada: "${resolvido.escala}".` : "";
+      const extra = `${avisos.length ? ` ${avisos.join(" ")}` : ""}${infoEscala}`;
 
       const res = await requestNexti({
         config,
