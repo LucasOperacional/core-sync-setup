@@ -198,6 +198,9 @@ function ProtocoloFolhasPonto() {
                 <OperationalErrorBoundary componentName="Cadastro de usuários NEXTI">
                   <AbaUsuariosNexti />
                 </OperationalErrorBoundary>
+                <OperationalErrorBoundary componentName="Sincronização de colaboradores NEXTI">
+                  <SincronizarColaboradoresNexti />
+                </OperationalErrorBoundary>
                 <OperationalErrorBoundary componentName="Opções do colaborador NEXTI">
                   <FlagsUsuarioNexti />
                 </OperationalErrorBoundary>
