@@ -245,6 +245,8 @@ export function ImportFaltasCard() {
           )}
         </div>
 
+        <ImportValidacaoRelatorio relatorios={relatorios} />
+
         {dragOver && (
           <div className="mt-3 flex items-center justify-center rounded-lg border-2 border-dashed border-orange-500/50 bg-orange-500/5 py-6 text-sm font-medium text-orange-400">
             Solte os arquivos aqui para importar
