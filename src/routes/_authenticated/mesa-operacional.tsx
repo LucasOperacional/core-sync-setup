@@ -53,6 +53,7 @@ function MesaOperacionalPage() {
   const cadastrar = useServerFn(cadastrarPostoMesa);
   const remover = useServerFn(removerPostoMesa);
   const marcar = useServerFn(registrarCheckinMesa);
+  const carregarNexti = useServerFn(buscarPostosNexti);
 
   const [dia, setDia] = useState(() => hojeBrasilia());
   const [busca, setBusca] = useState("");
@@ -60,6 +61,14 @@ function MesaOperacionalPage() {
   const [novoGerente, setNovoGerente] = useState<string>(AREAS_GERENTES[0]);
   const [novaLocalidade, setNovaLocalidade] = useState("");
   const [novoCliente, setNovoCliente] = useState("");
+
+  const nexti = useQuery({
+    queryKey: ["mesa-postos-nexti"],
+    queryFn: () => carregarNexti({ data: undefined as never }),
+    staleTime: 10 * 60_000,
+    gcTime: 30 * 60_000,
+  });
+  const postosNexti = nexti.data?.postos ?? [];
 
   const chave = ["mesa-operacional", dia] as const;
 
@@ -215,12 +224,40 @@ function MesaOperacionalPage() {
                 cadastrarMut.mutate();
               }}
             >
-              <Input
-                value={novoNome}
-                onChange={(e) => setNovoNome(e.target.value)}
-                placeholder="Nome do posto"
-                className="md:col-span-2"
-              />
+              <div className="md:col-span-2">
+                <Input
+                  value={novoNome}
+                  list="postos-nexti"
+                  onChange={(e) => {
+                    const valor = e.target.value;
+                    setNovoNome(valor);
+                    const achado = postosNexti.find(
+                      (p) => p.nome.toLowerCase() === valor.trim().toLowerCase(),
+                    );
+                    if (achado) {
+                      if (achado.cliente) setNovoCliente(achado.cliente);
+                      if (achado.localidade) setNovaLocalidade(achado.localidade);
+                    }
+                  }}
+                  placeholder={
+                    nexti.isLoading ? "Carregando postos da NEXTI..." : "Nome do posto (NEXTI)"
+                  }
+                />
+                <datalist id="postos-nexti">
+                  {postosNexti.map((p) => (
+                    <option key={`${p.nextiId ?? p.nome}`} value={p.nome}>
+                      {[p.cliente, p.localidade].filter(Boolean).join(" · ")}
+                    </option>
+                  ))}
+                </datalist>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {nexti.isLoading
+                    ? "Buscando postos na NEXTI..."
+                    : postosNexti.length > 0
+                      ? `${postosNexti.length} postos da NEXTI disponíveis`
+                      : "Nenhum posto retornado pela NEXTI"}
+                </p>
+              </div>
               <select
                 value={novoGerente}
                 onChange={(e) => setNovoGerente(e.target.value)}
