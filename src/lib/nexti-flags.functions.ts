@@ -179,3 +179,102 @@ export const salvarFlagsPessoaNexti = createServerFn({ method: "POST" })
       return { ok: false, erro: (error as Error)?.message ?? "Não foi possível salvar as opções." };
     }
   });
+
+/** Colaborador retornado na sincronização, com a situação do cadastro. */
+export type ColaboradorSincronizado = {
+  id: number;
+  nome: string;
+  matricula: string;
+  cpf: string;
+  posto: string;
+  escala: string;
+  ativo: boolean;
+  situacao: string;
+};
+
+/** Descobre se o cadastro está ativo, olhando os campos usados pela NEXTI. */
+function situacaoDoRegistro(r: Record<string, unknown>): { ativo: boolean; situacao: string } {
+  const nome = String(
+    r["personSituationName"] ?? r["pessoaSituationName"] ?? r["situationName"] ?? r["situation"] ?? "",
+  ).trim();
+  const idSituacao = Number(r["pessoaSituationId"] ?? r["personSituationId"] ?? r["situationId"] ?? 0);
+  const booleano = r["active"] ?? r["isActive"] ?? r["enabled"];
+
+  let ativo: boolean;
+  if (typeof booleano === "boolean") ativo = booleano;
+  else if (nome) ativo = /ativ/i.test(nome) && !/inativ/i.test(nome);
+  else ativo = idSituacao === 1;
+
+  return { ativo, situacao: nome || (ativo ? "Ativo" : "Inativo") };
+}
+
+/**
+ * Sincroniza todos os colaboradores da NEXTI, percorrendo as páginas do
+ * cadastro, para conferir quais estão ativos e quais estão inativos.
+ */
+export const sincronizarColaboradoresNexti = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async (): Promise<{
+    colaboradores: ColaboradorSincronizado[];
+    total: number;
+    ativos: number;
+    inativos: number;
+    erro?: string;
+  }> => {
+    const cfg = await config();
+    const colaboradores: ColaboradorSincronizado[] = [];
+    const vistos = new Set<number>();
+    let erro: string | undefined;
+    const tamanho = 200;
+
+    try {
+      for (let pagina = 0; pagina < 60; pagina++) {
+        const res = await requestNexti({
+          config: cfg,
+          endpoint: "/api/persons/all",
+          method: "GET",
+          query: { page: pagina, size: tamanho },
+        });
+        const corpo = res.data;
+        const lista: unknown[] = Array.isArray(corpo)
+          ? corpo
+          : isRec(corpo) && Array.isArray(corpo["content"])
+            ? (corpo["content"] as unknown[])
+            : isRec(corpo) && isRec(corpo["value"]) && Array.isArray(corpo["value"]["content"])
+              ? (corpo["value"]["content"] as unknown[])
+              : [];
+        if (lista.length === 0) break;
+
+        for (const item of lista) {
+          if (!isRec(item)) continue;
+          const p = paraPessoa(item);
+          if (!p || vistos.has(p.id)) continue;
+          vistos.add(p.id);
+          const { ativo, situacao } = situacaoDoRegistro(item);
+          colaboradores.push({
+            id: p.id,
+            nome: p.nome,
+            matricula: p.matricula,
+            cpf: p.cpf,
+            posto: p.posto,
+            escala: p.escala,
+            ativo,
+            situacao,
+          });
+        }
+        if (lista.length < tamanho) break;
+      }
+    } catch (error) {
+      erro = (error as Error)?.message ?? "Não foi possível consultar a NEXTI.";
+    }
+
+    colaboradores.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    const ativos = colaboradores.filter((c) => c.ativo).length;
+    return {
+      colaboradores,
+      total: colaboradores.length,
+      ativos,
+      inativos: colaboradores.length - ativos,
+      ...(erro ? { erro } : {}),
+    };
+  });
