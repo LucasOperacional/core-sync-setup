@@ -1,7 +1,28 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, Clock, MapPin } from "lucide-react";
+import { ChevronDown, Clock, MapPin, UserRound } from "lucide-react";
 
 import { classificarResposta, parseDateBR, type Visit } from "@/lib/report-parser";
+import { gerenteAreaACanonico } from "@/lib/gerentes-area-a";
+
+type Detalhe = {
+  id: string;
+  data: string;
+  inicio: string;
+  fim: string;
+  duracao: number | null;
+  qualidade: number;
+  supervisor: string;
+  gerente: string;
+};
+
+type BlocoGerente = {
+  gerente: string;
+  visitas: number;
+  minutos: number;
+  mediaMin: number | null;
+  qualidade: number;
+  detalhes: Detalhe[];
+};
 
 type LinhaLocal = {
   local: string;
@@ -10,15 +31,7 @@ type LinhaLocal = {
   mediaMin: number | null;
   qualidade: number;
   supervisores: string[];
-  detalhes: {
-    id: string;
-    data: string;
-    inicio: string;
-    fim: string;
-    duracao: number | null;
-    qualidade: number;
-    supervisor: string;
-  }[];
+  gerentes: BlocoGerente[];
 };
 
 function duracaoValida(v: Visit) {
@@ -63,13 +76,67 @@ function contar(v: Visit) {
   return { conformes, naoConformes, itens: conformes + naoConformes };
 }
 
+function agregar(vs: Visit[]) {
+  let itens = 0;
+  let naoConformes = 0;
+  let minutos = 0;
+  const duracoes: number[] = [];
+  const detalhes: Detalhe[] = vs
+    .slice()
+    .sort(
+      (a, b) => (parseDateBR(b.inicio)?.getTime() ?? 0) - (parseDateBR(a.inicio)?.getTime() ?? 0),
+    )
+    .map((v) => {
+      const c = contar(v);
+      itens += c.itens;
+      naoConformes += c.naoConformes;
+      const dur = duracaoValida(v);
+      if (dur) {
+        minutos += dur;
+        duracoes.push(dur);
+      }
+      return {
+        id: v.id,
+        data: dataDe(v.inicio),
+        inicio: horaDe(v.inicio),
+        fim: horaDe(v.fim),
+        duracao: dur,
+        qualidade: c.itens > 0 ? Math.round((c.conformes / c.itens) * 100) : 0,
+        supervisor: v.responsavel.trim() || "Não informado",
+        gerente: gerenteDe(v),
+      };
+    });
+
+  return {
+    visitas: vs.length,
+    minutos,
+    mediaMin: duracoes.length
+      ? Math.round(duracoes.reduce((a, b) => a + b, 0) / duracoes.length)
+      : null,
+    qualidade: itens > 0 ? Math.round(((itens - naoConformes) / itens) * 100) : 0,
+    detalhes,
+  };
+}
+
+/** Gerente de Área A responsável pela visita, quando reconhecido. */
+function gerenteDe(v: Visit): string {
+  return (
+    gerenteAreaACanonico(v.responsavel) ??
+    gerenteAreaACanonico(v.posto) ??
+    gerenteAreaACanonico(v.local) ??
+    "Sem Gerente de Área A identificado"
+  );
+}
+
 export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
   const [fechados, setFechados] = useState<Set<string>>(new Set());
 
   const linhas = useMemo<LinhaLocal[]>(() => {
+    // Agrupa pelo campo "Local:" extraído dos arquivos importados.
     const porLocal = new Map<string, Visit[]>();
     for (const v of visitas) {
-      const local = (v.posto || v.local || v.cliente).trim() || "Local não informado";
+      const local =
+        (v.local || v.posto || v.cliente).trim() || "Local não informado";
       const lista = porLocal.get(local) ?? [];
       lista.push(v);
       porLocal.set(local, lista);
@@ -77,51 +144,25 @@ export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
 
     return Array.from(porLocal.entries())
       .map(([local, vs]) => {
-        let itens = 0;
-        let naoConformes = 0;
-        let minutos = 0;
-        const duracoes: number[] = [];
-        const supervisores = new Set<string>();
+        const total = agregar(vs);
 
-        const detalhes = vs
-          .slice()
-          .sort(
-            (a, b) =>
-              (parseDateBR(b.inicio)?.getTime() ?? 0) - (parseDateBR(a.inicio)?.getTime() ?? 0),
-          )
-          .map((v) => {
-            const c = contar(v);
-            itens += c.itens;
-            naoConformes += c.naoConformes;
-            const dur = duracaoValida(v);
-            if (dur) {
-              minutos += dur;
-              duracoes.push(dur);
-            }
-            const supervisor = v.responsavel.trim() || "Não informado";
-            supervisores.add(supervisor);
-            return {
-              id: v.id,
-              data: dataDe(v.inicio),
-              inicio: horaDe(v.inicio),
-              fim: horaDe(v.fim),
-              duracao: dur,
-              qualidade: c.itens > 0 ? Math.round((c.conformes / c.itens) * 100) : 0,
-              supervisor,
-            };
-          });
+        const porGerente = new Map<string, Visit[]>();
+        for (const v of vs) {
+          const g = gerenteDe(v);
+          const lista = porGerente.get(g) ?? [];
+          lista.push(v);
+          porGerente.set(g, lista);
+        }
 
-        return {
-          local,
-          visitas: vs.length,
-          minutos,
-          mediaMin: duracoes.length
-            ? Math.round(duracoes.reduce((a, b) => a + b, 0) / duracoes.length)
-            : null,
-          qualidade: itens > 0 ? Math.round(((itens - naoConformes) / itens) * 100) : 0,
-          supervisores: Array.from(supervisores).sort((a, b) => a.localeCompare(b, "pt-BR")),
-          detalhes,
-        };
+        const gerentes: BlocoGerente[] = Array.from(porGerente.entries())
+          .map(([gerente, lista]) => ({ gerente, ...agregar(lista) }))
+          .sort((a, b) => b.visitas - a.visitas || a.gerente.localeCompare(b.gerente, "pt-BR"));
+
+        const supervisores = Array.from(
+          new Set(total.detalhes.map((d) => d.supervisor)),
+        ).sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+        return { local, ...total, supervisores, gerentes };
       })
       .sort((a, b) => b.visitas - a.visitas || a.local.localeCompare(b.local, "pt-BR"));
   }, [visitas]);
@@ -133,16 +174,14 @@ export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
         <div>
           <h2 className="text-sm font-semibold">Qualidade e tempo por local de visita</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Todos os locais visitados, com data, horário de entrada e saída, tempo exato no posto e
-            qualidade de cada visita. Clique no local para recolher ou expandir.
+            Locais lidos do campo "Local:" dos arquivos importados, separados por Gerente de Área A,
+            com data, entrada, saída, tempo exato no posto e qualidade de cada visita.
           </p>
         </div>
       </div>
 
       {linhas.length === 0 ? (
-        <p className="mt-4 text-xs text-muted-foreground">
-          Nenhuma visita no filtro selecionado.
-        </p>
+        <p className="mt-4 text-xs text-muted-foreground">Nenhuma visita no filtro selecionado.</p>
       ) : (
         <ul className="mt-4 space-y-2">
           {linhas.map((l) => {
@@ -169,11 +208,11 @@ export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
                   <MapPin className="size-3.5 shrink-0 text-primary" />
                   <span className="min-w-[10rem] flex-1 text-xs font-semibold">{l.local}</span>
                   <span className="text-[11px] text-muted-foreground">
-                    {l.visitas} visita(s) · {l.supervisores.length} supervisor(es)
+                    {l.visitas} visita(s) · {l.gerentes.length} gerente(s) ·{" "}
+                    {l.supervisores.length} supervisor(es)
                   </span>
                   <span className="text-[11px] text-muted-foreground">
-                    Total {formatarDuracao(l.minutos || null)} · média{" "}
-                    {formatarDuracao(l.mediaMin)}
+                    Total {formatarDuracao(l.minutos || null)} · média {formatarDuracao(l.mediaMin)}
                   </span>
                   <span
                     className={`rounded-md px-2 py-1 text-xs font-semibold ${tomQualidade(l.qualidade)}`}
@@ -183,35 +222,54 @@ export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
                 </button>
 
                 {expandido ? (
-                  <div className="border-t border-border/70 p-3">
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[36rem] text-left text-[11px]">
-                        <thead className="text-muted-foreground">
-                          <tr className="border-b border-border/60">
-                            <th className="py-1 pr-3 font-medium">Data</th>
-                            <th className="py-1 pr-3 font-medium">Entrada</th>
-                            <th className="py-1 pr-3 font-medium">Saída</th>
-                            <th className="py-1 pr-3 font-medium">Tempo no posto</th>
-                            <th className="py-1 pr-3 font-medium">Supervisor</th>
-                            <th className="py-1 font-medium">Qualidade</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {l.detalhes.map((d) => (
-                            <tr key={d.id} className="border-b border-border/40 last:border-0">
-                              <td className="py-1 pr-3 whitespace-nowrap">{d.data}</td>
-                              <td className="py-1 pr-3 whitespace-nowrap">{d.inicio}</td>
-                              <td className="py-1 pr-3 whitespace-nowrap">{d.fim}</td>
-                              <td className="py-1 pr-3 whitespace-nowrap">
-                                {formatarDuracao(d.duracao)}
-                              </td>
-                              <td className="py-1 pr-3">{d.supervisor}</td>
-                              <td className="py-1 font-semibold">{d.qualidade}%</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                  <div className="space-y-3 border-t border-border/70 p-3">
+                    {l.gerentes.map((g) => (
+                      <div key={g.gerente} className="rounded-lg border border-border/50">
+                        <div className="flex flex-wrap items-center gap-3 bg-muted/40 px-3 py-2">
+                          <UserRound className="size-3.5 shrink-0 text-primary" />
+                          <span className="min-w-[10rem] flex-1 text-[11px] font-semibold">
+                            {g.gerente}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {g.visitas} visita(s) · total {formatarDuracao(g.minutos || null)} ·
+                            média {formatarDuracao(g.mediaMin)}
+                          </span>
+                          <span
+                            className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${tomQualidade(g.qualidade)}`}
+                          >
+                            {g.qualidade}%
+                          </span>
+                        </div>
+                        <div className="overflow-x-auto p-3">
+                          <table className="w-full min-w-[36rem] text-left text-[11px]">
+                            <thead className="text-muted-foreground">
+                              <tr className="border-b border-border/60">
+                                <th className="py-1 pr-3 font-medium">Data</th>
+                                <th className="py-1 pr-3 font-medium">Entrada</th>
+                                <th className="py-1 pr-3 font-medium">Saída</th>
+                                <th className="py-1 pr-3 font-medium">Tempo no posto</th>
+                                <th className="py-1 pr-3 font-medium">Supervisor</th>
+                                <th className="py-1 font-medium">Qualidade</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {g.detalhes.map((d) => (
+                                <tr key={d.id} className="border-b border-border/40 last:border-0">
+                                  <td className="py-1 pr-3 whitespace-nowrap">{d.data}</td>
+                                  <td className="py-1 pr-3 whitespace-nowrap">{d.inicio}</td>
+                                  <td className="py-1 pr-3 whitespace-nowrap">{d.fim}</td>
+                                  <td className="py-1 pr-3 whitespace-nowrap">
+                                    {formatarDuracao(d.duracao)}
+                                  </td>
+                                  <td className="py-1 pr-3">{d.supervisor}</td>
+                                  <td className="py-1 font-semibold">{d.qualidade}%</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : null}
               </li>
