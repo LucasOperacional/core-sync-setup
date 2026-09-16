@@ -675,6 +675,81 @@ async function vincularEscala(
   return { ok: false, erro: ultimoErro };
 }
 
+/** Procura na NEXTI um colaborador já cadastrado pelo CPF ou pela matrícula. */
+async function buscarPessoaExistente(
+  config: Awaited<ReturnType<typeof loadConfig>>,
+  cpf: string,
+  matricula: string,
+): Promise<{ id: number; nome: string } | null> {
+  const tentativas: string[] = [];
+  if (cpf) tentativas.push(`/api/persons/cpf/${cpf}`, `/api/persons/document/${cpf}`);
+  if (matricula)
+    tentativas.push(
+      `/api/persons/externalid/${encodeURIComponent(matricula)}`,
+      `/api/persons/registration/${encodeURIComponent(matricula)}`,
+    );
+
+  for (const endpoint of tentativas) {
+    try {
+      const res = await requestNexti({ config, endpoint, method: "GET" });
+      let corpo: unknown = res.data;
+      if (typeof corpo === "string") {
+        try {
+          corpo = JSON.parse(corpo);
+        } catch {
+          /* resposta sem JSON */
+        }
+      }
+      const candidatos: unknown[] = Array.isArray(corpo)
+        ? corpo
+        : isRec(corpo)
+          ? Array.isArray(corpo["content"])
+            ? (corpo["content"] as unknown[])
+            : [isRec(corpo["value"]) ? corpo["value"] : corpo]
+          : [];
+      for (const c of candidatos) {
+        if (!isRec(c)) continue;
+        const id = Number(c["id"] ?? 0);
+        if (id > 0) return { id, nome: String(c["name"] ?? c["nome"] ?? "") };
+      }
+    } catch {
+      /* tenta o próximo formato de consulta */
+    }
+  }
+  return null;
+}
+
+/** Atualiza o cadastro de um colaborador que já existe na NEXTI. */
+async function atualizarPessoa(
+  config: Awaited<ReturnType<typeof loadConfig>>,
+  personId: number,
+  payload: Record<string, string | number | boolean>,
+): Promise<{ ok: boolean; erro?: string }> {
+  const corpo = { ...payload, id: personId, ignoreValidation: true };
+  const tentativas: Array<{ endpoint: string; method: "PUT" | "POST" }> = [
+    { endpoint: "/api/persons", method: "PUT" },
+    { endpoint: `/api/persons/${personId}`, method: "PUT" },
+  ];
+  let ultimoErro = "sem resposta da NEXTI";
+  for (const t of tentativas) {
+    try {
+      const res = await requestNexti({
+        config,
+        endpoint: t.endpoint,
+        method: t.method,
+        body: corpo,
+      });
+      if (res.status >= 200 && res.status < 300) return { ok: true };
+      ultimoErro = `${t.endpoint} respondeu ${res.status}`;
+    } catch (error) {
+      ultimoErro = (error as Error)?.message ?? "erro desconhecido";
+    }
+  }
+  return { ok: false, erro: ultimoErro };
+}
+
+
+
 
 /** Cadastra um colaborador na NEXTI (POST /api/persons). */
 export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
