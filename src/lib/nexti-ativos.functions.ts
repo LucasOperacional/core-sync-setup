@@ -1096,6 +1096,21 @@ async function carregarFaltasNexti(supabaseClient: unknown): Promise<{
     const posto = pessoa?.posto ?? "";
     if (!postoDeveAparecerNoDashboardFaltas(posto)) continue;
 
+    const motivo =
+      str(
+        pick(f, [
+          "observation",
+          "observacao",
+          "note",
+          "justificativa",
+          "justification",
+          "reason",
+          "motivo",
+          "comment",
+          "comments",
+        ]),
+      ) || "";
+
     lista.push({
       colaborador,
       cargo,
@@ -1103,6 +1118,7 @@ async function carregarFaltasNexti(supabaseClient: unknown): Promise<{
       tipo,
       posto,
       matricula: pessoa?.matricula ?? personExternalId,
+      motivo,
     });
 
   }
