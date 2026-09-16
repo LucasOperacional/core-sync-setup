@@ -633,17 +633,19 @@ function FaltasPage() {
     const faltasPorColaborador = new Map<string, number>();
     const colaboradorInfo = new Map<
       string,
-      { nome: string; posto: string; cargo: string; ocorrencias: number; dias: number }
+      { nome: string; posto: string; cargo: string; ocorrencias: number; dias: number; motivos: Map<string, number> }
     >();
     for (const r of data) {
       if (!r.colaborador) continue;
       const val = parseFaltasValue(r.faltas);
       faltasPorColaborador.set(r.colaborador, (faltasPorColaborador.get(r.colaborador) ?? 0) + val);
       const key = normalize(r.colaborador);
+      const motivo = (r.tipo || "NÃO INFORMADO").trim() || "NÃO INFORMADO";
       const info = colaboradorInfo.get(key);
       if (info) {
         info.ocorrencias += 1;
         info.dias += val;
+        info.motivos.set(motivo, (info.motivos.get(motivo) ?? 0) + 1);
         if (!info.posto && r.posto) info.posto = r.posto;
         if (!info.cargo && r.cargo) info.cargo = r.cargo;
       } else {
@@ -653,6 +655,7 @@ function FaltasPage() {
           cargo: r.cargo,
           ocorrencias: 1,
           dias: val,
+          motivos: new Map([[motivo, 1]]),
         });
       }
     }
