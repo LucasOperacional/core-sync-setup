@@ -238,6 +238,94 @@ function acharEscalaPorHorario(
   return melhor?.opcao ?? null;
 }
 
+const PALAVRAS_IGNORADAS = new Set([
+  "de", "da", "do", "das", "dos", "e", "a", "o", "as", "os", "as", "escala",
+  "horario", "horarios", "turno", "jornada", "hs", "hrs", "h", "ate", "às", "as",
+]);
+
+function tokensDe(texto: string): string[] {
+  return normalizar(texto)
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(" ")
+    .filter((t) => t.length >= 2 && !PALAVRAS_IGNORADAS.has(t));
+}
+
+/** Diurno/noturno a partir de palavras ou do horário inicial. */
+function periodoDe(texto: string, horarios: string[]): "diurno" | "noturno" | null {
+  const base = normalizar(texto);
+  if (/\bnot(urno)?\b|\bnoite\b/.test(base)) return "noturno";
+  if (/\bdiurno\b|\bdia\b|\bmanha\b|\btarde\b/.test(base)) return "diurno";
+  const inicio = horarios[0];
+  if (!inicio) return null;
+  const hh = Number(inicio.slice(0, 2));
+  if (Number.isNaN(hh)) return null;
+  return hh >= 18 || hh < 5 ? "noturno" : "diurno";
+}
+
+/**
+ * Regra de importação: para o texto da coluna "escala" da planilha, escolhe a
+ * escala mais compatível cadastrada na NEXTI, combinando horários, jornada
+ * (12x36, 5x2...), período (diurno/noturno) e semelhança das palavras.
+ */
+function acharEscalaCompativel(
+  escalasRaw: Record<string, unknown>[],
+  termo?: string,
+): { opcao: OpcaoNexti; pontos: number } | null {
+  const bruto = limpar(termo);
+  if (!bruto) return null;
+
+  const horarios = extrairHorarios(bruto);
+  const jornada = extrairJornada(bruto);
+  const periodo = periodoDe(bruto, horarios);
+  const tokens = tokensDe(bruto);
+
+  let melhor: { opcao: OpcaoNexti; pontos: number } | null = null;
+
+  for (const item of escalasRaw) {
+    const id = Number(item["id"] ?? 0);
+    const nome = typeof item["name"] === "string" ? item["name"] : "";
+    if (!id || !nome) continue;
+
+    const texto = textoDaEscala(item);
+    const horariosEscala = extrairHorarios(texto);
+    const jornadaEscala = extrairJornada(texto);
+    const periodoEscala = periodoDe(texto, horariosEscala);
+    const tokensEscala = new Set(tokensDe(`${nome} ${texto}`));
+
+    let pontos = 0;
+
+    // Horários coincidentes (início/fim).
+    let batidas = 0;
+    for (const h of horarios) if (horariosEscala.includes(h)) batidas += 1;
+    pontos += batidas * 4;
+    if (horarios.length > 0 && batidas === 0) pontos -= 2;
+
+    // Jornada.
+    if (jornada && jornadaEscala === jornada) pontos += 5;
+    else if (jornada && jornadaEscala && jornadaEscala !== jornada) pontos -= 5;
+
+    // Período.
+    if (periodo && periodoEscala === periodo) pontos += 2;
+    else if (periodo && periodoEscala && periodoEscala !== periodo) pontos -= 3;
+
+    // Semelhança das palavras.
+    if (tokens.length > 0) {
+      const iguais = tokens.filter((t) => tokensEscala.has(t)).length;
+      pontos += (iguais / tokens.length) * 6;
+      const nomeNorm = normalizar(nome);
+      const alvoNorm = normalizar(bruto);
+      if (nomeNorm === alvoNorm) pontos += 10;
+      else if (nomeNorm.includes(alvoNorm) || alvoNorm.includes(nomeNorm)) pontos += 4;
+    }
+
+    if (pontos <= 0) continue;
+    if (!melhor || pontos > melhor.pontos) melhor = { opcao: { id, nome }, pontos };
+  }
+
+  // Exige uma compatibilidade mínima para não lançar escala errada.
+  return melhor && melhor.pontos >= 4 ? melhor : null;
+}
+
 /** Posto padrão para quem entra sem vaga no posto informado. */
 const POSTO_NOVAS_ADMISSOES = "NOVAS ADMISSÕES";
 
