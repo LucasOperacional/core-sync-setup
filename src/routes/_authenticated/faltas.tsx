@@ -669,6 +669,9 @@ function FaltasPage() {
         cargo: info.cargo,
         ocorrencias: info.ocorrencias,
         quantidade: info.dias,
+        motivos: Array.from(info.motivos, ([nome, qtd]) => ({ nome, qtd })).sort(
+          (a, b) => b.qtd - a.qtd,
+        ),
       }));
 
     const faltasPorPosto = new Map<string, number>();
