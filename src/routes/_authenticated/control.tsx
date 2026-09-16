@@ -527,6 +527,13 @@ function ControlDashboard() {
               },
 
               {
+                key: "desempenho-gerentes-area",
+                titulo: "Performance dos Gerentes de Área",
+                tamanho: "grande",
+                conteudo: <DesempenhoGerentesArea visitas={filtradas} />,
+              },
+
+              {
                 key: "grafico-visitas-dia",
                 titulo: "Visitas por dia",
                 tamanho: "medio",
