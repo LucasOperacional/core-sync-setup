@@ -226,7 +226,6 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
       const faltando: string[] = [];
       if (limpar(p.empresa) && !empresa) faltando.push(`empresa "${p.empresa}"`);
       if (limpar(p.cargo) && !cargo) faltando.push(`cargo "${p.cargo}"`);
-      if (limpar(p.posto) && !posto) faltando.push(`posto "${p.posto}"`);
       if (limpar(p.escala) && !escala) faltando.push(`escala "${p.escala}"`);
       if (faltando.length) {
         return {
@@ -237,15 +236,22 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
         };
       }
 
-      // Regra: posto sem vaga livre → lotar em "NOVAS ADMISSÕES".
+      // Regra: posto não encontrado ou sem vaga livre → lotar em "NOVAS ADMISSÕES".
       let avisoPosto = "";
-      if (posto) {
+      const destinoNovas = acharOpcao(paraOpcoes(postosRaw), POSTO_NOVAS_ADMISSOES);
+      if (limpar(p.posto) && !posto) {
+        if (destinoNovas) {
+          avisoPosto = ` Posto "${p.posto}" não encontrado — lotado em "${destinoNovas.nome}".`;
+          posto = destinoNovas;
+        } else {
+          avisoPosto = ` Posto "${p.posto}" não encontrado e não encontrei o posto "${POSTO_NOVAS_ADMISSOES}" na NEXTI.`;
+        }
+      } else if (posto) {
         const semVaga = await postoSemVaga(postosRaw, posto.id);
         if (semVaga) {
-          const destino = acharOpcao(paraOpcoes(postosRaw), POSTO_NOVAS_ADMISSOES);
-          if (destino) {
-            avisoPosto = ` Posto "${posto.nome}" sem vaga — lotado em "${destino.nome}".`;
-            posto = destino;
+          if (destinoNovas) {
+            avisoPosto = ` Posto "${posto.nome}" sem vaga — lotado em "${destinoNovas.nome}".`;
+            posto = destinoNovas;
           } else {
             avisoPosto = ` Posto "${posto.nome}" sem vaga e não encontrei o posto "${POSTO_NOVAS_ADMISSOES}" na NEXTI.`;
           }
