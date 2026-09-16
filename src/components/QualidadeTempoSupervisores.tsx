@@ -320,6 +320,23 @@ export function QualidadeTempoSupervisores({
           })}
         </ul>
       )}
+      {haMais ? (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Mostrando {limite} de {totalLocais} locais.
+          {linkPara ? (
+            <>
+              {" "}
+              <Link
+                to={linkPara as "/qualidade-tempo"}
+                className="font-medium text-primary underline-offset-2 hover:underline"
+              >
+                Ver todos os locais
+              </Link>
+              .
+            </>
+          ) : null}
+        </p>
+      ) : null}
     </section>
   );
 }
