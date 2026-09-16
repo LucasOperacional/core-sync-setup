@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 
 import { KpiCard } from "@/components/KpiCard";
+import { DesempenhoGerentesArea } from "@/components/DesempenhoGerentesArea";
 import {
   QualidadeTempoSupervisores,
   formatarDuracao,
@@ -524,6 +525,13 @@ function ControlDashboard() {
                     limite={10}
                   />
                 ),
+              },
+
+              {
+                key: "desempenho-gerentes-area",
+                titulo: "Performance dos Gerentes de Área",
+                tamanho: "grande",
+                conteudo: <DesempenhoGerentesArea visitas={filtradas} />,
               },
 
               {
