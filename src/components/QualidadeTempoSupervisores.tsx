@@ -129,7 +129,13 @@ function gerenteDe(v: Visit): string {
   );
 }
 
-export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
+export function QualidadeTempoSupervisores({
+  visitas,
+  linkPara,
+}: {
+  visitas: Visit[];
+  linkPara?: string;
+}) {
   const [fechados, setFechados] = useState<Set<string>>(new Set());
 
   const linhas = useMemo<LinhaLocal[]>(() => {
@@ -172,8 +178,18 @@ export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
     <section className="panel p-4 sm:p-5">
       <div className="flex items-start gap-2">
         <Clock className="mt-0.5 size-4 text-primary" />
-        <div>
-          <h2 className="text-sm font-semibold">Qualidade e tempo por local de visita</h2>
+        <div className="flex-1">
+          {linkPara ? (
+            <Link
+              to={linkPara}
+              className="group inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:text-primary"
+            >
+              Qualidade e tempo por local de visita
+              <ArrowRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+            </Link>
+          ) : (
+            <h2 className="text-sm font-semibold">Qualidade e tempo por local de visita</h2>
+          )}
           <p className="mt-1 text-xs text-muted-foreground">
             Locais lidos do campo "Local:" dos arquivos importados, separados por Gerente de Área A,
             com data, entrada, saída, tempo exato no posto e qualidade de cada visita.
