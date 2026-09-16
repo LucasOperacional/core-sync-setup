@@ -133,7 +133,14 @@ function MesaOperacionalPage() {
   });
 
   const loteMut = useMutation({
-    mutationFn: (lista: { nome: string; gerenteNome: string; localidade?: string; cliente?: string }[]) =>
+    mutationFn: (
+      lista: {
+        nome: string;
+        gerenteNome: string;
+        localidade?: string | undefined;
+        cliente?: string | undefined;
+      }[],
+    ) =>
       importarLote({ data: { postos: lista } }),
     onSuccess: (r) => {
       if (!r.ok) {
