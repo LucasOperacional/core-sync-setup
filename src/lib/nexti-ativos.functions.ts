@@ -893,6 +893,7 @@ export type FaltaNextiItem = {
   tipo: string;
   posto: string;
   matricula: string;
+  motivo: string;
 };
 
 let cacheFaltas: {
@@ -1095,6 +1096,21 @@ async function carregarFaltasNexti(supabaseClient: unknown): Promise<{
     const posto = pessoa?.posto ?? "";
     if (!postoDeveAparecerNoDashboardFaltas(posto)) continue;
 
+    const motivo =
+      str(
+        pick(f, [
+          "observation",
+          "observacao",
+          "note",
+          "justificativa",
+          "justification",
+          "reason",
+          "motivo",
+          "comment",
+          "comments",
+        ]),
+      ) || "";
+
     lista.push({
       colaborador,
       cargo,
@@ -1102,6 +1118,7 @@ async function carregarFaltasNexti(supabaseClient: unknown): Promise<{
       tipo,
       posto,
       matricula: pessoa?.matricula ?? personExternalId,
+      motivo,
     });
 
   }
@@ -1181,6 +1198,7 @@ export type LinhaDashboardFaltas = {
   dataFim: string;
   faltas: string;
   tipo: string;
+  motivo: string;
 };
 
 export type DashboardFaltasNextiResultado = {
@@ -1256,6 +1274,7 @@ export const carregarFaltasDashboardNexti = createServerFn({ method: "POST" })
           dataFim: fim,
           faltas: String(diasDeFalta(inicio, fim)),
           tipo: f.tipo.toUpperCase(),
+          motivo: f.motivo,
         };
       });
 

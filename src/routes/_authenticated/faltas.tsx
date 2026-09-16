@@ -196,7 +196,20 @@ const TARGET_COLUMNS = [
   },
   {
     key: "tipo",
-    labels: ["tipo", "tipo de ausencia", "tipo de ausência", "motivo", "ocorrencia", "ocorrência"],
+    labels: ["tipo", "tipo de ausencia", "tipo de ausência", "ocorrencia", "ocorrência"],
+  },
+  {
+    key: "motivo",
+    labels: [
+      "motivo",
+      "motivo da falta",
+      "justificativa",
+      "observacao",
+      "observação",
+      "obs",
+      "descricao",
+      "descrição",
+    ],
   },
 ];
 
@@ -208,6 +221,7 @@ type ExtractedRow = {
   periodo: string;
   faltas: string;
   tipo: string;
+  motivo: string;
 };
 
 function normalize(s: string): string {
@@ -270,6 +284,7 @@ function extractRows(rows: ParsedRow[]): ExtractedRow[] {
       periodo: buildPeriodo(dataInicio, dataFim),
       faltas: (row[mapping["faltas"] ?? -1] ?? "").trim(),
       tipo: (row[mapping["tipo"] ?? -1] ?? "").trim().toUpperCase(),
+      motivo: (row[mapping["motivo"] ?? -1] ?? "").trim(),
     };
     const temConteudo =
       item.colaborador !== "" ||
@@ -375,6 +390,18 @@ function TopColaboradorTooltip({ active, payload }: any) {
           ))}
         </div>
       )}
+      {Array.isArray(d.motivosReais) && d.motivosReais.length > 0 && (
+        <div className="mt-1 border-t border-border pt-1">
+          <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Justificativa registrada
+          </p>
+          {d.motivosReais.map((m: string, idx: number) => (
+            <p key={idx} className="max-w-[260px] whitespace-normal text-xs text-foreground">
+              {m}
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -431,7 +458,7 @@ function FaltasPage() {
         return;
       }
       const tabela: ParsedRow[] = [
-        ["POSTO", "COLABORADOR", "CARGO", "GERENTE", "DATA INICIO", "DATA FIM", "FALTAS", "TIPO"],
+        ["POSTO", "COLABORADOR", "CARGO", "GERENTE", "DATA INICIO", "DATA FIM", "FALTAS", "TIPO", "MOTIVO"],
         ...res.linhas.map((l) => [
           l.posto,
           l.colaborador,
@@ -441,6 +468,7 @@ function FaltasPage() {
           l.dataFim,
           l.faltas,
           l.tipo,
+          l.motivo,
         ]),
       ];
       setRows(tabela);
@@ -645,7 +673,7 @@ function FaltasPage() {
     const faltasPorColaborador = new Map<string, number>();
     const colaboradorInfo = new Map<
       string,
-      { nome: string; posto: string; cargo: string; ocorrencias: number; dias: number; motivos: Map<string, number> }
+      { nome: string; posto: string; cargo: string; ocorrencias: number; dias: number; motivos: Map<string, number>; motivosReais: Set<string> }
     >();
     for (const r of data) {
       if (!r.colaborador) continue;
@@ -658,6 +686,7 @@ function FaltasPage() {
         info.ocorrencias += 1;
         info.dias += val;
         info.motivos.set(motivo, (info.motivos.get(motivo) ?? 0) + 1);
+        if (r.motivo) info.motivosReais.add(r.motivo);
         if (!info.posto && r.posto) info.posto = r.posto;
         if (!info.cargo && r.cargo) info.cargo = r.cargo;
       } else {
@@ -668,6 +697,7 @@ function FaltasPage() {
           ocorrencias: 1,
           dias: val,
           motivos: new Map([[motivo, 1]]),
+          motivosReais: new Set(r.motivo ? [r.motivo] : []),
         });
       }
     }
@@ -684,6 +714,7 @@ function FaltasPage() {
         motivos: Array.from(info.motivos, ([nome, qtd]) => ({ nome, qtd })).sort(
           (a, b) => b.qtd - a.qtd,
         ),
+        motivosReais: Array.from(info.motivosReais),
       }));
 
     const faltasPorPosto = new Map<string, number>();
