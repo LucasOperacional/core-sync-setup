@@ -874,7 +874,7 @@ function FaltasPage() {
 
         <WidgetBoard
           dashboard="faltas"
-          widgets={[
+          widgets={useMemo(() => [
             ...(columnsDetected
               ? [
                   {
@@ -1555,7 +1555,7 @@ function FaltasPage() {
                   },
                 ]
               : []),
-          ]}
+          ], [columnsDetected, stats, filteredData, registrosSerieMensal, gerenteFaltasCards, gerenteAberto, tabelaLimite])}
         />
       </div>
     </main>
