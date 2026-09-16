@@ -796,7 +796,17 @@ function FaltasPage() {
       </header>
 
       <div className="mx-auto max-w-7xl space-y-8 px-6 py-10">
+        {nextiErro ? (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+            {nextiErro}
+          </div>
+        ) : nextiEm ? (
+          <p className="text-xs text-muted-foreground">
+            Dados carregados da NEXTI em {new Date(nextiEm).toLocaleString("pt-BR")}.
+          </p>
+        ) : null}
         {/* No data state */}
+
 
         {!hasData && (
           <div className="flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed border-border bg-secondary/50 p-10 text-center">
