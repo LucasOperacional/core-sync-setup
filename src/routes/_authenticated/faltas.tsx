@@ -421,8 +421,12 @@ function FaltasPage() {
   }, []);
 
   useEffect(() => {
+    // Mostra o último conteúdo salvo enquanto busca os dados reais e, em
+    // seguida, força uma leitura nova na NEXTI para atualizar todos os cards.
     loadFromStorage();
-    void puxarDaNexti(false);
+    void puxarDaNexti(true);
+    const id = window.setInterval(() => void puxarDaNexti(true), 5 * 60 * 1000);
+    return () => window.clearInterval(id);
   }, [puxarDaNexti]);
 
 
