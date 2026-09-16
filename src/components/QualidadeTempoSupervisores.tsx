@@ -132,11 +132,22 @@ function gerenteDe(v: Visit): string {
 export function QualidadeTempoSupervisores({
   visitas,
   linkPara,
+  fechado = false,
 }: {
   visitas: Visit[];
   linkPara?: string;
+  fechado?: boolean;
 }) {
-  const [fechados, setFechados] = useState<Set<string>>(new Set());
+  const [fechados, setFechados] = useState<Set<string>>(() => {
+    if (!fechado) return new Set();
+    const todos = new Set<string>();
+    for (const v of visitas) {
+      const local =
+        (v.local || v.posto || v.cliente).trim() || "Local não informado";
+      todos.add(local);
+    }
+    return todos;
+  });
 
   const linhas = useMemo<LinhaLocal[]>(() => {
     // Agrupa pelo campo "Local:" extraído dos arquivos importados.
@@ -176,26 +187,35 @@ export function QualidadeTempoSupervisores({
 
   return (
     <section className="panel p-4 sm:p-5">
-      <div className="flex items-start gap-2">
-        <Clock className="mt-0.5 size-4 text-primary" />
-        <div className="flex-1">
-          {linkPara ? (
-            <Link
-              to={linkPara as "/qualidade-tempo"}
-              className="group inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:text-primary"
-            >
+      {linkPara ? (
+        <Link
+          to={linkPara as "/qualidade-tempo"}
+          className="group flex items-start gap-2 rounded-lg transition-colors"
+        >
+          <Clock className="mt-0.5 size-4 text-primary" />
+          <div className="flex-1">
+            <div className="inline-flex items-center gap-1.5 text-sm font-semibold group-hover:text-primary">
               Qualidade e tempo por local de visita
               <ArrowRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-            </Link>
-          ) : (
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Locais lidos do campo "Local:" dos arquivos importados, separados por Gerente de Área A,
+              com data, entrada, saída, tempo exato no posto e qualidade de cada visita.
+            </p>
+          </div>
+        </Link>
+      ) : (
+        <div className="flex items-start gap-2">
+          <Clock className="mt-0.5 size-4 text-primary" />
+          <div className="flex-1">
             <h2 className="text-sm font-semibold">Qualidade e tempo por local de visita</h2>
-          )}
-          <p className="mt-1 text-xs text-muted-foreground">
-            Locais lidos do campo "Local:" dos arquivos importados, separados por Gerente de Área A,
-            com data, entrada, saída, tempo exato no posto e qualidade de cada visita.
-          </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Locais lidos do campo "Local:" dos arquivos importados, separados por Gerente de Área A,
+              com data, entrada, saída, tempo exato no posto e qualidade de cada visita.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {linhas.length === 0 ? (
         <p className="mt-4 text-xs text-muted-foreground">Nenhuma visita no filtro selecionado.</p>
