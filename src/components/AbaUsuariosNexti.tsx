@@ -170,49 +170,40 @@ export function AbaUsuariosNexti() {
     }
   };
 
-  const processarArquivo = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const processarArquivo = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
     setArquivoNome(file.name);
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const wb = XLSX.read(evt.target?.result, { type: "binary", cellDates: true });
-        const ws = wb.Sheets[wb.SheetNames[0]!]!;
-        const dados = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
-        const cabecalho = (dados[0] ?? []).map((c) => normalizar(c));
-        const indices = new Map<keyof PessoaCadastro, number>();
-        for (const campo of CAMPOS) {
-          const idx = cabecalho.findIndex((c) => campo.termos.some((t) => c.includes(t)));
-          if (idx >= 0) indices.set(campo.chave, idx);
-        }
-        if (!indices.has("nome")) {
-          toast.error("Não encontrei a coluna de nome na planilha.");
-          return;
-        }
-        const novas: LinhaUsuario[] = dados
-          .slice(1)
-          .filter((r) => Array.isArray(r) && r.length > 0)
-          .map((r, i) => {
-            const pessoa: PessoaCadastro = { nome: "", cpf: "" };
-            for (const [chave, idx] of indices) {
-              (pessoa as Record<string, string>)[chave] = valorTexto(r[idx]);
-            }
-            return { ...pessoa, id: `${i}-${pessoa.nome}`, status: "pendente" as const };
-          })
-          .filter((l) => l.nome);
-        setLinhas(novas);
-        setValidacoes([]);
-        registrar(`Planilha "${file.name}" lida: ${novas.length} colaboradores.`);
-        toast.success(`${novas.length} colaboradores lidos da planilha.`);
-        void validarLista(novas);
-      } catch {
-        registrar(`Não consegui ler a planilha "${file.name}".`, "erro");
-        toast.error("Não consegui ler a planilha. Use .xlsx, .xls ou .csv.");
+    try {
+      const { pessoas, colunasReconhecidas, colunasIgnoradas } = await lerPlanilhaUsuarios(file);
+      const novas: LinhaUsuario[] = pessoas.map((pessoa, i) => ({
+        ...pessoa,
+        id: `${i}-${pessoa.nome}`,
+        status: "pendente" as const,
+      }));
+      setLinhas(novas);
+      setValidacoes([]);
+      registrar(`Planilha "${file.name}" lida: ${novas.length} colaboradores.`);
+      registrar(
+        `Colunas convertidas para a NEXTI: ${colunasReconhecidas
+          .map((c) => `${c.rotulo} (${c.coluna})`)
+          .join(", ")}.`,
+        "ok",
+      );
+      if (colunasIgnoradas.length > 0) {
+        registrar(`Colunas não usadas no envio: ${colunasIgnoradas.join(", ")}.`);
       }
-    };
-    reader.readAsBinaryString(file);
-    e.target.value = "";
+      toast.success(
+        `${novas.length} colaboradores lidos — ${colunasReconhecidas.length} colunas convertidas.`,
+      );
+      await validarLista(novas);
+    } catch (error) {
+      const msg =
+        (error as Error)?.message ?? "Não consegui ler a planilha. Use .xlsx, .xls ou .csv.";
+      registrar(`Planilha "${file.name}": ${msg}`, "erro");
+      toast.error(msg);
+    }
   };
 
   const enviarTodos = async () => {
