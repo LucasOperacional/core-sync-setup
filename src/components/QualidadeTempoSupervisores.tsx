@@ -132,11 +132,22 @@ function gerenteDe(v: Visit): string {
 export function QualidadeTempoSupervisores({
   visitas,
   linkPara,
+  fechado = false,
 }: {
   visitas: Visit[];
   linkPara?: string;
+  fechado?: boolean;
 }) {
-  const [fechados, setFechados] = useState<Set<string>>(new Set());
+  const [fechados, setFechados] = useState<Set<string>>(() => {
+    if (!fechado) return new Set();
+    const todos = new Set<string>();
+    for (const v of visitas) {
+      const local =
+        (v.local || v.posto || v.cliente).trim() || "Local não informado";
+      todos.add(local);
+    }
+    return todos;
+  });
 
   const linhas = useMemo<LinhaLocal[]>(() => {
     // Agrupa pelo campo "Local:" extraído dos arquivos importados.
