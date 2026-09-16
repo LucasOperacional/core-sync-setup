@@ -68,18 +68,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     });
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
 
-    // Register with IA Operacional
-    try {
-      OperationalAI.getInstance().captureError({
-        errorType: "root_error_boundary",
-        message: error?.message ?? "Unknown root error",
-        technicalDetails: error?.stack,
-        severity: "critical",
-        component: "__root.tsx",
-      });
-    } catch {
-      // IA module not available — ignore
-    }
+    // Register with IA Operacional (carregada sob demanda)
+    void import("../lib/operational-ai")
+      .then(({ OperationalAI }) =>
+        OperationalAI.getInstance().captureError({
+          errorType: "root_error_boundary",
+          message: error?.message ?? "Unknown root error",
+          technicalDetails: error?.stack,
+          severity: "critical",
+          component: "__root.tsx",
+        }),
+      )
+      .catch(() => {});
   }, [error]);
 
   return (
