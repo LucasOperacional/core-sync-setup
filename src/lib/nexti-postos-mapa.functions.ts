@@ -165,6 +165,8 @@ export function empresaPermitidaNoMapa(p: PostoMapa): boolean {
   const textos = [p.empresa, p.cliente, p.nome].filter(Boolean).join(" ");
   if (!textos) return false;
   const normalizada = normalizarNomeEmpresa(textos);
+  // TEKTRON SEGURANÇA (e variações) nunca entra no mapa.
+  if (normalizada.includes("TEKTRON") && normalizada.includes("SEGURANCA")) return false;
   return EMPRESAS_PERMITIDAS.some((e) => normalizada.includes(normalizarNomeEmpresa(e)));
 }
 
