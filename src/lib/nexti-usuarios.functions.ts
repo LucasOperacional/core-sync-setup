@@ -19,6 +19,8 @@ export type PessoaCadastro = {
   pis?: string;
   matricula?: string;
   email?: string;
+  telefone?: string;
+  telefone2?: string;
   genero?: string;
   nascimento?: string;
   admissao?: string;
