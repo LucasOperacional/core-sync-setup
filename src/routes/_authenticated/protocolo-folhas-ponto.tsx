@@ -28,6 +28,8 @@ import { DashboardCardsProtocolo } from "@/components/DashboardCardsProtocolo";
 import { DemitidosNextiCard } from "@/components/DemitidosNextiCard";
 import { ContagemDemitidosCard } from "@/components/ContagemDemitidosCard";
 import { AbaUsuariosNexti } from "@/components/AbaUsuariosNexti";
+import { FlagsUsuarioNexti } from "@/components/FlagsUsuarioNexti";
+
 
 import { OutrasLotacoesCards } from "@/components/OutrasLotacoesCards";
 import { SincronizacaoAutomaticaNexti } from "@/components/SincronizacaoAutomaticaNexti";
@@ -192,10 +194,16 @@ function ProtocoloFolhasPonto() {
               </OperationalErrorBoundary>
             </TabsContent>
             <TabsContent value="usuarios">
-              <OperationalErrorBoundary componentName="Cadastro de usuários NEXTI">
-                <AbaUsuariosNexti />
-              </OperationalErrorBoundary>
+              <div className="space-y-4">
+                <OperationalErrorBoundary componentName="Cadastro de usuários NEXTI">
+                  <AbaUsuariosNexti />
+                </OperationalErrorBoundary>
+                <OperationalErrorBoundary componentName="Opções do colaborador NEXTI">
+                  <FlagsUsuarioNexti />
+                </OperationalErrorBoundary>
+              </div>
             </TabsContent>
+
             <TabsContent value="demitidos">
               <OperationalErrorBoundary componentName="Demitidos NEXTI">
                 <DemitidosNextiCard />
