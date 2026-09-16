@@ -432,10 +432,16 @@ function montarCadastro(
   let escala = acharOpcao(paraOpcoes(listas.escalasRaw), p.escala);
 
   if (limpar(p.escala) && !escala) {
+    // 1) horário exato; 2) escala mais compatível (horário + jornada + período + palavras).
     const porHorario = acharEscalaPorHorario(listas.escalasRaw, p.escala);
-    if (porHorario) {
-      escala = porHorario;
-      avisos.push(`Escala "${p.escala}" casada pelo horário com "${porHorario.nome}".`);
+    const compativel = porHorario
+      ? { opcao: porHorario, pontos: 99 }
+      : acharEscalaCompativel(listas.escalasRaw, p.escala);
+    if (compativel) {
+      escala = compativel.opcao;
+      avisos.push(
+        `Escala "${p.escala}" não existe com esse nome — usada a mais compatível: "${compativel.opcao.nome}".`,
+      );
     }
   }
 
