@@ -343,6 +343,10 @@ function MesaOperacionalPage() {
                     )}
                   </CardContent>
                 </Card>
+                      );
+                    })}
+                  </div>
+                </section>
               );
             })}
           </div>
