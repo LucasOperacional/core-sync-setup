@@ -33,6 +33,10 @@ import {
 
 import { KpiCard } from "@/components/KpiCard";
 import {
+  QualidadeTempoSupervisores,
+  formatarDuracao,
+} from "@/components/QualidadeTempoSupervisores";
+import {
   chartQuestionKey,
   classificarResposta,
   deduplicarVisitas,
