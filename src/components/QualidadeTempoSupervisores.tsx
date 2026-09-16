@@ -187,6 +187,10 @@ export function QualidadeTempoSupervisores({
       .sort((a, b) => b.visitas - a.visitas || a.local.localeCompare(b.local, "pt-BR"));
   }, [visitas]);
 
+  const linhasVisiveis = typeof limite === "number" && limite > 0 ? linhas.slice(0, limite) : linhas;
+  const totalLocais = linhas.length;
+  const haMais = typeof limite === "number" && limite > 0 && totalLocais > limite;
+
   return (
     <section className="panel p-4 sm:p-5">
       {linkPara ? (
