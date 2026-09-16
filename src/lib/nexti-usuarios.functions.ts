@@ -291,7 +291,16 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
       );
       const cargo = acharOpcao(paraOpcoes(cargosRaw), p.cargo);
       let posto = acharOpcao(paraOpcoes(postosRaw), p.posto);
-      const escala = acharOpcao(paraOpcoes(escalasRaw), p.escala);
+      let escala = acharOpcao(paraOpcoes(escalasRaw), p.escala);
+      // Regra: se o nome não bate, tenta casar pelo horário informado na coluna "escala".
+      let avisoEscala = "";
+      if (limpar(p.escala) && !escala) {
+        const porHorario = acharEscalaPorHorario(escalasRaw, p.escala);
+        if (porHorario) {
+          escala = porHorario;
+          avisoEscala = ` Escala "${p.escala}" casada pelo horário com "${porHorario.nome}".`;
+        }
+      }
 
       const faltando: string[] = [];
       if (limpar(p.empresa) && !empresa) faltando.push(`empresa "${p.empresa}"`);
