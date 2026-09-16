@@ -16,6 +16,7 @@ import { AREAS_GERENTES } from "@/lib/areas-gerentes";
 import { normalizarNome } from "@/lib/gerentes-area-a";
 import { COORDENADORES, coordenadorDoGerente, rotuloCoordenador } from "@/lib/coordenadores";
 import {
+  buscarPostosNexti,
   cadastrarPostoMesa,
   hojeBrasilia,
   listarPostosMesa,
