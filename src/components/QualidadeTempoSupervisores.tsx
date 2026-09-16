@@ -133,10 +133,12 @@ export function QualidadeTempoSupervisores({
   visitas,
   linkPara,
   fechado = false,
+  limite,
 }: {
   visitas: Visit[];
   linkPara?: string;
   fechado?: boolean;
+  limite?: number;
 }) {
   const [fechados, setFechados] = useState<Set<string>>(() => {
     if (!fechado) return new Set();
@@ -185,6 +187,10 @@ export function QualidadeTempoSupervisores({
       .sort((a, b) => b.visitas - a.visitas || a.local.localeCompare(b.local, "pt-BR"));
   }, [visitas]);
 
+  const linhasVisiveis = typeof limite === "number" && limite > 0 ? linhas.slice(0, limite) : linhas;
+  const totalLocais = linhas.length;
+  const haMais = typeof limite === "number" && limite > 0 && totalLocais > limite;
+
   return (
     <section className="panel p-4 sm:p-5">
       {linkPara ? (
@@ -217,11 +223,11 @@ export function QualidadeTempoSupervisores({
         </div>
       )}
 
-      {linhas.length === 0 ? (
+      {linhasVisiveis.length === 0 ? (
         <p className="mt-4 text-xs text-muted-foreground">Nenhuma visita no filtro selecionado.</p>
       ) : (
         <ul className="mt-4 space-y-2">
-          {linhas.map((l) => {
+          {linhasVisiveis.map((l) => {
             const expandido = !fechados.has(l.local);
             return (
               <li key={l.local} className="rounded-xl border border-border/70">
@@ -314,6 +320,23 @@ export function QualidadeTempoSupervisores({
           })}
         </ul>
       )}
+      {haMais ? (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Mostrando {limite} de {totalLocais} locais.
+          {linkPara ? (
+            <>
+              {" "}
+              <Link
+                to={linkPara as "/qualidade-tempo"}
+                className="font-medium text-primary underline-offset-2 hover:underline"
+              >
+                Ver todos os locais
+              </Link>
+              .
+            </>
+          ) : null}
+        </p>
+      ) : null}
     </section>
   );
 }

@@ -521,6 +521,7 @@ function ControlDashboard() {
                     visitas={filtradas}
                     linkPara="/qualidade-tempo"
                     fechado
+                    limite={10}
                   />
                 ),
               },
