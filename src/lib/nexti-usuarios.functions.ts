@@ -675,6 +675,81 @@ async function vincularEscala(
   return { ok: false, erro: ultimoErro };
 }
 
+/** Procura na NEXTI um colaborador já cadastrado pelo CPF ou pela matrícula. */
+async function buscarPessoaExistente(
+  config: Awaited<ReturnType<typeof loadConfig>>,
+  cpf: string,
+  matricula: string,
+): Promise<{ id: number; nome: string } | null> {
+  const tentativas: string[] = [];
+  if (cpf) tentativas.push(`/api/persons/cpf/${cpf}`, `/api/persons/document/${cpf}`);
+  if (matricula)
+    tentativas.push(
+      `/api/persons/externalid/${encodeURIComponent(matricula)}`,
+      `/api/persons/registration/${encodeURIComponent(matricula)}`,
+    );
+
+  for (const endpoint of tentativas) {
+    try {
+      const res = await requestNexti({ config, endpoint, method: "GET" });
+      let corpo: unknown = res.data;
+      if (typeof corpo === "string") {
+        try {
+          corpo = JSON.parse(corpo);
+        } catch {
+          /* resposta sem JSON */
+        }
+      }
+      const candidatos: unknown[] = Array.isArray(corpo)
+        ? corpo
+        : isRec(corpo)
+          ? Array.isArray(corpo["content"])
+            ? (corpo["content"] as unknown[])
+            : [isRec(corpo["value"]) ? corpo["value"] : corpo]
+          : [];
+      for (const c of candidatos) {
+        if (!isRec(c)) continue;
+        const id = Number(c["id"] ?? 0);
+        if (id > 0) return { id, nome: String(c["name"] ?? c["nome"] ?? "") };
+      }
+    } catch {
+      /* tenta o próximo formato de consulta */
+    }
+  }
+  return null;
+}
+
+/** Atualiza o cadastro de um colaborador que já existe na NEXTI. */
+async function atualizarPessoa(
+  config: Awaited<ReturnType<typeof loadConfig>>,
+  personId: number,
+  payload: Record<string, string | number | boolean>,
+): Promise<{ ok: boolean; erro?: string }> {
+  const corpo = { ...payload, id: personId, ignoreValidation: true };
+  const tentativas: Array<{ endpoint: string; method: "PUT" | "POST" }> = [
+    { endpoint: "/api/persons", method: "PUT" },
+    { endpoint: `/api/persons/${personId}`, method: "PUT" },
+  ];
+  let ultimoErro = "sem resposta da NEXTI";
+  for (const t of tentativas) {
+    try {
+      const res = await requestNexti({
+        config,
+        endpoint: t.endpoint,
+        method: t.method,
+        body: corpo,
+      });
+      if (res.status >= 200 && res.status < 300) return { ok: true };
+      ultimoErro = `${t.endpoint} respondeu ${res.status}`;
+    } catch (error) {
+      ultimoErro = (error as Error)?.message ?? "erro desconhecido";
+    }
+  }
+  return { ok: false, erro: ultimoErro };
+}
+
+
+
 
 /** Cadastra um colaborador na NEXTI (POST /api/persons). */
 export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
@@ -703,12 +778,58 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
       const infoEscala = resolvido.escala ? ` Escala usada: "${resolvido.escala}".` : "";
       const extra = `${avisos.length ? ` ${avisos.join(" ")}` : ""}${infoEscala}`;
 
-      const res = await requestNexti({
-        config,
-        endpoint: "/api/persons",
-        method: "POST",
-        body: payload,
-      });
+      const vincular = async (personId: number) => {
+        const escalaId = Number(payload["scheduleId"] ?? 0);
+        if (!(escalaId > 0)) return "";
+        const vinculo = await vincularEscala(
+          config,
+          personId,
+          escalaId,
+          String(payload["admissionDate"] ?? ""),
+        );
+        return vinculo.ok
+          ? " Escala vinculada na NEXTI."
+          : ` Atenção: não foi possível vincular a escala automaticamente (${vinculo.erro}).`;
+      };
+
+      let res: Awaited<ReturnType<typeof requestNexti>>;
+      try {
+        res = await requestNexti({
+          config,
+          endpoint: "/api/persons",
+          method: "POST",
+          body: payload,
+        });
+      } catch (error) {
+        const status = Number((error as { httpStatus?: number }).httpStatus ?? 0);
+        // 409 = a NEXTI já tem esse colaborador (CPF/matrícula duplicados).
+        if (status !== 409) throw error;
+
+        const existente = await buscarPessoaExistente(
+          config,
+          String(payload["cpf"] ?? payload["document"] ?? ""),
+          String(payload["externalId"] ?? payload["registerNumber"] ?? ""),
+        );
+        if (!existente) {
+          return {
+            nome,
+            ok: false,
+            personId: null,
+            mensagem: `Este colaborador já está cadastrado na NEXTI (CPF ou matrícula em uso) e não foi possível localizá-lo para atualizar. Confira o CPF e a matrícula.${extra}`,
+          };
+        }
+
+        const atualizado = await atualizarPessoa(config, existente.id, payload);
+        const infoVinculo = await vincular(existente.id);
+        return {
+          nome,
+          ok: atualizado.ok,
+          personId: existente.id,
+          mensagem: atualizado.ok
+            ? `Colaborador já existia na NEXTI (matrícula interna ${existente.id}) — cadastro atualizado.${extra}${infoVinculo}`
+            : `Colaborador já existe na NEXTI (matrícula interna ${existente.id}), mas a atualização falhou: ${atualizado.erro}.${extra}`,
+        };
+      }
 
       let corpoResposta: unknown = res.data;
       if (typeof corpoResposta === "string") {
@@ -727,19 +848,7 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
 
       if (res.status >= 200 && res.status < 300 && personId) {
         // Garante que a escala fique realmente vinculada ao colaborador.
-        const escalaId = Number(payload["scheduleId"] ?? 0);
-        let infoVinculo = "";
-        if (escalaId > 0) {
-          const vinculo = await vincularEscala(
-            config,
-            personId,
-            escalaId,
-            String(payload["admissionDate"] ?? ""),
-          );
-          infoVinculo = vinculo.ok
-            ? " Escala vinculada na NEXTI."
-            : ` Atenção: não foi possível vincular a escala automaticamente (${vinculo.erro}).`;
-        }
+        const infoVinculo = await vincular(personId);
         return {
           nome,
           ok: true,
@@ -753,6 +862,7 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
         personId,
         mensagem: `A NEXTI respondeu ${res.status} sem confirmar o cadastro.${extra}`,
       };
+
     } catch (error) {
       return {
         nome: nomeBase,
