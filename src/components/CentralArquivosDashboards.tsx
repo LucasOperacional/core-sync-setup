@@ -219,8 +219,50 @@ export function CentralArquivosDashboards() {
     } else {
       toast.error("Não foi possível excluir o arquivo.");
     }
+    setSelecionados((s) => s.filter((id) => id !== arquivo.id));
     await recarregar();
   }
+
+  function alternarSelecao(id: string) {
+    setSelecionados((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  }
+
+  function alternarTodos() {
+    const ids = filtrados.map((a) => a.id);
+    const todos = ids.length > 0 && ids.every((id) => selecionados.includes(id));
+    setSelecionados(todos ? [] : ids);
+  }
+
+  async function handleExcluirSelecionados() {
+    const alvos = filtrados.filter((a) => selecionados.includes(a.id));
+    if (alvos.length === 0) return;
+    if (
+      !window.confirm(
+        `Excluir definitivamente ${alvos.length} arquivo(s) importado(s)? Esta ação não pode ser desfeita.`,
+      )
+    )
+      return;
+    setApagandoLote(true);
+    let sucesso = 0;
+    let falhas = 0;
+    for (const arquivo of alvos) {
+      const ok = await excluirArquivoImportado(arquivo);
+      if (ok) {
+        sucesso += 1;
+        if (detalhe?.id === arquivo.id) setDetalhe(null);
+      } else {
+        falhas += 1;
+      }
+    }
+    setApagandoLote(false);
+    setSelecionados([]);
+    if (sucesso > 0) toast.success(`${sucesso} arquivo(s) excluído(s).`);
+    if (falhas > 0) toast.error(`${falhas} arquivo(s) não puderam ser excluídos.`);
+    await recarregar();
+  }
+
+  const todosSelecionados =
+    filtrados.length > 0 && filtrados.every((a) => selecionados.includes(a.id));
 
   return (
     <section className="space-y-5">
