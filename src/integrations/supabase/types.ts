@@ -2037,6 +2037,83 @@ export type Database = {
           },
         ]
       }
+      mesa_checkins: {
+        Row: {
+          data: string
+          feito: boolean
+          id: string
+          observacao: string | null
+          posto_id: string
+          registrado_em: string
+          registrado_por: string | null
+          updated_at: string
+        }
+        Insert: {
+          data?: string
+          feito?: boolean
+          id?: string
+          observacao?: string | null
+          posto_id: string
+          registrado_em?: string
+          registrado_por?: string | null
+          updated_at?: string
+        }
+        Update: {
+          data?: string
+          feito?: boolean
+          id?: string
+          observacao?: string | null
+          posto_id?: string
+          registrado_em?: string
+          registrado_por?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mesa_checkins_posto_id_fkey"
+            columns: ["posto_id"]
+            isOneToOne: false
+            referencedRelation: "mesa_postos_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mesa_postos_servico: {
+        Row: {
+          ativo: boolean
+          cliente: string | null
+          created_at: string
+          created_by: string | null
+          gerente_nome: string
+          id: string
+          localidade: string | null
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cliente?: string | null
+          created_at?: string
+          created_by?: string | null
+          gerente_nome: string
+          id?: string
+          localidade?: string | null
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cliente?: string | null
+          created_at?: string
+          created_by?: string | null
+          gerente_nome?: string
+          id?: string
+          localidade?: string | null
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       monitor_cron: {
         Row: {
           created_at: string
