@@ -2,22 +2,22 @@ import { pushSistema } from "@/lib/push-eventos";
 import { useRef, useState, useEffect } from "react";
 import { FileUp, Loader2, CheckCircle2, AlertTriangle, CalendarX2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { parseAnyFile, type ParsedRow } from "@/lib/file-parsers";
+import { type ParsedRow } from "@/lib/file-parsers";
 import { mesclarLinhas } from "@/lib/tabular-extract";
 import { uploadFaltasArquivos } from "@/lib/faltas-db";
 import { registrarArquivoImportado } from "@/lib/central-arquivos-db";
 import { registrarImportacaoDashboard } from "@/lib/fonte-dashboard";
+import {
+  validarArquivosDashboard,
+  extensaoAceita,
+  type RelatorioArquivo,
+} from "@/lib/import-validacao";
+import { ImportValidacaoRelatorio } from "@/components/ImportValidacaoRelatorio";
 
 const FALTAS_STORAGE_KEY = "nexti-faltas-rows-v1";
 
-const ACCEPTED_EXTENSIONS = [".pdf", ".csv", ".xlsx", ".xls", ".txt", ".tsv"];
 const ACCEPTED_MIME =
   "application/pdf,text/csv,text/plain,text/tab-separated-values,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-function isAcceptedFile(file: File): boolean {
-  const name = file.name.toLowerCase();
-  return ACCEPTED_EXTENSIONS.some((ext) => name.endsWith(ext));
-}
 
 export function ImportFaltasCard() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -26,6 +26,7 @@ export function ImportFaltasCard() {
     success: boolean;
     message: string;
   } | null>(null);
+  const [relatorios, setRelatorios] = useState<RelatorioArquivo[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [currentRows, setCurrentRows] = useState(0);
 
@@ -46,53 +47,19 @@ export function ImportFaltasCard() {
     if (!files || files.length === 0) return;
     setBusy(true);
     setLastResult(null);
+    setRelatorios([]);
 
     try {
-      const validFiles = Array.from(files).filter(isAcceptedFile);
-      if (validFiles.length === 0) {
+      const selecionados = Array.from(files);
+      if (!selecionados.some((f) => extensaoAceita(f.name))) {
         setLastResult({
           success: false,
-          message: "Nenhum arquivo válido selecionado. Aceitos: PDF, CSV, XLSX, XLS.",
+          message: "Nenhum arquivo válido selecionado. Aceitos: PDF, CSV, XLSX, XLS, TXT, TSV.",
         });
         setBusy(false);
         return;
       }
 
-      let allRows: ParsedRow[] = [];
-      const falhas: string[] = [];
-      let lidos = 0;
-
-      for (const file of validFiles) {
-        try {
-          const rows = await parseAnyFile(file);
-          if (rows.length > 0) {
-            allRows = allRows.concat(rows);
-            lidos++;
-          } else {
-            falhas.push(`${file.name}: nenhuma linha encontrada`);
-          }
-          await registrarArquivoImportado(file, "FALTAS", rows.length);
-        } catch (err) {
-          const detalhe = err instanceof Error ? err.message : "erro desconhecido";
-          console.error(`[ImportFaltasCard] Erro ao processar ${file.name}:`, err);
-          falhas.push(`${file.name}: ${detalhe}`);
-          await registrarArquivoImportado(file, "FALTAS", 0, detalhe);
-        }
-      }
-
-      if (allRows.length === 0) {
-        setLastResult({
-          success: false,
-          message:
-            falhas.length > 0
-              ? `Não foi possível ler os arquivos — ${falhas.join(" | ")}`
-              : "Não foi possível extrair dados dos arquivos. Verifique se possuem conteúdo tabular (planilha ou PDF com texto).",
-        });
-        setBusy(false);
-        return;
-      }
-
-      // Junta com o que já havia sido importado antes (sem duplicar linhas).
       let anteriores: ParsedRow[] = [];
       try {
         const raw = localStorage.getItem(FALTAS_STORAGE_KEY);
@@ -101,7 +68,37 @@ export function ImportFaltasCard() {
       } catch {
         /* ignore */
       }
-      const combinadas = mesclarLinhas(anteriores, allRows);
+
+      const validacao = await validarArquivosDashboard(selecionados, "FALTAS", anteriores);
+      setRelatorios(validacao.relatorios);
+
+      for (const [i, rel] of validacao.relatorios.entries()) {
+        const arquivo = selecionados[i];
+        if (!arquivo) continue;
+        await registrarArquivoImportado(
+          arquivo,
+          "FALTAS",
+          rel.novas,
+          rel.status === "erro" ? rel.mensagens.join(" ") : undefined,
+        );
+      }
+
+      if (validacao.linhas.length === 0) {
+        const motivos = validacao.relatorios
+          .filter((r) => r.mensagens.length > 0)
+          .map((r) => `${r.arquivo}: ${r.mensagens.join(" ")}`);
+        setLastResult({
+          success: false,
+          message:
+            motivos.length > 0
+              ? `Nada foi importado — ${motivos.join(" | ")}`
+              : "Nada foi importado. Verifique se os arquivos possuem conteúdo tabular com cabeçalho.",
+        });
+        setBusy(false);
+        return;
+      }
+
+      const combinadas = mesclarLinhas(anteriores, validacao.linhas);
 
       try {
         localStorage.setItem(FALTAS_STORAGE_KEY, JSON.stringify(combinadas));
@@ -109,30 +106,32 @@ export function ImportFaltasCard() {
         /* storage full */
       }
 
-      // Dispatch sync event so Faltas dashboard updates in the same tab
       registrarImportacaoDashboard("FALTAS", combinadas.length);
       window.dispatchEvent(new Event("faltas-sync"));
 
       setCurrentRows(combinadas.length);
 
-      // Upload to Supabase in background
+      const aprovados = selecionados.filter(
+        (f, i) => validacao.relatorios[i] && validacao.relatorios[i]!.status !== "erro",
+      );
       try {
-        await uploadFaltasArquivos(validFiles);
+        await uploadFaltasArquivos(aprovados);
       } catch {
         /* silent — localStorage is the primary sync */
       }
 
-      const aviso = falhas.length > 0 ? ` Não lidos: ${falhas.join(" | ")}` : "";
+      const comErro = validacao.arquivosComErro;
       setLastResult({
-        success: true,
-        message: `${lidos} de ${validFiles.length} arquivo(s) lido(s) — ${combinadas.length} linha(s) no Dashboard de Faltas.${aviso}`,
+        success: comErro === 0,
+        message: `${validacao.total - comErro} de ${validacao.total} arquivo(s) validado(s) — ${validacao.linhas.length} linha(s) nova(s), ${combinadas.length} no total.${
+          comErro > 0 ? ` ${comErro} arquivo(s) com erro (veja a conferência abaixo).` : ""
+        }`,
       });
-      // Um único aviso de resumo da importação (nunca dentro do laço de arquivos).
       void pushSistema.importacaoConcluida({
         dashboard: "Faltas",
-        arquivos: validFiles.length,
+        arquivos: validacao.total,
         linhas: combinadas.length,
-        naoLidos: falhas.length,
+        naoLidos: comErro,
       });
     } catch {
       setLastResult({
@@ -218,6 +217,7 @@ export function ImportFaltasCard() {
               onClick={() => {
                 localStorage.removeItem(FALTAS_STORAGE_KEY);
                 setCurrentRows(0);
+                setRelatorios([]);
                 window.dispatchEvent(new Event("faltas-sync"));
                 setLastResult({ success: true, message: "Dados importados removidos." });
               }}
@@ -244,6 +244,8 @@ export function ImportFaltasCard() {
             </div>
           )}
         </div>
+
+        <ImportValidacaoRelatorio relatorios={relatorios} />
 
         {dragOver && (
           <div className="mt-3 flex items-center justify-center rounded-lg border-2 border-dashed border-orange-500/50 bg-orange-500/5 py-6 text-sm font-medium text-orange-400">
