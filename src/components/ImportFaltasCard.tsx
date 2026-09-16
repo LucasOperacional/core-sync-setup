@@ -2,22 +2,22 @@ import { pushSistema } from "@/lib/push-eventos";
 import { useRef, useState, useEffect } from "react";
 import { FileUp, Loader2, CheckCircle2, AlertTriangle, CalendarX2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { parseAnyFile, type ParsedRow } from "@/lib/file-parsers";
+import { type ParsedRow } from "@/lib/file-parsers";
 import { mesclarLinhas } from "@/lib/tabular-extract";
 import { uploadFaltasArquivos } from "@/lib/faltas-db";
 import { registrarArquivoImportado } from "@/lib/central-arquivos-db";
 import { registrarImportacaoDashboard } from "@/lib/fonte-dashboard";
+import {
+  validarArquivosDashboard,
+  extensaoAceita,
+  type RelatorioArquivo,
+} from "@/lib/import-validacao";
+import { ImportValidacaoRelatorio } from "@/components/ImportValidacaoRelatorio";
 
 const FALTAS_STORAGE_KEY = "nexti-faltas-rows-v1";
 
-const ACCEPTED_EXTENSIONS = [".pdf", ".csv", ".xlsx", ".xls", ".txt", ".tsv"];
 const ACCEPTED_MIME =
   "application/pdf,text/csv,text/plain,text/tab-separated-values,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-function isAcceptedFile(file: File): boolean {
-  const name = file.name.toLowerCase();
-  return ACCEPTED_EXTENSIONS.some((ext) => name.endsWith(ext));
-}
 
 export function ImportFaltasCard() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -26,6 +26,7 @@ export function ImportFaltasCard() {
     success: boolean;
     message: string;
   } | null>(null);
+  const [relatorios, setRelatorios] = useState<RelatorioArquivo[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [currentRows, setCurrentRows] = useState(0);
 
