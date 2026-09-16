@@ -133,10 +133,12 @@ export function QualidadeTempoSupervisores({
   visitas,
   linkPara,
   fechado = false,
+  limite,
 }: {
   visitas: Visit[];
   linkPara?: string;
   fechado?: boolean;
+  limite?: number;
 }) {
   const [fechados, setFechados] = useState<Set<string>>(() => {
     if (!fechado) return new Set();
