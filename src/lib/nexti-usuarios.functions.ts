@@ -386,6 +386,50 @@ function acharPostoCompativel(
   return melhor && melhor.pontos >= 4 ? melhor : null;
 }
 
+/**
+ * Regra: depois de achar a escala mais compatível, usa o código externo
+ * (matrícula) da escala para identificar o posto na NEXTI — pelo posto
+ * vinculado à escala, pelo mesmo código externo ou por prefixo do código.
+ */
+function acharPostoPelaEscala(
+  postosRaw: Record<string, unknown>[],
+  escalaRaw: Record<string, unknown> | undefined,
+  escala: OpcaoNexti | null,
+): OpcaoNexti | null {
+  if (!escala) return null;
+
+  const codigo = normalizar(escala.externalId ?? "");
+  const vinculado = Number(
+    escalaRaw?.["workplaceId"] ?? escalaRaw?.["workPlaceId"] ?? 0,
+  );
+  const codigoVinculado = normalizar(
+    typeof escalaRaw?.["externalWorkplaceId"] === "string"
+      ? (escalaRaw["externalWorkplaceId"] as string)
+      : "",
+  );
+
+  for (const item of postosRaw) {
+    const id = Number(item["id"] ?? 0);
+    const nome = typeof item["name"] === "string" ? item["name"] : "";
+    if (!id || !nome) continue;
+    const externalId = normalizar(
+      typeof item["externalId"] === "string" ? item["externalId"] : "",
+    );
+
+    const bate =
+      (vinculado && id === vinculado) ||
+      (codigoVinculado && externalId === codigoVinculado) ||
+      (codigo && externalId && (externalId === codigo || codigo.startsWith(externalId)));
+
+    if (!bate) continue;
+    const opcao: OpcaoNexti = { id, nome };
+    if (externalId) opcao.externalId = String(item["externalId"]);
+    return opcao;
+  }
+
+  return null;
+}
+
 type ListasNexti = {
   empresasRaw: Record<string, unknown>[];
   cargosRaw: Record<string, unknown>[];
