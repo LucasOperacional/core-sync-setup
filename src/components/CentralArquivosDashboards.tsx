@@ -535,6 +535,15 @@ export function CentralArquivosDashboards() {
                   {filtrados.map((a) => (
                     <tr key={a.id} className="border-b border-border/60">
                       <td className="px-3 py-2">
+                        <input
+                          type="checkbox"
+                          checked={selecionados.includes(a.id)}
+                          onChange={() => alternarSelecao(a.id)}
+                          aria-label={`Selecionar ${a.nome_original}`}
+                          className="size-4 accent-current"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
                         <p className="max-w-[220px] truncate font-medium" title={a.nome_original}>
                           {a.nome_original}
                         </p>
