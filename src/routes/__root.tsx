@@ -221,16 +221,28 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const [mounted, setMounted] = useState(false);
 
-  // Initialize the IA Operacional global listeners once at the app root.
+  // Os serviços de fundo entram só depois que a tela já apareceu.
   useEffect(() => {
-    setMounted(true);
+    const ocioso =
+      (window as Window & { requestIdleCallback?: (cb: () => void) => number })
+        .requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 400));
 
-    const ai = OperationalAI.getInstance();
-    ai.init();
-    ai.restoreFormData();
+    const id = ocioso(() => {
+      setMounted(true);
 
-    // Mark the signed-in user as online as soon as the app is opened.
-    void import("../lib/presence").then(({ startPresence }) => startPresence());
+      void import("../lib/operational-ai")
+        .then(({ OperationalAI }) => {
+          const ai = OperationalAI.getInstance();
+          ai.init();
+          ai.restoreFormData();
+        })
+        .catch(() => {});
+
+      // Mark the signed-in user as online as soon as the app is opened.
+      void import("../lib/presence").then(({ startPresence }) => startPresence());
+    });
+    void id;
+
 
     // Regra geral: as APIs ligadas pelo superadmin valem para todos os usuários
     // e para todos os cards. Falha aqui nunca interrompe a tela.
