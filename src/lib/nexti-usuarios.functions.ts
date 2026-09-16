@@ -299,7 +299,7 @@ export type ValidacaoPessoa = {
   nome: string;
   erros: string[];
   avisos: string[];
-  payload: Record<string, unknown>;
+  payload: Record<string, string | number | boolean>;
   resolvido: { empresa?: string; cargo?: string; posto?: string; escala?: string };
 };
 
@@ -380,7 +380,7 @@ function montarCadastro(
     }
   }
 
-  const payload: Record<string, unknown> = {
+  const payload: Record<string, string | number | boolean> = {
     name: nome,
     cpf,
     pis: pis.length === 11 ? pis : "00000000000",
@@ -395,7 +395,12 @@ function montarCadastro(
     allowDevicePassword: false,
     allowMobileClocking: false,
     adminDevice: false,
-    ...(empresa ? { companyId: empresa.id, externalCompanyId: empresa.externalId } : {}),
+    ...(empresa
+      ? {
+          companyId: empresa.id,
+          ...(empresa.externalId ? { externalCompanyId: empresa.externalId } : {}),
+        }
+      : {}),
     ...(cargo ? { careerId: cargo.id } : {}),
     ...(posto ? { workplaceId: posto.id } : {}),
     ...(escala ? { scheduleId: escala.id } : {}),
