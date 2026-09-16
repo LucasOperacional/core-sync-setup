@@ -58,8 +58,17 @@ export type ClasseResposta = "conforme" | "nao_conforme" | "neutro";
 function regraPorPergunta(question: string | undefined, texto: string): ClasseResposta | null {
   if (!question) return null;
   const q = semAcento(question).toUpperCase();
-  // "OCORREU CONTATO DIRETO COM O CLIENTE?" respondida com "Não: <justificativa>" é o esperado.
-  if (q.includes("CONTATO DIRETO COM O CLIENTE") && /^NAO\b/.test(texto)) return "conforme";
+  // "OCORREU CONTATO DIRETO COM O CLIENTE?":
+  // SIM/NÃO acompanhados de justificativa → conforme; "Não" sem justificativa → não conforme.
+  if (q.includes("CONTATO DIRETO COM O CLIENTE")) {
+    const sim = /^(SIM|S)\b/.test(texto);
+    const nao = /^(NAO|N)\b/.test(texto);
+    if (!sim && !nao) return null;
+    const justificativa = texto.replace(/^(SIM|NAO|S|N)\b[\s:,.\-–—]*/, "").trim();
+    const temJustificativa = justificativa.replace(/[^A-Z0-9]/g, "").length >= 3;
+    if (temJustificativa) return "conforme";
+    return sim ? "conforme" : "nao_conforme";
+  }
   // Equipamentos conferidos: quando o contrato não tem material, a resposta é conforme.
   if (
     (q.includes("EQUIPAMENTOS ALOCADOS") || q.includes("FORAM CONFERIDOS")) &&
