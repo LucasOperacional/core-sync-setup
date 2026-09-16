@@ -99,6 +99,8 @@ export function CentralArquivosDashboards() {
   const [ocupadoArquivo, setOcupadoArquivo] = useState<string | null>(null);
   const [detalhe, setDetalhe] = useState<ArquivoImportado | null>(null);
   const [historico, setHistorico] = useState<HistoricoSincronizacao[]>([]);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [apagandoLote, setApagandoLote] = useState(false);
 
   // filtros
   const [filtroDashboard, setFiltroDashboard] = useState<"TODOS" | DashboardDestino>("TODOS");
