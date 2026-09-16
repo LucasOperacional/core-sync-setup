@@ -162,6 +162,24 @@ export const Route = createFileRoute("/api/public/evolution-webhook")({
         if (!autorizado) return new Response("Não autorizado", { status: 401 });
 
         const evento = String(corpo["event"] ?? "");
+
+        // O Evolution Go só entrega o QR Code por aqui (o GET /instance/qr
+        // responde "no QR code available"). Guardamos a imagem para o painel.
+        if (/qr/i.test(evento)) {
+          const d = rec(corpo["data"]);
+          const img = d["qrcode"] ?? d["Qrcode"] ?? d["QRCode"] ?? corpo["qrcode"];
+          if (typeof img === "string" && img) {
+            const { guardarQrCode } = await import("@/lib/evolution-go.functions");
+            await guardarQrCode(img);
+          }
+          return Response.json({ ok: true, evento });
+        }
+        if (/connected|loggedin/i.test(evento)) {
+          const { guardarQrCode } = await import("@/lib/evolution-go.functions");
+          await guardarQrCode("");
+          return Response.json({ ok: true, evento });
+        }
+
         if (evento !== "Message" && evento !== "SendMessage") {
           // Demais eventos (conexão, QR Code, presença) não geram histórico.
           return Response.json({ ok: true, ignorado: evento });
