@@ -196,7 +196,20 @@ const TARGET_COLUMNS = [
   },
   {
     key: "tipo",
-    labels: ["tipo", "tipo de ausencia", "tipo de ausência", "motivo", "ocorrencia", "ocorrência"],
+    labels: ["tipo", "tipo de ausencia", "tipo de ausência", "ocorrencia", "ocorrência"],
+  },
+  {
+    key: "motivo",
+    labels: [
+      "motivo",
+      "motivo da falta",
+      "justificativa",
+      "observacao",
+      "observação",
+      "obs",
+      "descricao",
+      "descrição",
+    ],
   },
 ];
 
@@ -208,6 +221,7 @@ type ExtractedRow = {
   periodo: string;
   faltas: string;
   tipo: string;
+  motivo: string;
 };
 
 function normalize(s: string): string {
@@ -270,6 +284,7 @@ function extractRows(rows: ParsedRow[]): ExtractedRow[] {
       periodo: buildPeriodo(dataInicio, dataFim),
       faltas: (row[mapping["faltas"] ?? -1] ?? "").trim(),
       tipo: (row[mapping["tipo"] ?? -1] ?? "").trim().toUpperCase(),
+      motivo: (row[mapping["motivo"] ?? -1] ?? "").trim(),
     };
     const temConteudo =
       item.colaborador !== "" ||
