@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useCallback, useRef, useState, useMemo, useEffect } from "react";
+import { useRef, useState, useMemo, useEffect } from "react";
 import { WidgetBoard } from "@/components/widgets/WidgetBoard";
 
 import {
