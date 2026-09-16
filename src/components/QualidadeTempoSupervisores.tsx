@@ -76,7 +76,7 @@ function contar(v: Visit) {
 }
 
 export function QualidadeTempoSupervisores({ visitas }: { visitas: Visit[] }) {
-  const [aberto, setAberto] = useState<string | null>(null);
+  const [fechados, setFechados] = useState<Set<string>>(new Set());
 
   const linhas = useMemo<LinhaSupervisor[]>(() => {
     const porSupervisor = new Map<string, Visit[]>();
