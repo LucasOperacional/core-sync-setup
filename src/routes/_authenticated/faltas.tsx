@@ -756,6 +756,7 @@ function FaltasPage() {
   }, [filteredData]);
 
   const [gerenteAberto, setGerenteAberto] = useState<string | null>(null);
+  const [tabelaLimite, setTabelaLimite] = useState(100);
 
   function clearFilters() {
     setFilterPosto("");
@@ -873,7 +874,7 @@ function FaltasPage() {
 
         <WidgetBoard
           dashboard="faltas"
-          widgets={[
+          widgets={useMemo(() => [
             ...(columnsDetected
               ? [
                   {
@@ -1516,7 +1517,7 @@ function FaltasPage() {
                               </tr>
                             </thead>
                             <tbody>
-                              {filteredData.map((r, idx) => (
+                              {filteredData.slice(0, tabelaLimite).map((r, idx) => (
                                 <tr
                                   key={idx}
                                   className="border-b border-border transition-colors hover:bg-muted/50"
@@ -1538,12 +1539,23 @@ function FaltasPage() {
                             </tbody>
                           </table>
                         </div>
+                        {filteredData.length > tabelaLimite && (
+                          <div className="flex justify-center pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setTabelaLimite((v) => v + 200)}
+                              className="rounded-lg border border-border bg-secondary px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary/80"
+                            >
+                              Mostrar mais ({filteredData.length - tabelaLimite} restantes)
+                            </button>
+                          </div>
+                        )}
                       </section>
                     ),
                   },
                 ]
               : []),
-          ]}
+          ], [columnsDetected, stats, filteredData, registrosSerieMensal, gerenteFaltasCards, gerenteAberto, tabelaLimite])}
         />
       </div>
     </main>
