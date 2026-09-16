@@ -40,6 +40,7 @@ import { importarPostosNexti } from "@/lib/areas-nexti.functions";
 import { meuVinculoGerente } from "@/lib/vinculo-gerente.functions";
 import { useSessao, useIsAdmin } from "@/hooks/use-sessao";
 import { toast } from "sonner";
+import { COORDENADORES, coordenadorDoGerente, rotuloCoordenador } from "@/lib/coordenadores";
 
 export const Route = createFileRoute("/_authenticated/areas")({
   head: () => ({
