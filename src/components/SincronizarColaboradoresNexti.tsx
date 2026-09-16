@@ -48,7 +48,7 @@ export function SincronizarColaboradoresNexti() {
   async function executar() {
     setCarregando(true);
     try {
-      const r = await sincronizar({ data: {} });
+      const r = await sincronizar();
       setColaboradores(r.colaboradores);
       if (r.erro) toast.warning(`Sincronização parcial: ${r.erro}`);
       else
