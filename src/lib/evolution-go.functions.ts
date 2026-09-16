@@ -250,11 +250,33 @@ export const evolutionGoStatus = createServerFn({ method: "POST" })
 
       let qrCode: string | null = null;
       if (!logado) {
-        const qr = await evolutionFetch(cfg, "/instance/qr");
-        if (qr.status < 400) {
+        const lerQr = async (): Promise<string | null> => {
+          const qr = await evolutionFetch(cfg, "/instance/qr");
+          if (qr.status >= 400) return null;
           const q = rec(rec(qr.corpo)["data"] ?? qr.corpo);
           const img = q["Qrcode"] ?? q["qrcode"] ?? q["QRCode"];
-          if (typeof img === "string" && img) qrCode = img;
+          return typeof img === "string" && img ? img : null;
+        };
+
+        qrCode = await lerQr();
+
+        // O QR Code só é gerado depois que a sessão é iniciada no servidor.
+        // Quando a instância não está conectada, iniciamos a sessão e
+        // tentamos ler o QR Code novamente.
+        if (!qrCode) {
+          await evolutionFetch(cfg, "/instance/connect", {
+            method: "POST",
+            ...(cfg.instanceId ? { headers: { instanceId: cfg.instanceId } } : {}),
+            body: JSON.stringify({
+              immediate: true,
+              subscribe: ["MESSAGE", "SEND_MESSAGE", "CONNECTION", "QRCODE"],
+              ...(cfg.webhookUrl ? { webhookUrl: cfg.webhookUrl } : {}),
+            }),
+          });
+          for (let i = 0; i < 6 && !qrCode; i += 1) {
+            await new Promise((r) => setTimeout(r, 1000));
+            qrCode = await lerQr();
+          }
         }
       }
       return { ok: true, configurado: true, conectado, logado, nome, qrCode };
