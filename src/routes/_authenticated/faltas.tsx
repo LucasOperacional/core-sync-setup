@@ -345,6 +345,23 @@ function ChartTooltipContent({ active, payload, label }: any) {
   );
 }
 
+/* Tooltip detalhado do Top 10 — mostra dados reais do colaborador */
+function TopColaboradorTooltip({ active, payload }: any) {
+  if (!active || !payload || payload.length === 0) return null;
+  const d = payload[0]?.payload;
+  if (!d) return null;
+  return (
+    <div className="min-w-max max-w-xs rounded-lg border border-border bg-card px-3 py-2 shadow-lg">
+      <p className="whitespace-nowrap text-xs font-semibold text-foreground">{d.nomeCompleto}</p>
+      {d.cargo && <p className="whitespace-nowrap text-xs text-muted-foreground">{d.cargo}</p>}
+      {d.posto && <p className="whitespace-nowrap text-xs text-muted-foreground">{d.posto}</p>}
+      <p className="whitespace-nowrap text-sm font-bold text-foreground">
+        {d.quantidade} dia(s) de falta · {d.ocorrencias} ocorrência(s)
+      </p>
+    </div>
+  );
+}
+
 function FaltasPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<ParsedRow[]>([]);
