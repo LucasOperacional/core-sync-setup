@@ -121,9 +121,16 @@ const ASSINATURAS_EMPRESAS = [
   ["TEKTRON", "SERVICOS"],
 ];
 
+/**
+ * Empresas bloqueadas: TEKTRON SEGURANÇA (e variações de grafia) nunca entra
+ * na importação, mesmo que o nome contenha tokens de outra empresa.
+ */
+const ASSINATURAS_BLOQUEADAS = [["TEKTRON", "SEGURANCA"]];
+
 export function empresaPermitida(nome: string): boolean {
   const n = normalizar(nome);
   if (!n) return false;
+  if (ASSINATURAS_BLOQUEADAS.some((tokens) => tokens.every((t) => n.includes(t)))) return false;
   return ASSINATURAS_EMPRESAS.some((tokens) => tokens.every((t) => n.includes(t)));
 }
 
