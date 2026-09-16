@@ -29,6 +29,37 @@ export const REGRAS_COLUNAS: Regra[] = [
   },
   { chave: "rg", rotulo: "RG", termos: ["rg", "identidade", "registro geral"] },
   { chave: "email", rotulo: "E-mail", termos: ["email", "e-mail"] },
+  {
+    chave: "telefone",
+    rotulo: "Telefone",
+    termos: [
+      "celular",
+      "telefone celular",
+      "telefone 1",
+      "telefone",
+      "fone",
+      "whatsapp",
+      "contato",
+      "tel",
+      "phone",
+    ],
+    exclui: ["2", "recado", "emergencia", "comercial", "fixo"],
+  },
+  {
+    chave: "telefone2",
+    rotulo: "Telefone 2",
+    termos: [
+      "telefone 2",
+      "telefone2",
+      "celular 2",
+      "segundo telefone",
+      "telefone fixo",
+      "fone fixo",
+      "telefone recado",
+      "telefone comercial",
+      "phone2",
+    ],
+  },
   { chave: "genero", rotulo: "Sexo", termos: ["sexo", "genero"] },
   {
     chave: "nascimento",
@@ -146,6 +177,13 @@ export function converterCampo(chave: Campo, bruto: unknown): string {
       return texto.replace(/\s+/g, "").toUpperCase();
     case "email":
       return texto.toLowerCase().replace(/\s+/g, "");
+    case "telefone":
+    case "telefone2": {
+      // Mantém apenas dígitos; remove DDI 55 quando o número fica com 12/13 dígitos.
+      let d = soDigitos(texto);
+      if (d.length > 11 && d.startsWith("55")) d = d.slice(2);
+      return d;
+    }
     case "genero":
       return paraSexo(texto);
     case "nascimento":
