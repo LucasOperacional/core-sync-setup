@@ -1014,9 +1014,10 @@ function extrairPeriodo(f: Rec): string {
 }
 
 async function carregarFaltasNexti(supabaseClient: unknown): Promise<{
-  lista: Array<{ colaborador: string; cargo: string; periodo: string; tipo: string }>;
+  lista: FaltaNextiItem[];
   em: number;
 }> {
+
   if (cacheFaltas && Date.now() - cacheFaltas.em < CACHE_MS) {
     return cacheFaltas;
   }
