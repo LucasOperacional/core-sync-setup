@@ -77,6 +77,31 @@ async function salvarChave(chave: string, valor: string) {
     } as never);
 }
 
+/** Guarda (ou limpa) o QR Code recebido pelo webhook do Evolution Go. */
+export async function guardarQrCode(imagem: string): Promise<void> {
+  await salvarChave(CHAVES.qrCode, imagem);
+  await salvarChave(CHAVES.qrCodeEm, imagem ? new Date().toISOString() : "");
+}
+
+/** Último QR Code recebido pelo webhook, válido por 2 minutos. */
+async function lerQrCodeSalvo(): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("app_config" as never)
+    .select("chave, valor")
+    .in("chave", [CHAVES.qrCode, CHAVES.qrCodeEm]);
+  const mapa = new Map<string, string>();
+  for (const l of (data ?? []) as Array<{ chave: string; valor: string | null }>) {
+    mapa.set(l.chave, l.valor ?? "");
+  }
+  const img = (mapa.get(CHAVES.qrCode) ?? "").trim();
+  const em = Date.parse(mapa.get(CHAVES.qrCodeEm) ?? "");
+  if (!img || Number.isNaN(em)) return null;
+  return Date.now() - em < 120_000 ? img : null;
+}
+
+
+
 async function ehAdmin(context: unknown): Promise<boolean> {
   const ctx = context as { supabase: any; userId: string };
   const { data } = await ctx.supabase.rpc("has_role", {
