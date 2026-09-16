@@ -893,6 +893,7 @@ export type FaltaNextiItem = {
   tipo: string;
   posto: string;
   matricula: string;
+  motivo: string;
 };
 
 let cacheFaltas: {
