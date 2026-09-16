@@ -217,6 +217,7 @@ export function ImportFaltasCard() {
               onClick={() => {
                 localStorage.removeItem(FALTAS_STORAGE_KEY);
                 setCurrentRows(0);
+                setRelatorios([]);
                 window.dispatchEvent(new Event("faltas-sync"));
                 setLastResult({ success: true, message: "Dados importados removidos." });
               }}
