@@ -559,17 +559,46 @@ function montarCadastro(
   let escala = acharOpcao(paraOpcoes(listas.escalasRaw), p.escala);
 
   if (limpar(p.escala) && !escala) {
+    // 0) código externo (matrícula) da escala informado direto na planilha.
+    const termoEscala = normalizar(limpar(p.escala));
+    const porCodigo = listas.escalasRaw.find(
+      (item) => !!codigoExternoDe(item) && normalizar(codigoExternoDe(item)) === termoEscala,
+    );
     // 1) horário exato; 2) escala mais compatível (horário + jornada + período + palavras).
-    const porHorario = acharEscalaPorHorario(listas.escalasRaw, p.escala);
-    const compativel = porHorario
-      ? { opcao: porHorario, pontos: 99 }
-      : acharEscalaCompativel(listas.escalasRaw, p.escala);
+    const porHorario = porCodigo ? null : acharEscalaPorHorario(listas.escalasRaw, p.escala);
+    const compativel = porCodigo
+      ? {
+          opcao: {
+            id: Number(porCodigo["id"] ?? 0),
+            nome: String(porCodigo["name"] ?? ""),
+            externalId: codigoExternoDe(porCodigo),
+          } as OpcaoNexti,
+          pontos: 100,
+        }
+      : porHorario
+        ? { opcao: porHorario, pontos: 99 }
+        : acharEscalaCompativel(listas.escalasRaw, p.escala);
     if (compativel) {
       escala = compativel.opcao;
       avisos.push(
         `Escala "${p.escala}" não existe com esse nome — usada a mais compatível: "${compativel.opcao.nome}".`,
       );
     }
+  }
+
+  // Regra: garante o código externo (matrícula) da escala escolhida — é ele que
+  // a NEXTI exige para vincular a escala ao colaborador.
+  if (escala && !escala.externalId) {
+    const registro = listas.escalasRaw.find((item) => Number(item["id"] ?? 0) === escala!.id);
+    const codigo = registro ? codigoExternoDe(registro) : "";
+    if (codigo) escala = { ...escala, externalId: codigo };
+  }
+  if (escala) {
+    avisos.push(
+      escala.externalId
+        ? `Escala "${escala.nome}" identificada pelo código externo (matrícula) ${escala.externalId}.`
+        : `Atenção: a escala "${escala.nome}" não tem código externo (matrícula) na NEXTI — o vínculo automático pode falhar.`,
+    );
   }
 
   if (!limpar(p.empresa)) erros.push("Empresa não informada.");
