@@ -483,8 +483,8 @@ function ControlDashboard() {
                 conteudo: (
                   <KpiCard
                     label="Tempo médio"
-                    value={`${indicadores.tempoMedio} min`}
-                    hint="Da chegada ao encerramento"
+                    value={formatarDuracao(indicadores.tempoMedio || null)}
+                    hint={`Tempo exato da chegada ao encerramento (${indicadores.tempoMedio} min)`}
                     icon={Clock}
                     tone="accent"
                   />
