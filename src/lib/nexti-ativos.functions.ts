@@ -1050,7 +1050,7 @@ async function carregarFaltasNexti(supabaseClient: unknown): Promise<{
     if (id !== null && nome) situacoesPorId.set(id, nome);
   }
 
-  const lista: Array<{ colaborador: string; cargo: string; periodo: string; tipo: string }> = [];
+  const lista: FaltaNextiItem[] = [];
   const vistos = new Set<string>();
 
   for (const f of faltasRaw) {
