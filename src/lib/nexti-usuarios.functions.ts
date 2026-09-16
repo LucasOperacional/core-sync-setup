@@ -785,7 +785,12 @@ async function atualizarPessoa(
 
     // A atualização de pessoas exige o registro completo já existente. Preserva os
     // campos obrigatórios da NEXTI e substitui somente os dados vindos da planilha.
-    const corpo = { ...atual, ...payload, id: personId, ignoreValidation: true };
+    const corpo: Record<string, unknown> = {
+      ...atual,
+      ...payload,
+      id: personId,
+      ignoreValidation: true,
+    };
     delete corpo["message"];
     const res = await requestNexti({
       config,
