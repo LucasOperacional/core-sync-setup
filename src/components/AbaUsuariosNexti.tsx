@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -342,9 +342,8 @@ export function AbaUsuariosNexti() {
                       const temErro = (v?.erros.length ?? 0) > 0;
                       const temAviso = (v?.avisos.length ?? 0) > 0;
                       return (
-                        <>
+                        <Fragment key={linha.id}>
                           <TableRow
-                            key={linha.id}
                             className={temErro ? "bg-destructive/5" : undefined}
                           >
                             <TableCell className="text-muted-foreground">{i + 1}</TableCell>
@@ -392,7 +391,7 @@ export function AbaUsuariosNexti() {
                             })}
                           </TableRow>
                           {v && (temErro || temAviso || detalhe === i) && (
-                            <TableRow key={`${linha.id}-detalhe`}>
+                            <TableRow>
                               <TableCell colSpan={CAMPOS.length + 2} className="space-y-1 py-2">
                                 {v.erros.map((erro) => (
                                   <p key={erro} className="text-xs text-destructive">
@@ -412,7 +411,7 @@ export function AbaUsuariosNexti() {
                               </TableCell>
                             </TableRow>
                           )}
-                        </>
+                        </Fragment>
                       );
                     })}
                   </TableBody>
