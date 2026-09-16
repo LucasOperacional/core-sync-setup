@@ -669,11 +669,25 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
       const personId = valor && Number(valor["id"]) > 0 ? Number(valor["id"]) : null;
 
       if (res.status >= 200 && res.status < 300 && personId) {
+        // Garante que a escala fique realmente vinculada ao colaborador.
+        const escalaId = Number(payload["scheduleId"] ?? 0);
+        let infoVinculo = "";
+        if (escalaId > 0) {
+          const vinculo = await vincularEscala(
+            config,
+            personId,
+            escalaId,
+            String(payload["admissionDate"] ?? ""),
+          );
+          infoVinculo = vinculo.ok
+            ? " Escala vinculada na NEXTI."
+            : ` Atenção: não foi possível vincular a escala automaticamente (${vinculo.erro}).`;
+        }
         return {
           nome,
           ok: true,
           personId,
-          mensagem: `Cadastrado na NEXTI (matrícula interna ${personId}).${extra}`,
+          mensagem: `Cadastrado na NEXTI (matrícula interna ${personId}).${extra}${infoVinculo}`,
         };
       }
       return {
