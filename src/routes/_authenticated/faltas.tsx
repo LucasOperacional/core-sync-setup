@@ -768,6 +768,20 @@ function FaltasPage() {
             >
               <RefreshCw className="size-4" /> Atualizar
             </button>
+            <button
+              type="button"
+              onClick={() => void puxarDaNexti(true)}
+              disabled={nextiCarregando}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+            >
+              {nextiCarregando ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RefreshCw className="size-4" />
+              )}
+              {nextiCarregando ? "Buscando na NEXTI..." : "Puxar da NEXTI"}
+            </button>
+
             {columnsDetected && filteredData.length > 0 ? (
               <button
                 type="button"
