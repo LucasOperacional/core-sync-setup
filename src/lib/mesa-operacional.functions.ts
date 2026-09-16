@@ -287,5 +287,6 @@ export const buscarPostosNexti = createServerFn({ method: "GET" })
     }
 
     const postos = [...encontrados.values()].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
-    return { ok: postos.length > 0, postos, erro: postos.length > 0 ? undefined : erro };
+    if (postos.length > 0) return { ok: true, postos };
+    return erro ? { ok: false, postos, erro } : { ok: false, postos };
   });
