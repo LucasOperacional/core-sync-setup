@@ -7,7 +7,7 @@ import {
   CalendarX2,
   Download,
   FileUp,
-  Loader2,
+  
   RefreshCw,
   Search,
   X,
