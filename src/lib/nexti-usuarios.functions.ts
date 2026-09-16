@@ -660,6 +660,8 @@ function montarCadastro(
     enrolment: limpar(p.matricula),
     ...(limpar(p.matricula) ? { externalId: limpar(p.matricula) } : {}),
     email,
+    ...(telefone ? { phone: telefone } : {}),
+    ...(telefone2 ? { phone2: telefone2 } : {}),
     gender: genero,
     personSituationId: 1,
     personTypeId: 1,
