@@ -19,6 +19,7 @@ import {
   Users,
   UserCheck,
   Home,
+  Trash2,
 } from "lucide-react";
 import {
   Bar,
