@@ -290,3 +290,89 @@ export const buscarPostosNexti = createServerFn({ method: "GET" })
     if (postos.length > 0) return { ok: true, postos };
     return erro ? { ok: false, postos, erro } : { ok: false, postos };
   });
+
+// ---------------------------------------------------------------------------
+// Importação em lote de postos
+// ---------------------------------------------------------------------------
+
+export type ImportarLoteResultado = {
+  ok: boolean;
+  criados: number;
+  repetidos: number;
+  falhas: number;
+  erro?: string;
+};
+
+const loteSchema = z.object({
+  postos: z
+    .array(
+      z.object({
+        nome: z.string().min(2),
+        gerenteNome: z.string().min(2),
+        localidade: z.string().optional(),
+        cliente: z.string().optional(),
+      }),
+    )
+    .min(1)
+    .max(2000),
+});
+
+/** Cadastra vários postos de uma vez, já vinculados ao gerente de área. */
+export const importarPostosMesaLote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => loteSchema.parse(input))
+  .handler(async ({ context, data }): Promise<ImportarLoteResultado> => {
+    const vistos = new Set<string>();
+    const linhas = data.postos
+      .map((p) => ({
+        nome: p.nome.trim(),
+        gerente_nome: p.gerenteNome.trim(),
+        localidade: p.localidade?.trim() || null,
+        cliente: p.cliente?.trim() || null,
+        created_by: context.userId,
+      }))
+      .filter((p) => {
+        const chave = `${p.nome.toLowerCase()}|${p.gerente_nome.toLowerCase()}`;
+        if (vistos.has(chave)) return false;
+        vistos.add(chave);
+        return true;
+      });
+
+    const { data: existentes } = await context.supabase
+      .from("mesa_postos_servico")
+      .select("nome, gerente_nome");
+    const jaTem = new Set(
+      (existentes ?? []).map(
+        (e: { nome: string; gerente_nome: string }) =>
+          `${e.nome.toLowerCase()}|${e.gerente_nome.toLowerCase()}`,
+      ),
+    );
+
+    const novos = linhas.filter(
+      (p) => !jaTem.has(`${p.nome.toLowerCase()}|${p.gerente_nome.toLowerCase()}`),
+    );
+    const repetidos = linhas.length - novos.length;
+
+    let criados = 0;
+    let falhas = 0;
+    let ultimoErro: string | undefined;
+
+    for (let i = 0; i < novos.length; i += 200) {
+      const bloco = novos.slice(i, i + 200);
+      const { data: inseridos, error } = await context.supabase
+        .from("mesa_postos_servico")
+        .insert(bloco)
+        .select("id");
+      if (error) {
+        falhas += bloco.length;
+        ultimoErro = error.message;
+        continue;
+      }
+      criados += inseridos?.length ?? bloco.length;
+    }
+
+    if (criados === 0 && ultimoErro) {
+      return { ok: false, criados, repetidos, falhas, erro: ultimoErro };
+    }
+    return { ok: true, criados, repetidos, falhas };
+  });
