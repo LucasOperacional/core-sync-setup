@@ -33,6 +33,7 @@ import {
 
 import { KpiCard } from "@/components/KpiCard";
 import { DesempenhoGerentesArea } from "@/components/DesempenhoGerentesArea";
+import { gerenteAreaACanonico } from "@/lib/gerentes-area-a";
 import {
   QualidadeTempoSupervisores,
   formatarDuracao,
@@ -243,7 +244,8 @@ function ControlDashboard() {
     const porRealizadorVisitas = new Map<string, Visit[]>();
     for (const v of topFiltradas) {
       if (!visitaRealizada(v)) continue;
-      const nome = v.responsavel.trim() || "Não informado";
+      const bruto = v.responsavel.trim();
+      const nome = gerenteAreaACanonico(bruto) ?? bruto ?? "Não informado";
       const lista = porRealizadorVisitas.get(nome) ?? [];
       lista.push(v);
       porRealizadorVisitas.set(nome, lista);
