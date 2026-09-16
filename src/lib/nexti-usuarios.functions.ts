@@ -597,9 +597,10 @@ function montarCadastro(
     avisos.push(
       escala.externalId
         ? `Escala "${escala.nome}" identificada pelo código externo (matrícula) ${escala.externalId}.`
-        : `Atenção: a escala "${escala.nome}" não tem código externo (matrícula) na NEXTI — o vínculo automático pode falhar.`,
+        : `Escala "${escala.nome}" identificada pelo id ${escala.id} na NEXTI.`,
     );
   }
+
 
   if (!limpar(p.empresa)) erros.push("Empresa não informada.");
   else if (!empresa) erros.push(`Empresa "${p.empresa}" não existe na NEXTI.`);
@@ -756,18 +757,20 @@ async function vincularEscala(
   const agora = new Date();
   const hoje = `${String(agora.getUTCDate()).padStart(2, "0")}${String(agora.getUTCMonth() + 1).padStart(2, "0")}${agora.getUTCFullYear()}000000`;
   const transferDateTime = /^\d{14}$/.test(inicio) ? inicio : hoje;
-  if (!personExternalId || !scheduleExternalId) {
-    return { ok: false, erro: "a matrícula externa ou o código externo da escala não foi informado pela NEXTI" };
+  // Regra: sem código externo (matrícula), o vínculo usa o id da escala.
+  if (!scheduleId) {
+    return { ok: false, erro: "a escala não foi identificada na NEXTI" };
   }
 
-  const corpo = {
+  const corpo: Record<string, string | number | boolean> = {
     personId,
-    personExternalId,
     scheduleId,
-    scheduleExternalId,
     rotationCode: Number.isInteger(rotationCode) && rotationCode > 0 ? rotationCode : 1,
     transferDateTime,
   };
+  if (personExternalId) corpo["personExternalId"] = personExternalId;
+  if (scheduleExternalId) corpo["scheduleExternalId"] = scheduleExternalId;
+
   const tentativas: Array<{ endpoint: string; method: "POST"; body: Record<string, unknown> }> = [
     {
       endpoint: "/scheduletransfers",
