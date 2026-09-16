@@ -470,6 +470,37 @@ export function CentralArquivosDashboards() {
             />
           </div>
 
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              {selecionados.length > 0
+                ? `${selecionados.length} arquivo(s) selecionado(s)`
+                : "Selecione arquivos para apagar em lote."}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={alternarTodos}
+                disabled={filtrados.length === 0 || apagandoLote}
+                className="inline-flex items-center gap-2 rounded-md border border-input px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent disabled:opacity-40"
+              >
+                {todosSelecionados ? "Limpar seleção" : "Selecionar todos"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleExcluirSelecionados()}
+                disabled={selecionados.length === 0 || apagandoLote}
+                className="inline-flex items-center gap-2 rounded-md border border-destructive/40 px-3 py-1.5 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-40"
+              >
+                {apagandoLote ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+                Apagar selecionados
+              </button>
+            </div>
+          </div>
+
           {carregando ? (
             <p className="py-8 text-center text-sm text-muted-foreground">Carregando arquivos...</p>
           ) : filtrados.length === 0 ? (
