@@ -260,15 +260,17 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
-      {mounted && <SinoNotificacoes />}
       <Toaster />
-      {mounted && <RegistroAtividadeAuto />}
-      {mounted && <ChatAssistant />}
-      {/* Rastreio do supervisor: fica ativo em qualquer página, invisível. */}
       {mounted && (
-        <div className="hidden">
-          <RastreioSempreAtivo />
-        </div>
+        <Suspense fallback={null}>
+          <SinoNotificacoes />
+          <RegistroAtividadeAuto />
+          <ChatAssistant />
+          {/* Rastreio do supervisor: fica ativo em qualquer página, invisível. */}
+          <div className="hidden">
+            <RastreioSempreAtivo />
+          </div>
+        </Suspense>
       )}
     </QueryClientProvider>
   );
