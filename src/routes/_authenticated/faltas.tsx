@@ -33,10 +33,7 @@ import {
   YAxis,
 } from "recharts";
 import { type ParsedRow } from "@/lib/file-parsers";
-import {
-  carregarFaltasDashboardNexti,
-  postoDeveAparecerNoDashboardFaltas,
-} from "@/lib/nexti-ativos.functions";
+import { postoDeveAparecerNoDashboardFaltas } from "@/lib/nexti-ativos.functions";
 
 import { sincronizarFaltasLancadas } from "@/lib/faltas-lancamentos.functions";
 import { extrairTodosRegistros, temCabecalho } from "@/lib/tabular-extract";
