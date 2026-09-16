@@ -363,6 +363,18 @@ function TopColaboradorTooltip({ active, payload }: any) {
       <p className="whitespace-nowrap text-sm font-bold text-foreground">
         {d.quantidade} dia(s) de falta · {d.ocorrencias} ocorrência(s)
       </p>
+      {Array.isArray(d.motivos) && d.motivos.length > 0 && (
+        <div className="mt-1 border-t border-border pt-1">
+          <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Motivo(s)
+          </p>
+          {d.motivos.map((m: { nome: string; qtd: number }, idx: number) => (
+            <p key={idx} className="whitespace-nowrap text-xs text-foreground">
+              {m.nome} — {m.qtd}x
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -633,17 +645,19 @@ function FaltasPage() {
     const faltasPorColaborador = new Map<string, number>();
     const colaboradorInfo = new Map<
       string,
-      { nome: string; posto: string; cargo: string; ocorrencias: number; dias: number }
+      { nome: string; posto: string; cargo: string; ocorrencias: number; dias: number; motivos: Map<string, number> }
     >();
     for (const r of data) {
       if (!r.colaborador) continue;
       const val = parseFaltasValue(r.faltas);
       faltasPorColaborador.set(r.colaborador, (faltasPorColaborador.get(r.colaborador) ?? 0) + val);
       const key = normalize(r.colaborador);
+      const motivo = (r.tipo || "NÃO INFORMADO").trim() || "NÃO INFORMADO";
       const info = colaboradorInfo.get(key);
       if (info) {
         info.ocorrencias += 1;
         info.dias += val;
+        info.motivos.set(motivo, (info.motivos.get(motivo) ?? 0) + 1);
         if (!info.posto && r.posto) info.posto = r.posto;
         if (!info.cargo && r.cargo) info.cargo = r.cargo;
       } else {
@@ -653,6 +667,7 @@ function FaltasPage() {
           cargo: r.cargo,
           ocorrencias: 1,
           dias: val,
+          motivos: new Map([[motivo, 1]]),
         });
       }
     }
@@ -666,6 +681,9 @@ function FaltasPage() {
         cargo: info.cargo,
         ocorrencias: info.ocorrencias,
         quantidade: info.dias,
+        motivos: Array.from(info.motivos, ([nome, qtd]) => ({ nome, qtd })).sort(
+          (a, b) => b.qtd - a.qtd,
+        ),
       }));
 
     const faltasPorPosto = new Map<string, number>();
