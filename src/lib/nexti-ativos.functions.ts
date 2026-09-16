@@ -869,10 +869,20 @@ export const cadastrarAusenciaNexti = createServerFn({ method: "POST" })
 /* Busca de faltas diretamente na NEXTI (sem gravar no banco)         */
 /* ------------------------------------------------------------------ */
 
+export type FaltaNextiItem = {
+  colaborador: string;
+  cargo: string;
+  periodo: string;
+  tipo: string;
+  posto: string;
+  matricula: string;
+};
+
 let cacheFaltas: {
-  lista: Array<{ colaborador: string; cargo: string; periodo: string; tipo: string }>;
+  lista: FaltaNextiItem[];
   em: number;
 } | null = null;
+
 
 function dataHoraConsultaNexti(data: Date): string {
   const dois = (valor: number) => String(valor).padStart(2, "0");
