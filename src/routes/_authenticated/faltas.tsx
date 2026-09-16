@@ -410,9 +410,6 @@ function FaltasPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [nextiCarregando, setNextiCarregando] = useState(false);
-  const [nextiErro, setNextiErro] = useState<string | null>(null);
-  const [nextiEm, setNextiEm] = useState<string | null>(null);
 
 
   const [showFilters, setShowFilters] = useState(false);
