@@ -46,53 +46,19 @@ export function ImportAtestadosCard() {
     if (!files || files.length === 0) return;
     setBusy(true);
     setLastResult(null);
+    setRelatorios([]);
 
     try {
-      const validFiles = Array.from(files).filter(isAcceptedFile);
-      if (validFiles.length === 0) {
+      const selecionados = Array.from(files);
+      if (!selecionados.some((f) => extensaoAceita(f.name))) {
         setLastResult({
           success: false,
-          message: "Nenhum arquivo válido selecionado. Aceitos: PDF, CSV, XLSX, XLS.",
+          message: "Nenhum arquivo válido selecionado. Aceitos: PDF, CSV, XLSX, XLS, TXT, TSV.",
         });
         setBusy(false);
         return;
       }
 
-      let allRows: ParsedRow[] = [];
-      const falhas: string[] = [];
-      let lidos = 0;
-
-      for (const file of validFiles) {
-        try {
-          const rows = await parseAnyFile(file);
-          if (rows.length > 0) {
-            allRows = allRows.concat(rows);
-            lidos++;
-          } else {
-            falhas.push(`${file.name}: nenhuma linha encontrada`);
-          }
-          await registrarArquivoImportado(file, "ATESTADOS", rows.length);
-        } catch (err) {
-          const detalhe = err instanceof Error ? err.message : "erro desconhecido";
-          console.error(`[ImportAtestadosCard] Erro ao processar ${file.name}:`, err);
-          falhas.push(`${file.name}: ${detalhe}`);
-          await registrarArquivoImportado(file, "ATESTADOS", 0, detalhe);
-        }
-      }
-
-      if (allRows.length === 0) {
-        setLastResult({
-          success: false,
-          message:
-            falhas.length > 0
-              ? `Não foi possível ler os arquivos — ${falhas.join(" | ")}`
-              : "Não foi possível extrair dados dos arquivos. Verifique se possuem conteúdo tabular (planilha ou PDF com texto).",
-        });
-        setBusy(false);
-        return;
-      }
-
-      // Junta com o que já havia sido importado antes (sem duplicar linhas).
       let anteriores: ParsedRow[] = [];
       try {
         const raw = localStorage.getItem(ATESTADOS_STORAGE_KEY);
@@ -101,7 +67,37 @@ export function ImportAtestadosCard() {
       } catch {
         /* ignore */
       }
-      const combinadas = mesclarLinhas(anteriores, allRows);
+
+      const validacao = await validarArquivosDashboard(selecionados, "ATESTADOS", anteriores);
+      setRelatorios(validacao.relatorios);
+
+      for (const [i, rel] of validacao.relatorios.entries()) {
+        const arquivo = selecionados[i];
+        if (!arquivo) continue;
+        await registrarArquivoImportado(
+          arquivo,
+          "ATESTADOS",
+          rel.novas,
+          rel.status === "erro" ? rel.mensagens.join(" ") : undefined,
+        );
+      }
+
+      if (validacao.linhas.length === 0) {
+        const motivos = validacao.relatorios
+          .filter((r) => r.mensagens.length > 0)
+          .map((r) => `${r.arquivo}: ${r.mensagens.join(" ")}`);
+        setLastResult({
+          success: false,
+          message:
+            motivos.length > 0
+              ? `Nada foi importado — ${motivos.join(" | ")}`
+              : "Nada foi importado. Verifique se os arquivos possuem conteúdo tabular com cabeçalho.",
+        });
+        setBusy(false);
+        return;
+      }
+
+      const combinadas = mesclarLinhas(anteriores, validacao.linhas);
 
       try {
         localStorage.setItem(ATESTADOS_STORAGE_KEY, JSON.stringify(combinadas));
@@ -109,22 +105,22 @@ export function ImportAtestadosCard() {
         /* storage full */
       }
 
-      // Dispatch sync event so Atestados dashboard updates in the same tab
       registrarImportacaoDashboard("ATESTADOS", combinadas.length);
       window.dispatchEvent(new Event("atestados-sync"));
 
       setCurrentRows(combinadas.length);
 
-      const aviso = falhas.length > 0 ? ` Não lidos: ${falhas.join(" | ")}` : "";
+      const comErro = validacao.arquivosComErro;
       setLastResult({
-        success: true,
-        message: `${lidos} de ${validFiles.length} arquivo(s) lido(s) — ${combinadas.length} linha(s) no Dashboard de Atestados.${aviso}`,
+        success: comErro === 0,
+        message: `${validacao.total - comErro} de ${validacao.total} arquivo(s) validado(s) — ${validacao.linhas.length} linha(s) nova(s), ${combinadas.length} no total.${
+          comErro > 0 ? ` ${comErro} arquivo(s) com erro (veja a conferência abaixo).` : ""
+        }`,
       });
-      // Um único aviso de resumo (agrupado), nunca um por atestado.
       void pushAtestados.importado(`lote-${Date.now()}`, {
-        arquivos: validFiles.length,
+        arquivos: validacao.total,
         linhas: combinadas.length,
-        naoLidos: falhas.length,
+        naoLidos: comErro,
       });
     } catch {
       setLastResult({
