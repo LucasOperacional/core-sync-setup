@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
-import * as XLSX from "xlsx";
+import { lerPlanilhaUsuarios } from "@/lib/nexti-usuarios-planilha";
 import { useServerFn } from "@tanstack/react-start";
 import {
   AlertTriangle,
