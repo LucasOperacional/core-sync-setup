@@ -107,6 +107,29 @@ async function listarTudo(
   return itens;
 }
 
+/**
+ * Código externo (matrícula) do registro na NEXTI. A API usa nomes diferentes
+ * conforme o recurso e a versão, por isso procuramos todos os conhecidos.
+ */
+function codigoExternoDe(item: Record<string, unknown>): string {
+  const chaves = [
+    "externalId",
+    "externalCode",
+    "externalScheduleId",
+    "externalWorkplaceId",
+    "code",
+    "enrolment",
+    "registration",
+    "matricula",
+  ];
+  for (const chave of chaves) {
+    const valor = item[chave];
+    if (typeof valor === "string" && valor.trim()) return valor.trim();
+    if (typeof valor === "number" && Number.isFinite(valor)) return String(valor);
+  }
+  return "";
+}
+
 function paraOpcoes(
   itens: Record<string, unknown>[],
   campoNome: string[] = ["name"],
@@ -118,7 +141,8 @@ function paraOpcoes(
         id: Number(item["id"] ?? 0),
         nome: nomeChave ? String(item[nomeChave]) : "",
       };
-      if (typeof item["externalId"] === "string") opcao.externalId = item["externalId"];
+      const codigo = codigoExternoDe(item);
+      if (codigo) opcao.externalId = codigo;
       return opcao;
     })
     .filter((o) => o.id > 0 && o.nome);
@@ -232,7 +256,8 @@ function acharEscalaPorHorario(
     else if (jornada && jornadaEscala && jornadaEscala !== jornada) pontos -= 2;
     if (pontos <= 0) continue;
     const opcao: OpcaoNexti = { id, nome };
-    if (typeof item["externalId"] === "string") opcao.externalId = item["externalId"];
+    const codigo = codigoExternoDe(item);
+    if (codigo) opcao.externalId = codigo;
     if (!melhor || pontos > melhor.pontos) melhor = { opcao, pontos };
   }
   return melhor?.opcao ?? null;
@@ -321,7 +346,8 @@ function acharEscalaCompativel(
     if (pontos <= 0) continue;
     if (!melhor || pontos > melhor.pontos) {
       const opcao: OpcaoNexti = { id, nome };
-      if (typeof item["externalId"] === "string") opcao.externalId = item["externalId"];
+      const codigo = codigoExternoDe(item);
+      if (codigo) opcao.externalId = codigo;
       melhor = { opcao, pontos };
     }
   }
@@ -533,17 +559,46 @@ function montarCadastro(
   let escala = acharOpcao(paraOpcoes(listas.escalasRaw), p.escala);
 
   if (limpar(p.escala) && !escala) {
+    // 0) código externo (matrícula) da escala informado direto na planilha.
+    const termoEscala = normalizar(limpar(p.escala));
+    const porCodigo = listas.escalasRaw.find(
+      (item) => !!codigoExternoDe(item) && normalizar(codigoExternoDe(item)) === termoEscala,
+    );
     // 1) horário exato; 2) escala mais compatível (horário + jornada + período + palavras).
-    const porHorario = acharEscalaPorHorario(listas.escalasRaw, p.escala);
-    const compativel = porHorario
-      ? { opcao: porHorario, pontos: 99 }
-      : acharEscalaCompativel(listas.escalasRaw, p.escala);
+    const porHorario = porCodigo ? null : acharEscalaPorHorario(listas.escalasRaw, p.escala);
+    const compativel = porCodigo
+      ? {
+          opcao: {
+            id: Number(porCodigo["id"] ?? 0),
+            nome: String(porCodigo["name"] ?? ""),
+            externalId: codigoExternoDe(porCodigo),
+          } as OpcaoNexti,
+          pontos: 100,
+        }
+      : porHorario
+        ? { opcao: porHorario, pontos: 99 }
+        : acharEscalaCompativel(listas.escalasRaw, p.escala);
     if (compativel) {
       escala = compativel.opcao;
       avisos.push(
         `Escala "${p.escala}" não existe com esse nome — usada a mais compatível: "${compativel.opcao.nome}".`,
       );
     }
+  }
+
+  // Regra: garante o código externo (matrícula) da escala escolhida — é ele que
+  // a NEXTI exige para vincular a escala ao colaborador.
+  if (escala && !escala.externalId) {
+    const registro = listas.escalasRaw.find((item) => Number(item["id"] ?? 0) === escala!.id);
+    const codigo = registro ? codigoExternoDe(registro) : "";
+    if (codigo) escala = { ...escala, externalId: codigo };
+  }
+  if (escala) {
+    avisos.push(
+      escala.externalId
+        ? `Escala "${escala.nome}" identificada pelo código externo (matrícula) ${escala.externalId}.`
+        : `Atenção: a escala "${escala.nome}" não tem código externo (matrícula) na NEXTI — o vínculo automático pode falhar.`,
+    );
   }
 
   if (!limpar(p.empresa)) erros.push("Empresa não informada.");
