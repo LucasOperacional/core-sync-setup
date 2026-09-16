@@ -561,7 +561,14 @@ function montarCadastro(
       : {}),
     ...(cargo ? { careerId: cargo.id } : {}),
     ...(posto ? { workplaceId: posto.id } : {}),
-    ...(escala ? { scheduleId: escala.id } : {}),
+    // A NEXTI aceita a escala com nomes diferentes conforme a versão da API.
+    ...(escala
+      ? {
+          scheduleId: escala.id,
+          workScheduleId: escala.id,
+          ...(escala.externalId ? { externalScheduleId: escala.externalId } : {}),
+        }
+      : {}),
     ...(nascimento ? { birthDate: nascimento } : {}),
     ...(admissao ? { admissionDate: admissao } : {}),
     ...(limpar(p.mae) ? { mothersName: limpar(p.mae).toUpperCase() } : {}),
@@ -611,6 +618,63 @@ export const validarPessoasNexti = createServerFn({ method: "POST" })
       return { ok: false, itens: [], erro: (error as Error)?.message ?? "Falha ao validar na NEXTI." };
     }
   });
+
+/**
+ * Vincula a escala ao colaborador depois do cadastro. Algumas versões da API
+ * da NEXTI ignoram o scheduleId no POST /api/persons e exigem uma chamada
+ * própria de alocação de escala — tentamos os formatos conhecidos.
+ */
+async function vincularEscala(
+  config: Awaited<ReturnType<typeof loadConfig>>,
+  personId: number,
+  scheduleId: number,
+  inicio: string,
+): Promise<{ ok: boolean; erro?: string }> {
+  const dataInicio = /^\d{4}-\d{2}-\d{2}$/.test(inicio)
+    ? inicio
+    : new Date().toISOString().slice(0, 10);
+
+  const tentativas: Array<{ endpoint: string; method: "POST" | "PUT"; body: Record<string, unknown> }> = [
+    {
+      endpoint: "/api/personSchedules",
+      method: "POST",
+      body: { personId, scheduleId, startDate: dataInicio, ignoreValidation: true },
+    },
+    {
+      endpoint: "/api/personschedules",
+      method: "POST",
+      body: { personId, scheduleId, startDate: dataInicio, ignoreValidation: true },
+    },
+    {
+      endpoint: `/api/persons/${personId}/schedule`,
+      method: "PUT",
+      body: { scheduleId, startDate: dataInicio },
+    },
+    {
+      endpoint: "/api/persons",
+      method: "PUT",
+      body: { id: personId, scheduleId, workScheduleId: scheduleId, ignoreValidation: true },
+    },
+  ];
+
+  let ultimoErro = "sem resposta da NEXTI";
+  for (const t of tentativas) {
+    try {
+      const res = await requestNexti({
+        config,
+        endpoint: t.endpoint,
+        method: t.method,
+        body: t.body as Record<string, string | number | boolean>,
+      });
+      if (res.status >= 200 && res.status < 300) return { ok: true };
+      ultimoErro = `${t.endpoint} respondeu ${res.status}`;
+    } catch (error) {
+      ultimoErro = (error as Error)?.message ?? "erro desconhecido";
+    }
+  }
+  return { ok: false, erro: ultimoErro };
+}
+
 
 /** Cadastra um colaborador na NEXTI (POST /api/persons). */
 export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
@@ -662,11 +726,25 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
       const personId = valor && Number(valor["id"]) > 0 ? Number(valor["id"]) : null;
 
       if (res.status >= 200 && res.status < 300 && personId) {
+        // Garante que a escala fique realmente vinculada ao colaborador.
+        const escalaId = Number(payload["scheduleId"] ?? 0);
+        let infoVinculo = "";
+        if (escalaId > 0) {
+          const vinculo = await vincularEscala(
+            config,
+            personId,
+            escalaId,
+            String(payload["admissionDate"] ?? ""),
+          );
+          infoVinculo = vinculo.ok
+            ? " Escala vinculada na NEXTI."
+            : ` Atenção: não foi possível vincular a escala automaticamente (${vinculo.erro}).`;
+        }
         return {
           nome,
           ok: true,
           personId,
-          mensagem: `Cadastrado na NEXTI (matrícula interna ${personId}).${extra}`,
+          mensagem: `Cadastrado na NEXTI (matrícula interna ${personId}).${extra}${infoVinculo}`,
         };
       }
       return {
