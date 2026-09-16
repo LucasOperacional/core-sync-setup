@@ -1539,6 +1539,17 @@ function FaltasPage() {
                             </tbody>
                           </table>
                         </div>
+                        {filteredData.length > tabelaLimite && (
+                          <div className="flex justify-center pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setTabelaLimite((v) => v + 200)}
+                              className="rounded-lg border border-border bg-secondary px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary/80"
+                            >
+                              Mostrar mais ({filteredData.length - tabelaLimite} restantes)
+                            </button>
+                          </div>
+                        )}
                       </section>
                     ),
                   },
