@@ -4937,6 +4937,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      __tmp_exec_sql: { Args: { sql: string }; Returns: undefined }
       backup_listar_tabelas: {
         Args: never
         Returns: {
