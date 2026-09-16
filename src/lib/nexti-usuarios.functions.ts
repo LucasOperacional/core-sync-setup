@@ -256,7 +256,8 @@ function acharEscalaPorHorario(
     else if (jornada && jornadaEscala && jornadaEscala !== jornada) pontos -= 2;
     if (pontos <= 0) continue;
     const opcao: OpcaoNexti = { id, nome };
-    if (typeof item["externalId"] === "string") opcao.externalId = item["externalId"];
+    const codigo = codigoExternoDe(item);
+    if (codigo) opcao.externalId = codigo;
     if (!melhor || pontos > melhor.pontos) melhor = { opcao, pontos };
   }
   return melhor?.opcao ?? null;
