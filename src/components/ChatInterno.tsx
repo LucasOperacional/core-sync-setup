@@ -447,6 +447,7 @@ export function ChatInterno() {
             <EvolutionGoStatusBadge />
           </div>
         </div>
+        <EvolutionGoInstanciasPanel />
         <div className="flex-1 overflow-hidden">
           <ChatWhatsApp currentUserId={currentUserId} userProfiles={userProfiles} />
         </div>
