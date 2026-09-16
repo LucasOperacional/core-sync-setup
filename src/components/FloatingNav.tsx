@@ -43,6 +43,7 @@ export const allNavItems: NavItem[] = [
   { to: "/gps", icon: MapPin, label: "GPS", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
   { to: "/rh", icon: Building2, label: "Recursos humanos", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
   { to: "/areas", icon: LayoutGrid, label: "Áreas", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
+  { to: "/mesa-operacional", icon: ClipboardList, label: "Mesa operacional", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
   { to: "/indicadores", icon: Gauge, label: "Indicadores", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
 ];
 
