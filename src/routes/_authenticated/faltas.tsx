@@ -345,6 +345,23 @@ function ChartTooltipContent({ active, payload, label }: any) {
   );
 }
 
+/* Tooltip detalhado do Top 10 — mostra dados reais do colaborador */
+function TopColaboradorTooltip({ active, payload }: any) {
+  if (!active || !payload || payload.length === 0) return null;
+  const d = payload[0]?.payload;
+  if (!d) return null;
+  return (
+    <div className="min-w-max max-w-xs rounded-lg border border-border bg-card px-3 py-2 shadow-lg">
+      <p className="whitespace-nowrap text-xs font-semibold text-foreground">{d.nomeCompleto}</p>
+      {d.cargo && <p className="whitespace-nowrap text-xs text-muted-foreground">{d.cargo}</p>}
+      {d.posto && <p className="whitespace-nowrap text-xs text-muted-foreground">{d.posto}</p>}
+      <p className="whitespace-nowrap text-sm font-bold text-foreground">
+        {d.quantidade} dia(s) de falta · {d.ocorrencias} ocorrência(s)
+      </p>
+    </div>
+  );
+}
+
 function FaltasPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<ParsedRow[]>([]);
@@ -609,17 +626,42 @@ function FaltasPage() {
     const absenteeismRate = totalRows > 0 ? ((totalFaltas / totalRows) * 100).toFixed(1) : "0.0";
 
     const faltasPorColaborador = new Map<string, number>();
+    const colaboradorInfo = new Map<
+      string,
+      { nome: string; posto: string; cargo: string; ocorrencias: number; dias: number }
+    >();
     for (const r of data) {
       if (!r.colaborador) continue;
       const val = parseFaltasValue(r.faltas);
       faltasPorColaborador.set(r.colaborador, (faltasPorColaborador.get(r.colaborador) ?? 0) + val);
+      const key = normalize(r.colaborador);
+      const info = colaboradorInfo.get(key);
+      if (info) {
+        info.ocorrencias += 1;
+        info.dias += val;
+        if (!info.posto && r.posto) info.posto = r.posto;
+        if (!info.cargo && r.cargo) info.cargo = r.cargo;
+      } else {
+        colaboradorInfo.set(key, {
+          nome: r.colaborador,
+          posto: r.posto,
+          cargo: r.cargo,
+          ocorrencias: 1,
+          dias: val,
+        });
+      }
     }
-    const barData = Array.from(faltasPorColaborador, ([name, quantidade]) => ({
-      name: name.length > 25 ? name.slice(0, 23) + "…" : name,
-      quantidade,
-    }))
-      .sort((a, b) => b.quantidade - a.quantidade)
-      .slice(0, 10);
+    const barData = Array.from(colaboradorInfo.values())
+      .sort((a, b) => b.dias - a.dias || b.ocorrencias - a.ocorrencias)
+      .slice(0, 10)
+      .map((info) => ({
+        name: info.nome.length > 25 ? info.nome.slice(0, 23) + "…" : info.nome,
+        nomeCompleto: info.nome,
+        posto: info.posto,
+        cargo: info.cargo,
+        ocorrencias: info.ocorrencias,
+        quantidade: info.dias,
+      }));
 
     const faltasPorPosto = new Map<string, number>();
     for (const r of data) {
@@ -1401,8 +1443,8 @@ function FaltasPage() {
                                   stroke="var(--color-muted-foreground)"
                                   fontSize={10}
                                 />
-                                <Tooltip content={<ChartTooltipContent />} />
-                                <Bar dataKey="quantidade" name="Faltas" radius={4}>
+                                <Tooltip content={<TopColaboradorTooltip />} />
+                                <Bar dataKey="quantidade" name="Dias de falta" radius={4}>
                                   {stats.barData.map((_, idx) => (
                                     <Cell key={idx} fill={paletteColor(idx)} />
                                   ))}
