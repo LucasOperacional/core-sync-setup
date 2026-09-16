@@ -1371,6 +1371,69 @@ export type Database = {
         }
         Relationships: []
       }
+      faltas_nexti_log: {
+        Row: {
+          colaborador: string | null
+          created_at: string
+          data_fim: string | null
+          data_inicio: string | null
+          forcado: boolean
+          http_status: number | null
+          id: string
+          motivo: string | null
+          observacao: string | null
+          person_external_id: string | null
+          person_id: number | null
+          resposta: string | null
+          situacao_id: number | null
+          situacao_nome: string | null
+          status: string
+          usuario_id: string | null
+          usuario_nome: string | null
+          validacoes: Json
+        }
+        Insert: {
+          colaborador?: string | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          forcado?: boolean
+          http_status?: number | null
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          person_external_id?: string | null
+          person_id?: number | null
+          resposta?: string | null
+          situacao_id?: number | null
+          situacao_nome?: string | null
+          status: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+          validacoes?: Json
+        }
+        Update: {
+          colaborador?: string | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          forcado?: boolean
+          http_status?: number | null
+          id?: string
+          motivo?: string | null
+          observacao?: string | null
+          person_external_id?: string | null
+          person_id?: number | null
+          resposta?: string | null
+          situacao_id?: number | null
+          situacao_nome?: string | null
+          status?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+          validacoes?: Json
+        }
+        Relationships: []
+      }
       faltas_sem_cobertura: {
         Row: {
           cargo: string
@@ -1410,6 +1473,78 @@ export type Database = {
           nome?: string
           posto?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      ferias_usuarios_flags: {
+        Row: {
+          atualizado_por: string | null
+          created_at: string
+          data_fim: string | null
+          data_inicio: string | null
+          dias: number | null
+          empresa: string | null
+          enviar_aviso: boolean
+          enviar_ferias: boolean
+          exigir_aceite: boolean
+          exigir_assinatura: boolean
+          exigir_leitura: boolean
+          id: string
+          lancar_ferias: boolean
+          matricula: string | null
+          nome: string
+          nome_chave: string
+          observacao: string | null
+          origem: string
+          person_external_id: string | null
+          person_id: number | null
+          updated_at: string
+        }
+        Insert: {
+          atualizado_por?: string | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          dias?: number | null
+          empresa?: string | null
+          enviar_aviso?: boolean
+          enviar_ferias?: boolean
+          exigir_aceite?: boolean
+          exigir_assinatura?: boolean
+          exigir_leitura?: boolean
+          id?: string
+          lancar_ferias?: boolean
+          matricula?: string | null
+          nome: string
+          nome_chave: string
+          observacao?: string | null
+          origem?: string
+          person_external_id?: string | null
+          person_id?: number | null
+          updated_at?: string
+        }
+        Update: {
+          atualizado_por?: string | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          dias?: number | null
+          empresa?: string | null
+          enviar_aviso?: boolean
+          enviar_ferias?: boolean
+          exigir_aceite?: boolean
+          exigir_assinatura?: boolean
+          exigir_leitura?: boolean
+          id?: string
+          lancar_ferias?: boolean
+          matricula?: string | null
+          nome?: string
+          nome_chave?: string
+          observacao?: string | null
+          origem?: string
+          person_external_id?: string | null
+          person_id?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -4808,11 +4943,15 @@ export type Database = {
           assigned_to: string | null
           contato_nome: string | null
           created_at: string
+          foto_atualizada_em: string | null
+          foto_url: string | null
           id: string
           is_group: boolean
           last_message_at: string | null
           last_message_preview: string | null
           nao_lidas: number
+          queue_at: string | null
+          queue_id: string | null
           status: string
           telefone: string | null
           updated_at: string
@@ -4823,11 +4962,15 @@ export type Database = {
           assigned_to?: string | null
           contato_nome?: string | null
           created_at?: string
+          foto_atualizada_em?: string | null
+          foto_url?: string | null
           id?: string
           is_group?: boolean
           last_message_at?: string | null
           last_message_preview?: string | null
           nao_lidas?: number
+          queue_at?: string | null
+          queue_id?: string | null
           status?: string
           telefone?: string | null
           updated_at?: string
@@ -4838,17 +4981,29 @@ export type Database = {
           assigned_to?: string | null
           contato_nome?: string | null
           created_at?: string
+          foto_atualizada_em?: string | null
+          foto_url?: string | null
           id?: string
           is_group?: boolean
           last_message_at?: string | null
           last_message_preview?: string | null
           nao_lidas?: number
+          queue_at?: string | null
+          queue_id?: string | null
           status?: string
           telefone?: string | null
           updated_at?: string
           wa_chat_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_conversations_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "chat_queues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       whatsapp_messages: {
         Row: {
@@ -4937,7 +5092,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      __tmp_exec_sql: { Args: { sql: string }; Returns: undefined }
       backup_listar_tabelas: {
         Args: never
         Returns: {
@@ -4960,6 +5114,10 @@ export type Database = {
         Returns: boolean
       }
       is_chat_room_member: {
+        Args: { _room_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_room_admin: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
       }
