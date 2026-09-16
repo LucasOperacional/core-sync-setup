@@ -319,7 +319,11 @@ function acharEscalaCompativel(
     }
 
     if (pontos <= 0) continue;
-    if (!melhor || pontos > melhor.pontos) melhor = { opcao: { id, nome }, pontos };
+    if (!melhor || pontos > melhor.pontos) {
+      const opcao: OpcaoNexti = { id, nome };
+      if (typeof item["externalId"] === "string") opcao.externalId = item["externalId"];
+      melhor = { opcao, pontos };
+    }
   }
 
   // Exige uma compatibilidade mínima para não lançar escala errada.
@@ -543,6 +547,7 @@ function montarCadastro(
     cpf,
     pis: pis.length === 11 ? pis : "00000000000",
     enrolment: limpar(p.matricula),
+    ...(limpar(p.matricula) ? { externalId: limpar(p.matricula) } : {}),
     email,
     gender: genero,
     personSituationId: 1,
@@ -559,14 +564,30 @@ function montarCadastro(
           ...(empresa.externalId ? { externalCompanyId: empresa.externalId } : {}),
         }
       : {}),
-    ...(cargo ? { careerId: cargo.id } : {}),
-    ...(posto ? { workplaceId: posto.id } : {}),
+    ...(cargo
+      ? {
+          careerId: cargo.id,
+          ...(cargo.externalId ? { externalCareerId: cargo.externalId } : {}),
+        }
+      : {}),
+    ...(posto
+      ? {
+          workplaceId: posto.id,
+          ...(posto.externalId ? { externalWorkplaceId: posto.externalId } : {}),
+        }
+      : {}),
     // A NEXTI aceita a escala com nomes diferentes conforme a versão da API.
     ...(escala
       ? {
           scheduleId: escala.id,
-          workScheduleId: escala.id,
           ...(escala.externalId ? { externalScheduleId: escala.externalId } : {}),
+          rotationCode: (() => {
+            const registro = listas.escalasRaw.find((item) => Number(item["id"] ?? 0) === escala.id);
+            const rotacoes = registro && Array.isArray(registro["rotations"]) ? registro["rotations"] : [];
+            const primeira = rotacoes.find(isRec);
+            const codigo = Number(primeira?.["code"] ?? 1);
+            return Number.isInteger(codigo) && codigo > 0 ? codigo : 1;
+          })(),
         }
       : {}),
     ...(nascimento ? { birthDate: nascimento } : {}),
@@ -627,33 +648,37 @@ export const validarPessoasNexti = createServerFn({ method: "POST" })
 async function vincularEscala(
   config: Awaited<ReturnType<typeof loadConfig>>,
   personId: number,
+  personExternalId: string,
   scheduleId: number,
+  scheduleExternalId: string,
+  rotationCode: number,
   inicio: string,
 ): Promise<{ ok: boolean; erro?: string }> {
-  const dataInicio = /^\d{4}-\d{2}-\d{2}$/.test(inicio)
-    ? inicio
-    : new Date().toISOString().slice(0, 10);
+  const agora = new Date();
+  const hoje = `${String(agora.getUTCDate()).padStart(2, "0")}${String(agora.getUTCMonth() + 1).padStart(2, "0")}${agora.getUTCFullYear()}000000`;
+  const transferDateTime = /^\d{14}$/.test(inicio) ? inicio : hoje;
+  if (!personExternalId || !scheduleExternalId) {
+    return { ok: false, erro: "a matrícula externa ou o código externo da escala não foi informado pela NEXTI" };
+  }
 
-  const tentativas: Array<{ endpoint: string; method: "POST" | "PUT"; body: Record<string, unknown> }> = [
+  const corpo = {
+    personId,
+    personExternalId,
+    scheduleId,
+    scheduleExternalId,
+    rotationCode: Number.isInteger(rotationCode) && rotationCode > 0 ? rotationCode : 1,
+    transferDateTime,
+  };
+  const tentativas: Array<{ endpoint: string; method: "POST"; body: Record<string, unknown> }> = [
     {
-      endpoint: "/api/personSchedules",
+      endpoint: "/scheduletransfers",
       method: "POST",
-      body: { personId, scheduleId, startDate: dataInicio, ignoreValidation: true },
+      body: corpo,
     },
     {
-      endpoint: "/api/personschedules",
+      endpoint: "/api/scheduletransfers",
       method: "POST",
-      body: { personId, scheduleId, startDate: dataInicio, ignoreValidation: true },
-    },
-    {
-      endpoint: `/api/persons/${personId}/schedule`,
-      method: "PUT",
-      body: { scheduleId, startDate: dataInicio },
-    },
-    {
-      endpoint: "/api/persons",
-      method: "PUT",
-      body: { id: personId, scheduleId, workScheduleId: scheduleId, ignoreValidation: true },
+      body: corpo,
     },
   ];
 
