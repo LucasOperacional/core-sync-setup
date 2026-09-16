@@ -48,6 +48,39 @@ const CANONICOS = GERENTES_AREA_A.map((nome) => ({ nome, tokens: tokens(nome) })
  * Retorna o nome canônico do gerente de área A correspondente, ou null.
  * Aceita variações (com/sem preposições, nomes parciais como "ROBSON SOUSA").
  */
+function distancia(a: string, b: string): number {
+  if (a === b) return 0;
+  const m = a.length;
+  const n = b.length;
+  if (Math.abs(m - n) > 2) return 99;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) {
+      cur[j] = Math.min(
+        prev[j]! + 1,
+        cur[j - 1]! + 1,
+        prev[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    }
+    prev = cur;
+  }
+  return prev[n]!;
+}
+
+/** Dois tokens são equivalentes quando iguais ou com erro de digitação leve. */
+function tokenIgual(a: string, b: string): boolean {
+  if (a === b) return true;
+  const tamanho = Math.min(a.length, b.length);
+  if (tamanho < 4) return false;
+  return distancia(a, b) <= (tamanho >= 7 ? 2 : 1);
+}
+
+/**
+ * Retorna o nome canônico do gerente de área A correspondente, ou null.
+ * Aceita variações (com/sem preposições, nomes parciais como "ROBSON SOUSA")
+ * e pequenos erros de digitação (ex.: "GABRIEL MEDANHA").
+ */
 export function gerenteAreaACanonico(nome: string): string | null {
   const t = tokens(nome);
   if (t.length === 0) return null;
@@ -61,7 +94,26 @@ export function gerenteAreaACanonico(nome: string): string | null {
   for (const c of cSet) {
     if (t.every((token) => c.set.has(token)) && t.length >= 2) return c.nome;
   }
-  return null;
+
+  // Tolerância a erros de digitação: exige pelo menos 2 tokens equivalentes.
+  let melhor: { nome: string; acertos: number } | null = null;
+  for (const c of CANONICOS) {
+    const usados = new Set<number>();
+    let acertos = 0;
+    for (const token of t) {
+      const idx = c.tokens.findIndex(
+        (ct, i) => !usados.has(i) && tokenIgual(token, ct),
+      );
+      if (idx >= 0) {
+        usados.add(idx);
+        acertos++;
+      }
+    }
+    if (acertos >= 2 && (!melhor || acertos > melhor.acertos)) {
+      melhor = { nome: c.nome, acertos };
+    }
+  }
+  return melhor?.nome ?? null;
 }
 
 /**
