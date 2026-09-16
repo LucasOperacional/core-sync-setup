@@ -201,11 +201,64 @@ function buildUrl(baseUrl: string, endpoint: string, query?: NextiInput["query"]
   return url.toString();
 }
 
+/** Tenta extrair a explicação que a NEXTI mandou no corpo da resposta. */
+function mensagemDoCorpo(body: string): string {
+  const texto = String(body ?? "").trim();
+  if (!texto) return "";
+  let dado: unknown = texto;
+  try {
+    dado = JSON.parse(texto);
+  } catch {
+    // corpo em texto puro
+  }
+  const partes: string[] = [];
+  const coletar = (valor: unknown, profundidade = 0) => {
+    if (partes.length >= 3 || profundidade > 4) return;
+    if (typeof valor === "string") {
+      const v = valor.trim();
+      if (v && v.length < 300 && !partes.includes(v)) partes.push(v);
+      return;
+    }
+    if (Array.isArray(valor)) {
+      for (const item of valor) coletar(item, profundidade + 1);
+      return;
+    }
+    if (valor && typeof valor === "object") {
+      const rec = valor as Record<string, unknown>;
+      for (const chave of [
+        "message",
+        "mensagem",
+        "error_description",
+        "errorMessage",
+        "detail",
+        "details",
+        "errors",
+        "error",
+        "value",
+      ]) {
+        if (chave in rec) coletar(rec[chave], profundidade + 1);
+      }
+      return;
+    }
+  };
+  coletar(dado);
+  if (partes.length === 0 && typeof dado === "string") partes.push(dado.slice(0, 300));
+  return partes.join(" ").trim();
+}
+
+function comDetalhe(cause: string, body: string): string {
+  const detalhe = mensagemDoCorpo(body);
+  return detalhe ? `${cause} Detalhe da NEXTI: ${detalhe}` : cause;
+}
+
 function classifyHttpError(status: number, body: string): { code: string; cause: string } {
-  if (status === 400 || status === 404) {
+  if (status === 400 || status === 404 || status === 409 || status === 422) {
     return {
-      code: "invalid_url_or_endpoint",
-      cause: "URL base, endpoint ou parâmetros inválidos para a API da NEXTI.",
+      code: "invalid_request",
+      cause: comDetalhe(
+        `A NEXTI recusou a requisição (${status}). Verifique os dados enviados (CPF, PIS, matrícula, empresa, cargo, posto e escala) ou o endpoint informado.`,
+        body,
+      ),
     };
   }
   if (status === 401) {
@@ -226,14 +279,20 @@ function classifyHttpError(status: number, body: string): { code: string; cause:
   if (status === 429)
     return { code: "rate_limit", cause: "Limite de requisições da NEXTI atingido." };
   if (status >= 500)
-    return { code: "server_unavailable", cause: "Servidor da NEXTI indisponível ou instável." };
+    return {
+      code: "server_unavailable",
+      cause: comDetalhe(`Servidor da NEXTI indisponível ou instável (${status}).`, body),
+    };
   if (body.toLowerCase().includes("cors")) {
     return {
       code: "cors",
       cause: "Resposta indica bloqueio de CORS. A chamada permanece intermediada pelo backend.",
     };
   }
-  return { code: "nexti_error", cause: "A NEXTI retornou erro para a requisição." };
+  return {
+    code: "nexti_error",
+    cause: comDetalhe(`A NEXTI retornou erro ${status} para a requisição.`, body),
+  };
 }
 
 function classifyNetworkError(error: unknown): { code: string; cause: string; status: number } {
