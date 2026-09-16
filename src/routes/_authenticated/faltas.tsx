@@ -1295,9 +1295,12 @@ function FaltasPage() {
                                   {shortName}
                                 </p>
                                 <p className="mt-2 text-2xl font-bold text-foreground">
-                                  {g.faltas}
+                                  {g.lancamentos}
                                 </p>
-                                <p className="text-xs text-muted-foreground">faltas lançadas</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {g.lancamentos === 1 ? "lançamento" : "lançamentos"}
+                                  {g.faltas > 0 ? ` · ${g.faltas} ${g.faltas === 1 ? "dia" : "dias"}` : ""}
+                                </p>
                               </button>
                             );
                           })}
