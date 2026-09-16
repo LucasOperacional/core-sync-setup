@@ -177,6 +177,13 @@ export function converterCampo(chave: Campo, bruto: unknown): string {
       return texto.replace(/\s+/g, "").toUpperCase();
     case "email":
       return texto.toLowerCase().replace(/\s+/g, "");
+    case "telefone":
+    case "telefone2": {
+      // Mantém apenas dígitos; remove DDI 55 quando o número fica com 12/13 dígitos.
+      let d = soDigitos(texto);
+      if (d.length > 11 && d.startsWith("55")) d = d.slice(2);
+      return d;
+    }
     case "genero":
       return paraSexo(texto);
     case "nascimento":
