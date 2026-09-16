@@ -391,14 +391,14 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
           nome,
           ok: true,
           personId,
-          mensagem: `Cadastrado na NEXTI (matrícula interna ${personId}).${avisoPosto}`,
+          mensagem: `Cadastrado na NEXTI (matrícula interna ${personId}).${avisoPosto}${avisoEscala}`,
         };
       }
       return {
         nome,
         ok: false,
         personId,
-        mensagem: `A NEXTI respondeu ${res.status} sem confirmar o cadastro.${avisoPosto}`,
+        mensagem: `A NEXTI respondeu ${res.status} sem confirmar o cadastro.${avisoPosto}${avisoEscala}`,
       };
     } catch (error) {
       return {
