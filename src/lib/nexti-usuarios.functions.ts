@@ -543,6 +543,15 @@ function montarCadastro(
   const email = limpar(p.email);
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) erros.push(`E-mail "${email}" é inválido.`);
 
+  const telefone = soDigitos(p.telefone ?? "");
+  const telefone2 = soDigitos(p.telefone2 ?? "");
+  if (!telefone && !telefone2) avisos.push("Telefone não informado.");
+  for (const t of [telefone, telefone2]) {
+    if (t && (t.length < 10 || t.length > 11)) {
+      avisos.push(`Telefone "${t}" não tem 10 ou 11 dígitos — será enviado assim mesmo.`);
+    }
+  }
+
   const nascimento = dataNexti(p.nascimento);
   if (limpar(p.nascimento) && !nascimento) erros.push(`Data de nascimento "${p.nascimento}" não é uma data válida.`);
   const admissao = dataNexti(p.admissao);
