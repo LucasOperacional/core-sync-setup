@@ -376,9 +376,49 @@ function FaltasPage() {
     }
   };
 
+  // Carrega o dashboard direto da API da NEXTI
+  const puxarDaNexti = useCallback(async (forcar: boolean) => {
+    setNextiCarregando(true);
+    setNextiErro(null);
+    try {
+      const res = await carregarFaltasDashboardNexti({ data: { forcarSincronizar: forcar } });
+      if (!res.ok) throw new Error(res.erro || "Falha ao consultar a NEXTI.");
+      if (res.linhas.length === 0) {
+        setNextiErro("A NEXTI não retornou nenhuma ausência no período consultado.");
+        return;
+      }
+      const tabela: ParsedRow[] = [
+        ["POSTO", "COLABORADOR", "CARGO", "GERENTE", "DATA INICIO", "DATA FIM", "FALTAS", "TIPO"],
+        ...res.linhas.map((l) => [
+          l.posto,
+          l.colaborador,
+          l.cargo,
+          l.gerente,
+          l.dataInicio,
+          l.dataFim,
+          l.faltas,
+          l.tipo,
+        ]),
+      ];
+      setRows(tabela);
+      setNextiEm(res.sincronizadoEm);
+      try {
+        localStorage.setItem(FALTAS_STORAGE_KEY, JSON.stringify(tabela));
+      } catch {
+        /* armazenamento cheio: segue só em memória */
+      }
+    } catch (err) {
+      setNextiErro(err instanceof Error ? err.message : "Falha ao consultar a NEXTI.");
+    } finally {
+      setNextiCarregando(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadFromStorage();
-  }, []);
+    void puxarDaNexti(false);
+  }, [puxarDaNexti]);
+
 
   // Listen for storage changes (if admin imports in another tab)
   useEffect(() => {
