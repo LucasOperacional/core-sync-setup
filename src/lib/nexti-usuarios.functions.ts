@@ -656,7 +656,7 @@ function montarCadastro(
     ignoreValidation: true,
     ignoreTimeTracking: false,
     allowDevicePassword: false,
-    allowMobileClocking: false,
+    allowMobileClocking: true,
     adminDevice: false,
     ...(empresa
       ? {
