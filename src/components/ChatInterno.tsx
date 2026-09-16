@@ -761,7 +761,12 @@ export function ChatInterno() {
         <div className="flex flex-1 flex-col">
           {/* Show queues view */}
           {showWhats ? (
-            <ChatWhatsApp currentUserId={currentUserId} userProfiles={userProfiles} />
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <EvolutionGoInstanciasPanel />
+              <div className="flex-1 overflow-hidden">
+                <ChatWhatsApp currentUserId={currentUserId} userProfiles={userProfiles} />
+              </div>
+            </div>
           ) : showQueues ? (
             <ChatQueues
               isAdmin={isAdmin}
