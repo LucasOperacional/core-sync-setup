@@ -29,6 +29,7 @@ import { DemitidosNextiCard } from "@/components/DemitidosNextiCard";
 import { ContagemDemitidosCard } from "@/components/ContagemDemitidosCard";
 import { AbaUsuariosNexti } from "@/components/AbaUsuariosNexti";
 import { FlagsUsuarioNexti } from "@/components/FlagsUsuarioNexti";
+import { SincronizarColaboradoresNexti } from "@/components/SincronizarColaboradoresNexti";
 
 
 import { OutrasLotacoesCards } from "@/components/OutrasLotacoesCards";
