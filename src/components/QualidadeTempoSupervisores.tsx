@@ -181,7 +181,7 @@ export function QualidadeTempoSupervisores({
         <div className="flex-1">
           {linkPara ? (
             <Link
-              to={linkPara}
+              to={linkPara as "/qualidade-tempo"}
               className="group inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:text-primary"
             >
               Qualidade e tempo por local de visita
