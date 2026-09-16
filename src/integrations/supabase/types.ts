@@ -14,16 +14,146 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      gerentes: {
+        Row: {
+          cargo: string
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          cargo?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          cargo?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      visitas: {
+        Row: {
+          arquivo: string
+          bairro: string
+          cargo: string
+          chave: string
+          cidade: string
+          cliente: string
+          conformes: number
+          created_at: string
+          duracao_min: number | null
+          endereco: string
+          fim: string | null
+          gerente_id: string | null
+          id: string
+          inicio: string | null
+          local: string
+          nao_conformes: number
+          posto: string
+          relatos: Json
+          responsavel: string
+          respostas: Json
+          uf: string
+        }
+        Insert: {
+          arquivo?: string
+          bairro?: string
+          cargo?: string
+          chave: string
+          cidade?: string
+          cliente?: string
+          conformes?: number
+          created_at?: string
+          duracao_min?: number | null
+          endereco?: string
+          fim?: string | null
+          gerente_id?: string | null
+          id?: string
+          inicio?: string | null
+          local?: string
+          nao_conformes?: number
+          posto?: string
+          relatos?: Json
+          responsavel?: string
+          respostas?: Json
+          uf?: string
+        }
+        Update: {
+          arquivo?: string
+          bairro?: string
+          cargo?: string
+          chave?: string
+          cidade?: string
+          cliente?: string
+          conformes?: number
+          created_at?: string
+          duracao_min?: number | null
+          endereco?: string
+          fim?: string | null
+          gerente_id?: string | null
+          id?: string
+          inicio?: string | null
+          local?: string
+          nao_conformes?: number
+          posto?: string
+          relatos?: Json
+          responsavel?: string
+          respostas?: Json
+          uf?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visitas_gerente_id_fkey"
+            columns: ["gerente_id"]
+            isOneToOne: false
+            referencedRelation: "gerentes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +280,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
