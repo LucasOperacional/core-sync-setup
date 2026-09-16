@@ -34,6 +34,8 @@ const CHAVES = {
   instancia: "evolution_go_instancia",
   instanceId: "evolution_go_instance_id",
   webhookUrl: "evolution_go_webhook_url",
+  qrCode: "evolution_go_qrcode",
+  qrCodeEm: "evolution_go_qrcode_em",
 } as const;
 
 type Cfg = {
@@ -74,6 +76,31 @@ async function salvarChave(chave: string, valor: string) {
       onConflict: "chave",
     } as never);
 }
+
+/** Guarda (ou limpa) o QR Code recebido pelo webhook do Evolution Go. */
+export async function guardarQrCode(imagem: string): Promise<void> {
+  await salvarChave(CHAVES.qrCode, imagem);
+  await salvarChave(CHAVES.qrCodeEm, imagem ? new Date().toISOString() : "");
+}
+
+/** Último QR Code recebido pelo webhook, válido por 2 minutos. */
+async function lerQrCodeSalvo(): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("app_config" as never)
+    .select("chave, valor")
+    .in("chave", [CHAVES.qrCode, CHAVES.qrCodeEm]);
+  const mapa = new Map<string, string>();
+  for (const l of (data ?? []) as Array<{ chave: string; valor: string | null }>) {
+    mapa.set(l.chave, l.valor ?? "");
+  }
+  const img = (mapa.get(CHAVES.qrCode) ?? "").trim();
+  const em = Date.parse(mapa.get(CHAVES.qrCodeEm) ?? "");
+  if (!img || Number.isNaN(em)) return null;
+  return Date.now() - em < 120_000 ? img : null;
+}
+
+
 
 async function ehAdmin(context: unknown): Promise<boolean> {
   const ctx = context as { supabase: any; userId: string };
@@ -258,11 +285,11 @@ export const evolutionGoStatus = createServerFn({ method: "POST" })
           return typeof img === "string" && img ? img : null;
         };
 
-        qrCode = await lerQr();
+        qrCode = (await lerQr()) ?? (await lerQrCodeSalvo());
 
-        // O QR Code só é gerado depois que a sessão é iniciada no servidor.
-        // Quando a instância não está conectada, iniciamos a sessão e
-        // tentamos ler o QR Code novamente.
+        // O QR Code só é gerado depois que a sessão é iniciada no servidor e,
+        // na prática, chega pelo webhook (o GET /instance/qr costuma responder
+        // "no QR code available"). Iniciamos a sessão e aguardamos o webhook.
         if (!qrCode) {
           await evolutionFetch(cfg, "/instance/connect", {
             method: "POST",
@@ -273,9 +300,9 @@ export const evolutionGoStatus = createServerFn({ method: "POST" })
               ...(cfg.webhookUrl ? { webhookUrl: cfg.webhookUrl } : {}),
             }),
           });
-          for (let i = 0; i < 6 && !qrCode; i += 1) {
-            await new Promise((r) => setTimeout(r, 1000));
-            qrCode = await lerQr();
+          for (let i = 0; i < 8 && !qrCode; i += 1) {
+            await new Promise((r) => setTimeout(r, 1500));
+            qrCode = (await lerQr()) ?? (await lerQrCodeSalvo());
           }
         }
       }
