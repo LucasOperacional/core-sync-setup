@@ -363,6 +363,18 @@ function TopColaboradorTooltip({ active, payload }: any) {
       <p className="whitespace-nowrap text-sm font-bold text-foreground">
         {d.quantidade} dia(s) de falta · {d.ocorrencias} ocorrência(s)
       </p>
+      {Array.isArray(d.motivos) && d.motivos.length > 0 && (
+        <div className="mt-1 border-t border-border pt-1">
+          <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Motivo(s)
+          </p>
+          {d.motivos.map((m: { nome: string; qtd: number }, idx: number) => (
+            <p key={idx} className="whitespace-nowrap text-xs text-foreground">
+              {m.nome} — {m.qtd}x
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
