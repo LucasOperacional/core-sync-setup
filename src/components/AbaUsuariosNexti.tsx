@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, Eye, Loader2, ScrollText, Trash2, Upload, UserPlus, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Eye,
+  Loader2,
+  ScrollText,
+  ShieldCheck,
+  Trash2,
+  Upload,
+  UserPlus,
+  XCircle,
+} from "lucide-react";
 
 import {
   Dialog,
@@ -21,7 +32,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { cadastrarPessoaNexti, type PessoaCadastro } from "@/lib/nexti-usuarios.functions";
+import {
+  cadastrarPessoaNexti,
+  validarPessoasNexti,
+  type PessoaCadastro,
+  type ValidacaoPessoa,
+} from "@/lib/nexti-usuarios.functions";
 
 type LinhaUsuario = PessoaCadastro & {
   id: string;
@@ -75,7 +91,11 @@ export function AbaUsuariosNexti() {
   const [busca, setBusca] = useState("");
   const [logs, setLogs] = useState<LinhaLog[]>([]);
   const [previewAberto, setPreviewAberto] = useState(false);
+  const [validacoes, setValidacoes] = useState<ValidacaoPessoa[]>([]);
+  const [validando, setValidando] = useState(false);
+  const [detalhe, setDetalhe] = useState<number | null>(null);
   const cadastrar = useServerFn(cadastrarPessoaNexti);
+  const validar = useServerFn(validarPessoasNexti);
 
   const registrar = (texto: string, tipo: LinhaLog["tipo"] = "info") => {
     setLogs((atual) => [
@@ -107,6 +127,48 @@ export function AbaUsuariosNexti() {
     }),
     [linhas],
   );
+
+  const validacaoDe = (indice: number) => validacoes.find((v) => v.indice === indice);
+
+  const resumoValidacao = useMemo(
+    () => ({
+      comErro: validacoes.filter((v) => v.erros.length > 0).length,
+      comAviso: validacoes.filter((v) => v.erros.length === 0 && v.avisos.length > 0).length,
+      ok: validacoes.filter((v) => v.erros.length === 0 && v.avisos.length === 0).length,
+    }),
+    [validacoes],
+  );
+
+  const validarLista = async (lista: LinhaUsuario[]) => {
+    if (lista.length === 0) return;
+    setValidando(true);
+    setValidacoes([]);
+    registrar(`Validando ${lista.length} colaboradores contra a NEXTI...`);
+    try {
+      const pessoas = lista.map(({ id: _i, status: _s, mensagem: _m, ...pessoa }) => pessoa);
+      const res = await validar({ data: { pessoas } });
+      if (!res.ok) {
+        registrar(`Falha na validação: ${res.erro ?? "erro desconhecido"}`, "erro");
+        toast.error(res.erro ?? "Não consegui validar com a NEXTI.");
+        return;
+      }
+      setValidacoes(res.itens);
+      const erros = res.itens.filter((v) => v.erros.length > 0).length;
+      registrar(
+        `Validação concluída: ${res.itens.length - erros} prontos, ${erros} com problema.`,
+        erros ? "erro" : "ok",
+      );
+      if (erros) toast.warning(`${erros} colaborador(es) precisam de correção antes do envio.`);
+      else toast.success("Todos os colaboradores estão prontos para envio.");
+      setPreviewAberto(true);
+    } catch (error) {
+      const msg = (error as Error)?.message ?? "Falha na validação.";
+      registrar(msg, "erro");
+      toast.error(msg);
+    } finally {
+      setValidando(false);
+    }
+  };
 
   const processarArquivo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -140,8 +202,10 @@ export function AbaUsuariosNexti() {
           })
           .filter((l) => l.nome);
         setLinhas(novas);
+        setValidacoes([]);
         registrar(`Planilha "${file.name}" lida: ${novas.length} colaboradores.`);
         toast.success(`${novas.length} colaboradores lidos da planilha.`);
+        void validarLista(novas);
       } catch {
         registrar(`Não consegui ler a planilha "${file.name}".`, "erro");
         toast.error("Não consegui ler a planilha. Use .xlsx, .xls ou .csv.");
@@ -152,9 +216,18 @@ export function AbaUsuariosNexti() {
   };
 
   const enviarTodos = async () => {
-    const pendentes = linhas.filter((l) => l.status !== "ok");
+    const bloqueadas = linhas.filter(
+      (l, i) => l.status !== "ok" && (validacaoDe(i)?.erros.length ?? 0) > 0,
+    );
+    const pendentes = linhas.filter(
+      (l, i) => l.status !== "ok" && (validacaoDe(i)?.erros.length ?? 0) === 0,
+    );
+    if (bloqueadas.length) {
+      registrar(`${bloqueadas.length} colaborador(es) ignorados por erro de validação.`, "erro");
+      toast.warning(`${bloqueadas.length} colaborador(es) com erro não serão enviados.`);
+    }
     if (!pendentes.length) {
-      toast.info("Nenhum colaborador pendente para cadastrar.");
+      toast.info("Nenhum colaborador válido pendente para cadastrar.");
       return;
     }
     setEnviando(true);
@@ -305,6 +378,19 @@ export function AbaUsuariosNexti() {
           >
             <Trash2 className="h-4 w-4" />
             Limpar
+          </Button>
+          <Button
+            variant="ghost"
+            className="self-end gap-2"
+            onClick={() => void validarLista(linhas)}
+            disabled={validando || enviando || linhas.length === 0}
+          >
+            {validando ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ShieldCheck className="h-4 w-4" />
+            )}
+            Revalidar
           </Button>
         </div>
 
