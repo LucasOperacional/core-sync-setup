@@ -39,6 +39,7 @@ import { ChatQueues } from "@/components/ChatQueues";
 
 import { ChatWhatsApp } from "@/components/ChatWhatsApp";
 import { EvolutionGoStatusBadge } from "@/components/EvolutionGoStatusBadge";
+import { EvolutionGoInstanciasPanel } from "@/components/EvolutionGoInstanciasPanel";
 import { useChatQueues } from "@/hooks/use-chat-queues";
 import {
   Dialog,
