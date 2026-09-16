@@ -19,6 +19,9 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreload: "intent",
+    // Só pré-carrega quando o ponteiro fica parado no link: passar o mouse pelo
+    // menu deixa de disparar o carregamento de dezenas de telas ao mesmo tempo.
+    defaultPreloadDelay: 250,
     defaultPreloadStaleTime: 30_000,
   });
 

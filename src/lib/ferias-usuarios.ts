@@ -167,7 +167,7 @@ export function useFlagsFerias() {
   return useQuery({
     queryKey: FLAGS_FERIAS_QUERY_KEY,
     queryFn: listarFlagsFerias,
-    staleTime: 0,
+    staleTime: 60_000,
   });
 }
 

@@ -118,10 +118,9 @@ function useResumoDashboardProtocolo() {
   return useQuery({
     queryKey: protocoloFolhasQueryKeys.dashboardResumo,
     queryFn: carregarResumoDashboardProtocolo,
-    staleTime: 0,
-    gcTime: 1000 * 60 * 5,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    staleTime: 60_000,
+    gcTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     retry: 1,
   });

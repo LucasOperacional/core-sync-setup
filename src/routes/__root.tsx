@@ -7,16 +7,28 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { OperationalAI } from "../lib/operational-ai";
 import { Toaster } from "../components/ui/sonner";
-import { ChatAssistant } from "../components/ChatAssistant";
-import { CompartilharLocalizacaoCard as RastreioSempreAtivo } from "../components/CompartilharLocalizacaoCard";
-import { RegistroAtividadeAuto } from "../components/RegistroAtividadeAuto";
-import { SinoNotificacoes } from "../components/SinoNotificacoes";
+
+/* Recursos que acompanham todas as telas são carregados depois da primeira
+   pintura: a página abre mais rápido e nada é perdido. */
+const ChatAssistant = lazy(() =>
+  import("../components/ChatAssistant").then((m) => ({ default: m.ChatAssistant })),
+);
+const RastreioSempreAtivo = lazy(() =>
+  import("../components/CompartilharLocalizacaoCard").then((m) => ({
+    default: m.CompartilharLocalizacaoCard,
+  })),
+);
+const RegistroAtividadeAuto = lazy(() =>
+  import("../components/RegistroAtividadeAuto").then((m) => ({ default: m.RegistroAtividadeAuto })),
+);
+const SinoNotificacoes = lazy(() =>
+  import("../components/SinoNotificacoes").then((m) => ({ default: m.SinoNotificacoes })),
+);
 
 /* ─── 404 Page ─── */
 
@@ -56,18 +68,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     });
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
 
-    // Register with IA Operacional
-    try {
-      OperationalAI.getInstance().captureError({
-        errorType: "root_error_boundary",
-        message: error?.message ?? "Unknown root error",
-        technicalDetails: error?.stack,
-        severity: "critical",
-        component: "__root.tsx",
-      });
-    } catch {
-      // IA module not available — ignore
-    }
+    // Register with IA Operacional (carregada sob demanda)
+    void import("../lib/operational-ai")
+      .then(({ OperationalAI }) =>
+        OperationalAI.getInstance().captureError({
+          errorType: "root_error_boundary",
+          message: error?.message ?? "Unknown root error",
+          technicalDetails: error?.stack,
+          severity: "critical",
+          component: "__root.tsx",
+        }),
+      )
+      .catch(() => {});
   }, [error]);
 
   return (
@@ -209,16 +221,28 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const [mounted, setMounted] = useState(false);
 
-  // Initialize the IA Operacional global listeners once at the app root.
+  // Os serviços de fundo entram só depois que a tela já apareceu.
   useEffect(() => {
-    setMounted(true);
+    const ocioso =
+      (window as Window & { requestIdleCallback?: (cb: () => void) => number })
+        .requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 400));
 
-    const ai = OperationalAI.getInstance();
-    ai.init();
-    ai.restoreFormData();
+    const id = ocioso(() => {
+      setMounted(true);
 
-    // Mark the signed-in user as online as soon as the app is opened.
-    void import("../lib/presence").then(({ startPresence }) => startPresence());
+      void import("../lib/operational-ai")
+        .then(({ OperationalAI }) => {
+          const ai = OperationalAI.getInstance();
+          ai.init();
+          ai.restoreFormData();
+        })
+        .catch(() => {});
+
+      // Mark the signed-in user as online as soon as the app is opened.
+      void import("../lib/presence").then(({ startPresence }) => startPresence());
+    });
+    void id;
+
 
     // Regra geral: as APIs ligadas pelo superadmin valem para todos os usuários
     // e para todos os cards. Falha aqui nunca interrompe a tela.
@@ -236,15 +260,17 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
-      {mounted && <SinoNotificacoes />}
       <Toaster />
-      {mounted && <RegistroAtividadeAuto />}
-      {mounted && <ChatAssistant />}
-      {/* Rastreio do supervisor: fica ativo em qualquer página, invisível. */}
       {mounted && (
-        <div className="hidden">
-          <RastreioSempreAtivo />
-        </div>
+        <Suspense fallback={null}>
+          <SinoNotificacoes />
+          <RegistroAtividadeAuto />
+          <ChatAssistant />
+          {/* Rastreio do supervisor: fica ativo em qualquer página, invisível. */}
+          <div className="hidden">
+            <RastreioSempreAtivo />
+          </div>
+        </Suspense>
       )}
     </QueryClientProvider>
   );

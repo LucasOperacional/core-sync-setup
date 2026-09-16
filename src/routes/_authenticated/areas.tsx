@@ -40,6 +40,7 @@ import { importarPostosNexti } from "@/lib/areas-nexti.functions";
 import { meuVinculoGerente } from "@/lib/vinculo-gerente.functions";
 import { useSessao, useIsAdmin } from "@/hooks/use-sessao";
 import { toast } from "sonner";
+import { COORDENADORES, coordenadorDoGerente, rotuloCoordenador } from "@/lib/coordenadores";
 
 export const Route = createFileRoute("/_authenticated/areas")({
   head: () => ({
@@ -146,36 +147,52 @@ function AreasPage() {
           )}
         </div>
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {areas.map((nome) => (
-            <Card
-              key={nome}
-              className="cursor-pointer transition-shadow hover:shadow-md"
-              onClick={() => setGerenteSelecionado(nome)}
-            >
-              <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                  {iniciaisGerente(nome)}
-                </div>
-                <div className="min-w-0">
-                  <CardTitle className="truncate text-base">{nomeAmigavel(nome)}</CardTitle>
-                  <p className="text-xs text-muted-foreground">Gerente de área</p>
-                </div>
-              </CardHeader>
-              <CardContent className="flex items-center justify-between">
-                <Badge variant="secondary" className="gap-1">
-                  <UserRound className="size-3" />
-                  Área ativa
-                </Badge>
-                <span className="text-xs text-muted-foreground">Ver postos</span>
-              </CardContent>
-            </Card>
-          ))}
+        {COORDENADORES.map((coordenador) => {
+          const doCoordenador = areas.filter(
+            (nome) => coordenadorDoGerente(nome) === coordenador,
+          );
+          if (doCoordenador.length === 0) return null;
+          return (
+            <section key={coordenador} className="space-y-3">
+              <div className="flex items-center gap-2 border-b border-border pb-2">
+                <h2 className="font-display text-base font-semibold">
+                  {rotuloCoordenador(coordenador)}
+                </h2>
+                <Badge variant="secondary">{doCoordenador.length} área(s)</Badge>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {doCoordenador.map((nome) => (
+                  <Card
+                    key={nome}
+                    className="cursor-pointer transition-shadow hover:shadow-md"
+                    onClick={() => setGerenteSelecionado(nome)}
+                  >
+                    <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                        {iniciaisGerente(nome)}
+                      </div>
+                      <div className="min-w-0">
+                        <CardTitle className="truncate text-base">{nomeAmigavel(nome)}</CardTitle>
+                        <p className="text-xs text-muted-foreground">Gerente de área</p>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex items-center justify-between">
+                      <Badge variant="secondary" className="gap-1">
+                        <UserRound className="size-3" />
+                        Área ativa
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">Ver postos</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          );
+        })}
 
-          {areas.length === 0 && (
-            <p className="text-sm text-muted-foreground">Nenhuma área encontrada.</p>
-          )}
-        </section>
+        {areas.length === 0 && (
+          <p className="text-sm text-muted-foreground">Nenhuma área encontrada.</p>
+        )}
       </div>
 
       <Sheet

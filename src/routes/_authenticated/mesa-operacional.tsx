@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { AREAS_GERENTES } from "@/lib/areas-gerentes";
 import { normalizarNome } from "@/lib/gerentes-area-a";
+import { COORDENADORES, coordenadorDoGerente, rotuloCoordenador } from "@/lib/coordenadores";
 import {
   cadastrarPostoMesa,
   hojeBrasilia,
@@ -259,8 +260,26 @@ function MesaOperacionalPage() {
             <Loader2 className="size-4 animate-spin" /> Carregando postos...
           </div>
         ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {grupos.map((grupo) => {
+          <div className="space-y-6">
+            {COORDENADORES.map((coordenador) => {
+              const doCoordenador = grupos.filter(
+                (g) => coordenadorDoGerente(g.gerente) === coordenador,
+              );
+              if (doCoordenador.length === 0) return null;
+              const feitos = doCoordenador.reduce((s, g) => s + g.feitos, 0);
+              const totalPostos = doCoordenador.reduce((s, g) => s + g.lista.length, 0);
+              return (
+                <section key={coordenador} className="space-y-3">
+                  <div className="flex items-center gap-2 border-b border-border pb-2">
+                    <h2 className="font-display text-base font-semibold">
+                      {rotuloCoordenador(coordenador)}
+                    </h2>
+                    <Badge variant="secondary">
+                      {feitos}/{totalPostos} check-ins
+                    </Badge>
+                  </div>
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {doCoordenador.map((grupo) => {
               const total = grupo.lista.length;
               const pct = total ? Math.round((grupo.feitos / total) * 100) : 0;
               return (
@@ -325,6 +344,10 @@ function MesaOperacionalPage() {
                     )}
                   </CardContent>
                 </Card>
+                      );
+                    })}
+                  </div>
+                </section>
               );
             })}
           </div>
