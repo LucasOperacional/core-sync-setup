@@ -241,27 +241,218 @@ function acharEscalaPorHorario(
 /** Posto padrão para quem entra sem vaga no posto informado. */
 const POSTO_NOVAS_ADMISSOES = "NOVAS ADMISSÕES";
 
-/** Verifica se o posto já atingiu o número de vagas (vacantJob) da NEXTI. */
-async function postoSemVaga(
-  postosRaw: Record<string, unknown>[],
-  postoId: number,
-): Promise<boolean> {
-  const item = postosRaw.find((w) => Number(w["id"] ?? 0) === postoId);
-  const vagas = Number(item?.["vacantJob"] ?? 0);
-  if (!Number.isFinite(vagas) || vagas <= 0) return false;
+type ListasNexti = {
+  empresasRaw: Record<string, unknown>[];
+  cargosRaw: Record<string, unknown>[];
+  postosRaw: Record<string, unknown>[];
+  escalasRaw: Record<string, unknown>[];
+};
+
+async function carregarListas(
+  config: Awaited<ReturnType<typeof loadConfig>>,
+): Promise<ListasNexti> {
+  const [empresasRaw, cargosRaw, postosRaw, escalasRaw] = await Promise.all([
+    listarTudo(config, "/api/companies/all"),
+    listarTudo(config, "/api/careers/all"),
+    listarTudo(config, "/api/workplaces/all"),
+    listarTudo(config, "/api/schedules/all"),
+  ]);
+  return { empresasRaw, cargosRaw, postosRaw, escalasRaw };
+}
+
+/** Contagem de ativos por posto, usada para saber se ainda há vaga. */
+async function contarAtivosPorPosto(postoIds: number[]): Promise<Map<number, number>> {
+  const mapa = new Map<number, number>();
+  if (postoIds.length === 0) return mapa;
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { count, error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from("nexti_persons")
-      .select("nexti_id", { count: "exact", head: true })
-      .eq("workplace_id", postoId)
+      .select("workplace_id")
+      .in("workplace_id", postoIds)
       .is("demission_date", null);
-    if (error) return false;
-    return (count ?? 0) >= vagas;
+    if (error || !data) return mapa;
+    for (const row of data as { workplace_id: number | null }[]) {
+      const id = Number(row.workplace_id ?? 0);
+      if (id) mapa.set(id, (mapa.get(id) ?? 0) + 1);
+    }
   } catch {
-    return false;
+    /* sem contagem local */
   }
+  return mapa;
 }
+
+function cpfValido(valor: string): boolean {
+  const cpf = soDigitos(valor);
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  const calc = (tam: number) => {
+    let soma = 0;
+    for (let i = 0; i < tam; i++) soma += Number(cpf[i]) * (tam + 1 - i);
+    const resto = (soma * 10) % 11;
+    return resto === 10 ? 0 : resto;
+  };
+  return calc(9) === Number(cpf[9]) && calc(10) === Number(cpf[10]);
+}
+
+export type ValidacaoPessoa = {
+  indice: number;
+  nome: string;
+  erros: string[];
+  avisos: string[];
+  payload: Record<string, string | number | boolean>;
+  resolvido: { empresa?: string; cargo?: string; posto?: string; escala?: string };
+};
+
+/** Monta o corpo do POST /api/persons e acusa tudo que a NEXTI recusaria. */
+function montarCadastro(
+  p: PessoaCadastro,
+  listas: ListasNexti,
+  ativosPorPosto: Map<number, number>,
+): Omit<ValidacaoPessoa, "indice"> {
+  const erros: string[] = [];
+  const avisos: string[] = [];
+  const nome = limpar(p.nome).toUpperCase();
+  if (!nome) erros.push("Nome vazio.");
+
+  const cpf = soDigitos(p.cpf);
+  if (!cpf) erros.push("CPF vazio.");
+  else if (cpf.length !== 11) erros.push(`CPF "${p.cpf}" não tem 11 dígitos.`);
+  else if (!cpfValido(cpf)) erros.push(`CPF "${p.cpf}" é inválido (dígito verificador).`);
+
+  const pis = soDigitos(p.pis ?? "");
+  if (pis && pis.length !== 11) avisos.push(`PIS "${p.pis}" não tem 11 dígitos — será enviado zerado.`);
+  if (!pis) avisos.push("PIS não informado — será enviado 00000000000.");
+
+  const email = limpar(p.email);
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) erros.push(`E-mail "${email}" é inválido.`);
+
+  const nascimento = dataNexti(p.nascimento);
+  if (limpar(p.nascimento) && !nascimento) erros.push(`Data de nascimento "${p.nascimento}" não é uma data válida.`);
+  const admissao = dataNexti(p.admissao);
+  if (limpar(p.admissao) && !admissao) erros.push(`Data de admissão "${p.admissao}" não é uma data válida.`);
+  if (!admissao) avisos.push("Admissão não informada.");
+
+  if (!limpar(p.genero)) avisos.push('Sexo não informado — será enviado "M".');
+  const genero = normalizar(p.genero ?? "").startsWith("f") ? "F" : "M";
+
+  const empresa = acharOpcao(
+    paraOpcoes(listas.empresasRaw, ["companyName", "fantasyName", "name"]),
+    p.empresa,
+  );
+  const cargo = acharOpcao(paraOpcoes(listas.cargosRaw), p.cargo);
+  let posto = acharOpcao(paraOpcoes(listas.postosRaw), p.posto);
+  let escala = acharOpcao(paraOpcoes(listas.escalasRaw), p.escala);
+
+  if (limpar(p.escala) && !escala) {
+    const porHorario = acharEscalaPorHorario(listas.escalasRaw, p.escala);
+    if (porHorario) {
+      escala = porHorario;
+      avisos.push(`Escala "${p.escala}" casada pelo horário com "${porHorario.nome}".`);
+    }
+  }
+
+  if (!limpar(p.empresa)) erros.push("Empresa não informada.");
+  else if (!empresa) erros.push(`Empresa "${p.empresa}" não existe na NEXTI.`);
+  if (limpar(p.cargo) && !cargo) erros.push(`Cargo "${p.cargo}" não existe na NEXTI.`);
+  if (!limpar(p.cargo)) avisos.push("Cargo não informado.");
+  if (limpar(p.escala) && !escala) erros.push(`Escala "${p.escala}" não existe na NEXTI.`);
+
+  // Regra: posto não encontrado ou sem vaga livre → lotar em "NOVAS ADMISSÕES".
+  const destinoNovas = acharOpcao(paraOpcoes(listas.postosRaw), POSTO_NOVAS_ADMISSOES);
+  if (limpar(p.posto) && !posto) {
+    if (destinoNovas) {
+      avisos.push(`Posto "${p.posto}" não encontrado — será lotado em "${destinoNovas.nome}".`);
+      posto = destinoNovas;
+    } else {
+      erros.push(`Posto "${p.posto}" não encontrado e não existe o posto "${POSTO_NOVAS_ADMISSOES}" na NEXTI.`);
+    }
+  } else if (posto) {
+    const item = listas.postosRaw.find((w) => Number(w["id"] ?? 0) === posto!.id);
+    const vagas = Number(item?.["vacantJob"] ?? 0);
+    const ocupadas = ativosPorPosto.get(posto.id) ?? 0;
+    if (Number.isFinite(vagas) && vagas > 0 && ocupadas >= vagas) {
+      if (destinoNovas) {
+        avisos.push(`Posto "${posto.nome}" sem vaga (${ocupadas}/${vagas}) — será lotado em "${destinoNovas.nome}".`);
+        posto = destinoNovas;
+      } else {
+        erros.push(`Posto "${posto.nome}" sem vaga e não existe o posto "${POSTO_NOVAS_ADMISSOES}" na NEXTI.`);
+      }
+    }
+  }
+
+  const payload: Record<string, string | number | boolean> = {
+    name: nome,
+    cpf,
+    pis: pis.length === 11 ? pis : "00000000000",
+    enrolment: limpar(p.matricula),
+    email,
+    gender: genero,
+    personSituationId: 1,
+    personTypeId: 1,
+    businessUnitId: 0,
+    ignoreValidation: true,
+    ignoreTimeTracking: false,
+    allowDevicePassword: false,
+    allowMobileClocking: false,
+    adminDevice: false,
+    ...(empresa
+      ? {
+          companyId: empresa.id,
+          ...(empresa.externalId ? { externalCompanyId: empresa.externalId } : {}),
+        }
+      : {}),
+    ...(cargo ? { careerId: cargo.id } : {}),
+    ...(posto ? { workplaceId: posto.id } : {}),
+    ...(escala ? { scheduleId: escala.id } : {}),
+    ...(nascimento ? { birthDate: nascimento } : {}),
+    ...(admissao ? { admissionDate: admissao } : {}),
+    ...(limpar(p.mae) ? { mothersName: limpar(p.mae).toUpperCase() } : {}),
+    ...(limpar(p.pai) ? { fathersName: limpar(p.pai).toUpperCase() } : {}),
+    ...(limpar(p.rg) ? { registerNumber: limpar(p.rg) } : {}),
+  };
+
+  const resolvido: ValidacaoPessoa["resolvido"] = {};
+  if (empresa) resolvido.empresa = empresa.nome;
+  if (cargo) resolvido.cargo = cargo.nome;
+  if (posto) resolvido.posto = posto.nome;
+  if (escala) resolvido.escala = escala.nome;
+
+  return { nome: nome || "(sem nome)", erros, avisos, payload, resolvido };
+}
+
+/** Valida a planilha inteira contra a NEXTI antes de enviar qualquer cadastro. */
+export const validarPessoasNexti = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { pessoas: PessoaCadastro[] }) => ({
+    pessoas: Array.isArray(input?.pessoas) ? input.pessoas : [],
+  }))
+  .handler(async ({ data }): Promise<{ ok: boolean; erro?: string; itens: ValidacaoPessoa[] }> => {
+    try {
+      const config = await loadConfig();
+      config.baseUrl = normalizeBaseUrl(config.baseUrl);
+      const listas = await carregarListas(config);
+
+      const postosPossiveis = data.pessoas
+        .map((p) => acharOpcao(paraOpcoes(listas.postosRaw), p.posto)?.id ?? 0)
+        .filter((id) => id > 0);
+      const ativos = await contarAtivosPorPosto([...new Set(postosPossiveis)]);
+
+      const vistos = new Map<string, number>();
+      const itens = data.pessoas.map((p, indice) => {
+        const item = { indice, ...montarCadastro(p, listas, ativos) };
+        const cpf = soDigitos(p.cpf);
+        if (cpf) {
+          const anterior = vistos.get(cpf);
+          if (anterior !== undefined) item.erros.push(`CPF repetido na planilha (linha ${anterior + 1}).`);
+          else vistos.set(cpf, indice);
+        }
+        return item;
+      });
+      return { ok: true, itens };
+    } catch (error) {
+      return { ok: false, itens: [], erro: (error as Error)?.message ?? "Falha ao validar na NEXTI." };
+    }
+  });
 
 /** Cadastra um colaborador na NEXTI (POST /api/persons). */
 export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
@@ -271,104 +462,28 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }): Promise<ResultadoCadastro> => {
     const p = data.pessoa;
-    const nome = limpar(p.nome).toUpperCase();
-    if (!nome) return { nome: "(sem nome)", ok: false, personId: null, mensagem: "Nome vazio." };
+    const nomeBase = limpar(p.nome).toUpperCase();
+    if (!nomeBase)
+      return { nome: "(sem nome)", ok: false, personId: null, mensagem: "Nome vazio." };
 
     try {
       const config = await loadConfig();
       config.baseUrl = normalizeBaseUrl(config.baseUrl);
+      const listas = await carregarListas(config);
+      const postoId = acharOpcao(paraOpcoes(listas.postosRaw), p.posto)?.id ?? 0;
+      const ativos = await contarAtivosPorPosto(postoId ? [postoId] : []);
+      const { nome, erros, avisos, payload } = montarCadastro(p, listas, ativos);
 
-      const [empresasRaw, cargosRaw, postosRaw, escalasRaw] = await Promise.all([
-        limpar(p.empresa) ? listarTudo(config, "/api/companies/all") : Promise.resolve([]),
-        limpar(p.cargo) ? listarTudo(config, "/api/careers/all") : Promise.resolve([]),
-        limpar(p.posto) ? listarTudo(config, "/api/workplaces/all") : Promise.resolve([]),
-        limpar(p.escala) ? listarTudo(config, "/api/schedules/all") : Promise.resolve([]),
-      ]);
-
-      const empresa = acharOpcao(
-        paraOpcoes(empresasRaw, ["companyName", "fantasyName", "name"]),
-        p.empresa,
-      );
-      const cargo = acharOpcao(paraOpcoes(cargosRaw), p.cargo);
-      let posto = acharOpcao(paraOpcoes(postosRaw), p.posto);
-      let escala = acharOpcao(paraOpcoes(escalasRaw), p.escala);
-      // Regra: se o nome não bate, tenta casar pelo horário informado na coluna "escala".
-      let avisoEscala = "";
-      if (limpar(p.escala) && !escala) {
-        const porHorario = acharEscalaPorHorario(escalasRaw, p.escala);
-        if (porHorario) {
-          escala = porHorario;
-          avisoEscala = ` Escala "${p.escala}" casada pelo horário com "${porHorario.nome}".`;
-        }
+      if (erros.length) {
+        return { nome, ok: false, personId: null, mensagem: erros.join(" ") };
       }
-
-      const faltando: string[] = [];
-      if (limpar(p.empresa) && !empresa) faltando.push(`empresa "${p.empresa}"`);
-      if (limpar(p.cargo) && !cargo) faltando.push(`cargo "${p.cargo}"`);
-      if (limpar(p.escala) && !escala) faltando.push(`escala "${p.escala}"`);
-      if (faltando.length) {
-        return {
-          nome,
-          ok: false,
-          personId: null,
-          mensagem: `Não encontrei na NEXTI: ${faltando.join(", ")}.`,
-        };
-      }
-
-      // Regra: posto não encontrado ou sem vaga livre → lotar em "NOVAS ADMISSÕES".
-      let avisoPosto = "";
-      const destinoNovas = acharOpcao(paraOpcoes(postosRaw), POSTO_NOVAS_ADMISSOES);
-      if (limpar(p.posto) && !posto) {
-        if (destinoNovas) {
-          avisoPosto = ` Posto "${p.posto}" não encontrado — lotado em "${destinoNovas.nome}".`;
-          posto = destinoNovas;
-        } else {
-          avisoPosto = ` Posto "${p.posto}" não encontrado e não encontrei o posto "${POSTO_NOVAS_ADMISSOES}" na NEXTI.`;
-        }
-      } else if (posto) {
-        const semVaga = await postoSemVaga(postosRaw, posto.id);
-        if (semVaga) {
-          if (destinoNovas) {
-            avisoPosto = ` Posto "${posto.nome}" sem vaga — lotado em "${destinoNovas.nome}".`;
-            posto = destinoNovas;
-          } else {
-            avisoPosto = ` Posto "${posto.nome}" sem vaga e não encontrei o posto "${POSTO_NOVAS_ADMISSOES}" na NEXTI.`;
-          }
-        }
-      }
-
-      const genero = normalizar(p.genero ?? "").startsWith("f") ? "F" : "M";
-      const corpo: Record<string, unknown> = {
-        name: nome,
-        cpf: soDigitos(p.cpf),
-        pis: soDigitos(p.pis ?? "") || "00000000000",
-        enrolment: limpar(p.matricula),
-        email: limpar(p.email),
-        gender: genero,
-        personSituationId: 1,
-        personTypeId: 1,
-        businessUnitId: 0,
-        ignoreValidation: true,
-        ignoreTimeTracking: false,
-        allowDevicePassword: false,
-        allowMobileClocking: false,
-        adminDevice: false,
-        ...(empresa ? { companyId: empresa.id, externalCompanyId: empresa.externalId } : {}),
-        ...(cargo ? { careerId: cargo.id } : {}),
-        ...(posto ? { workplaceId: posto.id } : {}),
-        ...(escala ? { scheduleId: escala.id } : {}),
-        ...(dataNexti(p.nascimento) ? { birthDate: dataNexti(p.nascimento) } : {}),
-        ...(dataNexti(p.admissao) ? { admissionDate: dataNexti(p.admissao) } : {}),
-        ...(limpar(p.mae) ? { mothersName: limpar(p.mae).toUpperCase() } : {}),
-        ...(limpar(p.pai) ? { fathersName: limpar(p.pai).toUpperCase() } : {}),
-        ...(limpar(p.rg) ? { registerNumber: limpar(p.rg) } : {}),
-      };
+      const extra = avisos.length ? ` ${avisos.join(" ")}` : "";
 
       const res = await requestNexti({
         config,
         endpoint: "/api/persons",
         method: "POST",
-        body: corpo,
+        body: payload,
       });
 
       let corpoResposta: unknown = res.data;
@@ -391,18 +506,18 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
           nome,
           ok: true,
           personId,
-          mensagem: `Cadastrado na NEXTI (matrícula interna ${personId}).${avisoPosto}${avisoEscala}`,
+          mensagem: `Cadastrado na NEXTI (matrícula interna ${personId}).${extra}`,
         };
       }
       return {
         nome,
         ok: false,
         personId,
-        mensagem: `A NEXTI respondeu ${res.status} sem confirmar o cadastro.${avisoPosto}${avisoEscala}`,
+        mensagem: `A NEXTI respondeu ${res.status} sem confirmar o cadastro.${extra}`,
       };
     } catch (error) {
       return {
-        nome,
+        nome: nomeBase,
         ok: false,
         personId: null,
         mensagem: (error as Error)?.message ?? "Falha ao cadastrar na NEXTI.",
