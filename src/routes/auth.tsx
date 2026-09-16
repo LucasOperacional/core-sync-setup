@@ -10,8 +10,6 @@ import { entrarComUsuario } from "@/lib/auth.functions";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
-
   head: () => ({
     meta: [
       { title: "Acesso | PORTAL OPERACIONAL" },
