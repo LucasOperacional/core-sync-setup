@@ -1075,7 +1075,15 @@ async function carregarFaltasNexti(supabaseClient: unknown): Promise<{
     if (vistos.has(chave)) continue;
     vistos.add(chave);
 
-    lista.push({ colaborador, cargo, periodo, tipo });
+    lista.push({
+      colaborador,
+      cargo,
+      periodo,
+      tipo,
+      posto: pessoa?.posto ?? "",
+      matricula: pessoa?.matricula ?? personExternalId,
+    });
+
   }
 
   lista.sort((a, b) => b.periodo.localeCompare(a.periodo, "pt-BR"));
