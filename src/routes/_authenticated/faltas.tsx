@@ -33,7 +33,10 @@ import {
   YAxis,
 } from "recharts";
 import { type ParsedRow } from "@/lib/file-parsers";
-import { carregarFaltasDashboardNexti } from "@/lib/nexti-ativos.functions";
+import {
+  carregarFaltasDashboardNexti,
+  postoDeveAparecerNoDashboardFaltas,
+} from "@/lib/nexti-ativos.functions";
 
 import { sincronizarFaltasLancadas } from "@/lib/faltas-lancamentos.functions";
 import { extrairTodosRegistros, temCabecalho } from "@/lib/tabular-extract";
@@ -247,10 +250,12 @@ function buildPeriodo(dataInicio: string, dataFim: string): string {
 }
 
 function postoDeveAparecerNoDashboard(posto: string): boolean {
+  // Postos FGR e postos cujo nome começa com "Ts" são ignorados no dashboard de faltas.
+  if (!postoDeveAparecerNoDashboardFaltas(posto)) return false;
   const p = posto.trim().toUpperCase();
-  // Postos que começam com "FGR" são ignorados no dashboard de faltas.
   return !p.startsWith("FGR");
 }
+
 
 function extractRows(rows: ParsedRow[]): ExtractedRow[] {
   return extrairTodosRegistros<ExtractedRow>(rows, TARGET_COLUMNS, 2, (row, mapping) => {

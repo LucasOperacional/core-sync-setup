@@ -140,6 +140,16 @@ export function postoBloqueado(posto: string): boolean {
   return /(^| )FGR($| )/.test(n) || n.includes("FGR");
 }
 
+/** Postos cujo nome começa com "Ts" são ignorados no dashboard de faltas. */
+export function postoDeveAparecerNoDashboardFaltas(posto: string): boolean {
+  const n = normalizar(posto).replace(/[^A-Z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+  if (n === "TS") return false;
+  if (n.startsWith("TS ")) return false;
+  if (n.startsWith("TS-")) return false;
+  return true;
+}
+
+
 /** Busca todas as páginas de um recurso da NEXTI, tentando endpoints alternativos. */
 async function buscarTudo(
   config: Awaited<ReturnType<typeof loadConfig>>,
@@ -1082,16 +1092,20 @@ async function carregarFaltasNexti(supabaseClient: unknown): Promise<{
     if (vistos.has(chave)) continue;
     vistos.add(chave);
 
+    const posto = pessoa?.posto ?? "";
+    if (!postoDeveAparecerNoDashboardFaltas(posto)) continue;
+
     lista.push({
       colaborador,
       cargo,
       periodo,
       tipo,
-      posto: pessoa?.posto ?? "",
+      posto,
       matricula: pessoa?.matricula ?? personExternalId,
     });
 
   }
+
 
   lista.sort((a, b) => b.periodo.localeCompare(a.periodo, "pt-BR"));
 
