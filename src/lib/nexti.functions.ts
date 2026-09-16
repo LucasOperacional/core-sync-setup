@@ -279,7 +279,10 @@ function classifyHttpError(status: number, body: string): { code: string; cause:
   if (status === 429)
     return { code: "rate_limit", cause: "Limite de requisições da NEXTI atingido." };
   if (status >= 500)
-    return { code: "server_unavailable", cause: "Servidor da NEXTI indisponível ou instável." };
+    return {
+      code: "server_unavailable",
+      cause: comDetalhe(`Servidor da NEXTI indisponível ou instável (${status}).`, body),
+    };
   if (body.toLowerCase().includes("cors")) {
     return {
       code: "cors",
