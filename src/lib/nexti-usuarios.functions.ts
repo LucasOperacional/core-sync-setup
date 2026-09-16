@@ -329,6 +329,59 @@ function acharEscalaCompativel(
 /** Posto padrão para quem entra sem vaga no posto informado. */
 const POSTO_NOVAS_ADMISSOES = "NOVAS ADMISSÕES";
 
+/**
+ * Regra de importação: para o texto da coluna "posto" da planilha, escolhe o
+ * posto mais compatível cadastrado na NEXTI, combinando semelhança das
+ * palavras, código externo e correspondência parcial do nome.
+ */
+function acharPostoCompativel(
+  postosRaw: Record<string, unknown>[],
+  termo?: string,
+): { opcao: OpcaoNexti; pontos: number } | null {
+  const bruto = limpar(termo);
+  if (!bruto) return null;
+
+  const alvoNorm = normalizar(bruto);
+  const tokens = tokensDe(bruto);
+
+  let melhor: { opcao: OpcaoNexti; pontos: number } | null = null;
+
+  for (const item of postosRaw) {
+    const id = Number(item["id"] ?? 0);
+    const nome = typeof item["name"] === "string" ? item["name"] : "";
+    if (!id || !nome) continue;
+
+    const nomeNorm = normalizar(nome);
+    const texto = textoDaEscala(item);
+    const tokensPosto = new Set(tokensDe(`${nome} ${texto}`));
+    const externalId = typeof item["externalId"] === "string" ? item["externalId"] : "";
+
+    let pontos = 0;
+
+    // Nome idêntico ou contido.
+    if (nomeNorm === alvoNorm) pontos += 12;
+    else if (nomeNorm.includes(alvoNorm) || alvoNorm.includes(nomeNorm)) pontos += 6;
+    else if (nomeNorm.startsWith(alvoNorm) || alvoNorm.startsWith(nomeNorm)) pontos += 4;
+
+    // Código externo.
+    if (externalId && externalId.toLowerCase() === alvoNorm) pontos += 10;
+
+    // Semelhança das palavras.
+    if (tokens.length > 0) {
+      const iguais = tokens.filter((t) => tokensPosto.has(t)).length;
+      pontos += (iguais / tokens.length) * 8;
+    }
+
+    if (pontos <= 0) continue;
+    const opcao: OpcaoNexti = { id, nome };
+    if (externalId) opcao.externalId = externalId;
+    if (!melhor || pontos > melhor.pontos) melhor = { opcao, pontos };
+  }
+
+  // Exige uma compatibilidade mínima para não lançar posto errado.
+  return melhor && melhor.pontos >= 4 ? melhor : null;
+}
+
 type ListasNexti = {
   empresasRaw: Record<string, unknown>[];
   cargosRaw: Record<string, unknown>[];
@@ -450,6 +503,17 @@ function montarCadastro(
   if (limpar(p.cargo) && !cargo) erros.push(`Cargo "${p.cargo}" não existe na NEXTI.`);
   if (!limpar(p.cargo)) avisos.push("Cargo não informado.");
   if (limpar(p.escala) && !escala) erros.push(`Escala "${p.escala}" não existe na NEXTI.`);
+
+  // Regra: posto não encontrado pelo nome exato → usar o mais compatível da NEXTI.
+  if (limpar(p.posto) && !posto) {
+    const compativel = acharPostoCompativel(listas.postosRaw, p.posto);
+    if (compativel) {
+      posto = compativel.opcao;
+      avisos.push(
+        `Posto "${p.posto}" não existe com esse nome — usado o mais compatível: "${compativel.opcao.nome}".`,
+      );
+    }
+  }
 
   // Regra: posto não encontrado ou sem vaga livre → lotar em "NOVAS ADMISSÕES".
   const destinoNovas = acharOpcao(paraOpcoes(listas.postosRaw), POSTO_NOVAS_ADMISSOES);
