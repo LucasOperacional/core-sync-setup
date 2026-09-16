@@ -223,11 +223,11 @@ export function QualidadeTempoSupervisores({
         </div>
       )}
 
-      {linhas.length === 0 ? (
+      {linhasVisiveis.length === 0 ? (
         <p className="mt-4 text-xs text-muted-foreground">Nenhuma visita no filtro selecionado.</p>
       ) : (
         <ul className="mt-4 space-y-2">
-          {linhas.map((l) => {
+          {linhasVisiveis.map((l) => {
             const expandido = !fechados.has(l.local);
             return (
               <li key={l.local} className="rounded-xl border border-border/70">
