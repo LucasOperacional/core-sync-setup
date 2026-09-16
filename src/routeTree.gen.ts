@@ -45,6 +45,7 @@ import { Route as AuthenticatedPesquisaColaboradorNextiRouteImport } from './rou
 import { Route as AuthenticatedPesquisaFaltasRouteImport } from './routes/_authenticated/pesquisa-faltas'
 import { Route as AuthenticatedProtocoloFolhasPontoRouteImport } from './routes/_authenticated/protocolo-folhas-ponto'
 import { Route as AuthenticatedProtocoloLimpezaGeralRouteImport } from './routes/_authenticated/protocolo-limpeza-geral'
+import { Route as AuthenticatedQualidadeTempoRouteImport } from './routes/_authenticated/qualidade-tempo'
 import { Route as AuthenticatedRealizadoresRouteImport } from './routes/_authenticated/realizadores'
 import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
 import { Route as AuthenticatedSupervisaoCampoRouteImport } from './routes/_authenticated/supervisao-campo'
@@ -279,6 +280,12 @@ const AuthenticatedProtocoloLimpezaGeralRoute =
   AuthenticatedProtocoloLimpezaGeralRouteImport.update({
     id: '/protocolo-limpeza-geral',
     path: '/protocolo-limpeza-geral',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedQualidadeTempoRoute =
+  AuthenticatedQualidadeTempoRouteImport.update({
+    id: '/qualidade-tempo',
+    path: '/qualidade-tempo',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedRealizadoresRoute =
@@ -528,6 +535,7 @@ export interface FileRoutesByFullPath {
   '/pesquisa-faltas': typeof AuthenticatedPesquisaFaltasRoute
   '/protocolo-folhas-ponto': typeof AuthenticatedProtocoloFolhasPontoRoute
   '/protocolo-limpeza-geral': typeof AuthenticatedProtocoloLimpezaGeralRoute
+  '/qualidade-tempo': typeof AuthenticatedQualidadeTempoRoute
   '/realizadores': typeof AuthenticatedRealizadoresRoute
   '/rh': typeof AuthenticatedRhRoute
   '/supervisao-campo': typeof AuthenticatedSupervisaoCampoRoute
@@ -601,6 +609,7 @@ export interface FileRoutesByTo {
   '/pesquisa-faltas': typeof AuthenticatedPesquisaFaltasRoute
   '/protocolo-folhas-ponto': typeof AuthenticatedProtocoloFolhasPontoRoute
   '/protocolo-limpeza-geral': typeof AuthenticatedProtocoloLimpezaGeralRoute
+  '/qualidade-tempo': typeof AuthenticatedQualidadeTempoRoute
   '/realizadores': typeof AuthenticatedRealizadoresRoute
   '/rh': typeof AuthenticatedRhRoute
   '/supervisao-campo': typeof AuthenticatedSupervisaoCampoRoute
@@ -677,6 +686,7 @@ export interface FileRoutesById {
   '/_authenticated/pesquisa-faltas': typeof AuthenticatedPesquisaFaltasRoute
   '/_authenticated/protocolo-folhas-ponto': typeof AuthenticatedProtocoloFolhasPontoRoute
   '/_authenticated/protocolo-limpeza-geral': typeof AuthenticatedProtocoloLimpezaGeralRoute
+  '/_authenticated/qualidade-tempo': typeof AuthenticatedQualidadeTempoRoute
   '/_authenticated/realizadores': typeof AuthenticatedRealizadoresRoute
   '/_authenticated/rh': typeof AuthenticatedRhRoute
   '/_authenticated/supervisao-campo': typeof AuthenticatedSupervisaoCampoRoute
@@ -754,6 +764,7 @@ export interface FileRouteTypes {
     | '/pesquisa-faltas'
     | '/protocolo-folhas-ponto'
     | '/protocolo-limpeza-geral'
+    | '/qualidade-tempo'
     | '/realizadores'
     | '/rh'
     | '/supervisao-campo'
@@ -827,6 +838,7 @@ export interface FileRouteTypes {
     | '/pesquisa-faltas'
     | '/protocolo-folhas-ponto'
     | '/protocolo-limpeza-geral'
+    | '/qualidade-tempo'
     | '/realizadores'
     | '/rh'
     | '/supervisao-campo'
@@ -902,6 +914,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pesquisa-faltas'
     | '/_authenticated/protocolo-folhas-ponto'
     | '/_authenticated/protocolo-limpeza-geral'
+    | '/_authenticated/qualidade-tempo'
     | '/_authenticated/realizadores'
     | '/_authenticated/rh'
     | '/_authenticated/supervisao-campo'
@@ -1228,6 +1241,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProtocoloLimpezaGeralRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/qualidade-tempo': {
+      id: '/_authenticated/qualidade-tempo'
+      path: '/qualidade-tempo'
+      fullPath: '/qualidade-tempo'
+      preLoaderRoute: typeof AuthenticatedQualidadeTempoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/realizadores': {
       id: '/_authenticated/realizadores'
       path: '/realizadores'
@@ -1520,6 +1540,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPesquisaFaltasRoute: typeof AuthenticatedPesquisaFaltasRoute
   AuthenticatedProtocoloFolhasPontoRoute: typeof AuthenticatedProtocoloFolhasPontoRoute
   AuthenticatedProtocoloLimpezaGeralRoute: typeof AuthenticatedProtocoloLimpezaGeralRoute
+  AuthenticatedQualidadeTempoRoute: typeof AuthenticatedQualidadeTempoRoute
   AuthenticatedRealizadoresRoute: typeof AuthenticatedRealizadoresRoute
   AuthenticatedRhRoute: typeof AuthenticatedRhRoute
   AuthenticatedSupervisaoCampoRoute: typeof AuthenticatedSupervisaoCampoRoute
@@ -1572,6 +1593,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedProtocoloFolhasPontoRoute,
   AuthenticatedProtocoloLimpezaGeralRoute:
     AuthenticatedProtocoloLimpezaGeralRoute,
+  AuthenticatedQualidadeTempoRoute: AuthenticatedQualidadeTempoRoute,
   AuthenticatedRealizadoresRoute: AuthenticatedRealizadoresRoute,
   AuthenticatedRhRoute: AuthenticatedRhRoute,
   AuthenticatedSupervisaoCampoRoute: AuthenticatedSupervisaoCampoRoute,
