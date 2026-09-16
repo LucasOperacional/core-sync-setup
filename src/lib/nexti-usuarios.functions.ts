@@ -597,9 +597,10 @@ function montarCadastro(
     avisos.push(
       escala.externalId
         ? `Escala "${escala.nome}" identificada pelo código externo (matrícula) ${escala.externalId}.`
-        : `Atenção: a escala "${escala.nome}" não tem código externo (matrícula) na NEXTI — o vínculo automático pode falhar.`,
+        : `Escala "${escala.nome}" identificada pelo id ${escala.id} na NEXTI.`,
     );
   }
+
 
   if (!limpar(p.empresa)) erros.push("Empresa não informada.");
   else if (!empresa) erros.push(`Empresa "${p.empresa}" não existe na NEXTI.`);
