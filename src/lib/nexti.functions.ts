@@ -289,7 +289,10 @@ function classifyHttpError(status: number, body: string): { code: string; cause:
       cause: "Resposta indica bloqueio de CORS. A chamada permanece intermediada pelo backend.",
     };
   }
-  return { code: "nexti_error", cause: "A NEXTI retornou erro para a requisição." };
+  return {
+    code: "nexti_error",
+    cause: comDetalhe(`A NEXTI retornou erro ${status} para a requisição.`, body),
+  };
 }
 
 function classifyNetworkError(error: unknown): { code: string; cause: string; status: number } {
