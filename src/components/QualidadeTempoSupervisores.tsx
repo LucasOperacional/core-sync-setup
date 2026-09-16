@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, Clock, MapPin, UserRound } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, ChevronDown, Clock, MapPin, UserRound } from "lucide-react";
 
 import { classificarResposta, parseDateBR, type Visit } from "@/lib/report-parser";
 import { gerenteAreaACanonico } from "@/lib/gerentes-area-a";
