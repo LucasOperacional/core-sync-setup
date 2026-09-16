@@ -1,9 +1,4 @@
 # Roadmap
 
-- [ ] Consolidar design system corporativo e componentes básicos
-- [ ] Unificar estrutura global e navegação responsiva
-- [ ] Criar componentes operacionais e estados reutilizáveis
-- [ ] Migrar páginas operacionais prioritárias
-- [ ] Migrar páginas administrativas, públicas e auxiliares
-- [ ] Validar desktop, tablet, celular, compilação e fluxos críticos
-- [ ] Opção de assinatura em todas as mensagens do WhatsApp (chat interno)
+- [ ] Varredura de desempenho: reduzir lentidão (bundle inicial, consultas repetidas, índices no banco)
+- [ ] Separar gerentes por coordenador: VANDERLEI (Vivian de Carvalho Moreno, Paulo Henrique de Abreu Ribeiro, Williamar de Resende, João Carlos Rodrigues da Silva) e JEFFERSON (demais)
