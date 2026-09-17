@@ -187,6 +187,7 @@ function PostosPage() {
                       <th className="py-2 pr-3">Cliente</th>
                       <th className="py-2 pr-3">Cidade / UF</th>
                       <th className="py-2 pr-3">Situação</th>
+                      <th className="py-2 pr-3 text-right">Colaboradores</th>
                       <th className="py-2 pr-3 text-right">Cargos</th>
                       <th className="py-2 pr-3 text-right">Vagas</th>
                     </tr>
@@ -224,6 +225,11 @@ function PostosPage() {
                                 {p.ativo ? "Ativo" : "Inativo"}
                               </Badge>
                             </td>
+                            <td className="py-2 pr-3 text-right">
+                              <Badge variant={totalPessoas > 0 ? "secondary" : "outline"}>
+                                {totalPessoas}
+                              </Badge>
+                            </td>
                             <td className="py-2 pr-3 text-right text-muted-foreground">
                               {cargos.length > 0 ? (
                                 <span className="inline-flex flex-wrap justify-end gap-x-2 gap-y-0.5 text-xs">
@@ -255,7 +261,7 @@ function PostosPage() {
                           </tr>
                           {expandido ? (
                             <tr className="border-b last:border-0 bg-muted/30">
-                              <td colSpan={6} className="px-3 py-3">
+                              <td colSpan={7} className="px-3 py-3">
                                 {cargosQuery.isLoading ? (
                                   <p className="text-sm text-muted-foreground">
                                     Carregando cargos...

@@ -144,7 +144,14 @@ function normalizarCargo(raw: string | null | undefined): string {
   const limpo = (raw ?? "").toUpperCase().replace(/\s+/g, " ").trim();
   if (!limpo) return "Sem cargo informado";
 
-  if (limpo.includes("AUXILIAR") && limpo.includes("LIMPEZA")) return "AUXILIAR DE LIMPEZA";
+  if (
+    (limpo.includes("AUXILIAR") && limpo.includes("LIMPEZA")) ||
+    limpo.includes("AUXILIAR DE SERVICOS GERAIS") ||
+    limpo.includes("AUXILIAR DE SERVIÇOS GERAIS") ||
+    limpo.includes("SERVICOS GERAIS") ||
+    limpo.includes("SERVIÇOS GERAIS")
+  )
+    return "AUXILIAR DE LIMPEZA";
   if (limpo.includes("PORTEIRO") || limpo.includes("PORTA")) {
     if (limpo.includes("II") || limpo.includes("2")) return "PORTEIRO II";
     if (limpo.includes("I") || limpo.includes("1") || limpo.includes("PRIMEIRO"))
