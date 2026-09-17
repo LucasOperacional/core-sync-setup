@@ -166,17 +166,21 @@ export const salvarRelatorioGeralMesa = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => relatorioGeralSchema.parse(input))
   .handler(async ({ context, data }): Promise<MesaResultado> => {
-    const { error } = await context.supabase.from("mesa_relatorios").upsert(
-      {
-        posto_id: null,
-        gerente_nome: data.gerenteNome.trim(),
-        data: data.data,
-        relatorio: data.relatorio.trim(),
-        registrado_por: context.userId,
-        registrado_em: new Date().toISOString(),
-      },
-      { onConflict: "gerente_nome,data" },
-    );
+    const gerente = data.gerenteNome.trim();
+    await context.supabase
+      .from("mesa_relatorios")
+      .delete()
+      .is("posto_id", null)
+      .eq("gerente_nome", gerente)
+      .eq("data", data.data);
+    const { error } = await context.supabase.from("mesa_relatorios").insert({
+      posto_id: null,
+      gerente_nome: gerente,
+      data: data.data,
+      relatorio: data.relatorio.trim(),
+      registrado_por: context.userId,
+      registrado_em: new Date().toISOString(),
+    });
     if (error) return { ok: false, erro: error.message };
     return { ok: true };
   });
