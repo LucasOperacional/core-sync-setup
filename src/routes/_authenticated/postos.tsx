@@ -248,6 +248,12 @@ function PostosPage() {
                   {new Date(postosQuery.data.atualizadoEm).toLocaleString("pt-BR")}
                 </span>
               ) : null}
+              {ultimaAuto ? (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  · sincronização automática às {new Date(ultimaAuto).toLocaleTimeString("pt-BR")}
+                </span>
+              ) : null}
+
             </CardTitle>
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative">
