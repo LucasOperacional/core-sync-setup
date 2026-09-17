@@ -108,10 +108,10 @@ function PostosPage() {
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(termo));
     });
-  }, [todos, busca, somenteComVaga]);
+  }, [permitidos, busca, somenteComVaga]);
 
-  const totalVagas = todos.reduce((s, p) => s + p.vagas, 0);
-  const comVagas = todos.filter((p) => p.vagas > 0).length;
+  const totalVagas = permitidos.reduce((s, p) => s + p.vagas, 0);
+  const comVagas = permitidos.filter((p) => p.vagas > 0).length;
 
   return (
     <div className="min-h-screen bg-background">
