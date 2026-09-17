@@ -45,6 +45,7 @@ import {
   nxsEmpresas,
   nxsPainel,
 } from "@/lib/nxs.functions";
+import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 
 export const Route = createFileRoute("/_authenticated/nxs-control")({
   head: () => ({

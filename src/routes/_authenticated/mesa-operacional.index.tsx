@@ -24,6 +24,7 @@ import { Progress } from "@/components/ui/progress";
 import { AREAS_GERENTES } from "@/lib/areas-gerentes";
 import { normalizarNome } from "@/lib/gerentes-area-a";
 import { COORDENADORES, coordenadorDoGerente, rotuloCoordenador } from "@/lib/coordenadores";
+import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 import {
   buscarPostosNexti,
   importarPostosMesaLote,
