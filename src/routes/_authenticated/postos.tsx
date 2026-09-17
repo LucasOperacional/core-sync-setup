@@ -81,14 +81,15 @@ function PostosPage() {
 
   const todos = postosQuery.data?.postos ?? [];
 
-  // Remove postos encerrados na NEXTI, da TEKTRON SEGURANÇA, os que começam
-  // com TS ou FGR, e os postos administrativos de afastados/demitidos/desaparecidos.
+  // Remove postos encerrados na NEXTI (data fim ou motivo preenchido), da
+  // TEKTRON SEGURANÇA, os que começam com TS ou FGR, e os postos
+  // administrativos de afastados/demitidos/desaparecidos.
   const permitidos = useMemo(
     () =>
       todos.filter((p) => {
-        if (!p.ativo || p.encerradoEm != null) return false;
+        if (!p.ativo || p.encerradoEm != null || p.motivoEncerramento != null) return false;
         const nome = p.nome.toUpperCase().trim();
-        if (/^(TS|FGR)[\s\-–.]/.test(nome) || nome === "TS" || nome === "FGR") return false;
+        if (/^(TS|FGR)(\s|[-–.])/.test(nome) || nome === "TS" || nome === "FGR") return false;
         const nomesBloqueados = [
           "AFASTADO INSS",
           "INSS",
