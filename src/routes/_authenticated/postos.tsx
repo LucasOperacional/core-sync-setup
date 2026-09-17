@@ -225,6 +225,11 @@ function PostosPage() {
                                 {p.ativo ? "Ativo" : "Inativo"}
                               </Badge>
                             </td>
+                            <td className="py-2 pr-3 text-right">
+                              <Badge variant={totalPessoas > 0 ? "secondary" : "outline"}>
+                                {totalPessoas}
+                              </Badge>
+                            </td>
                             <td className="py-2 pr-3 text-right text-muted-foreground">
                               {cargos.length > 0 ? (
                                 <span className="inline-flex flex-wrap justify-end gap-x-2 gap-y-0.5 text-xs">
