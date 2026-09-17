@@ -2,7 +2,15 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle2, Loader2, Search, Trash2, UserRound } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  FileText,
+  Loader2,
+  Search,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { FloatingNav } from "@/components/FloatingNav";
@@ -24,12 +32,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { normalizarNome } from "@/lib/gerentes-area-a";
+import { Textarea } from "@/components/ui/textarea";
 import {
   hojeBrasilia,
   listarPostosMesa,
   registrarCheckinMesa,
   removerPostoMesa,
   removerTodosPostosMesa,
+  salvarRelatorioMesa,
 } from "@/lib/mesa-operacional.functions";
 
 export const Route = createFileRoute("/_authenticated/mesa-operacional/$gerente")({
