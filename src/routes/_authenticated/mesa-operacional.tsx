@@ -1,12 +1,11 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowRight,
   Building2,
   CheckCircle2,
-  ChevronDown,
-  ChevronRight,
   Loader2,
   Plus,
   Search,
@@ -77,16 +76,6 @@ function MesaOperacionalPage() {
   const [loteBusca, setLoteBusca] = useState("");
   const [loteSelecao, setLoteSelecao] = useState<string[]>([]);
   const [loteTexto, setLoteTexto] = useState("");
-  const [gerentesAbertos, setGerentesAbertos] = useState<Set<string>>(() => new Set());
-
-  const toggleGerente = (gerente: string) => {
-    setGerentesAbertos((prev) => {
-      const next = new Set(prev);
-      if (next.has(gerente)) next.delete(gerente);
-      else next.add(gerente);
-      return next;
-    });
-  };
 
   const nexti = useQuery({
     queryKey: ["mesa-postos-nexti"],
@@ -554,26 +543,19 @@ function MesaOperacionalPage() {
                     {doCoordenador.map((grupo) => {
                       const total = grupo.lista.length;
                       const pct = total ? Math.round((grupo.feitos / total) * 100) : 0;
-                      const aberto = gerentesAbertos.has(grupo.gerente);
                       return (
-                        <Card key={grupo.gerente}>
+                        <Card key={grupo.gerente} className="group">
                           <CardHeader className="pb-3">
                             <CardTitle className="flex items-center justify-between gap-2 text-sm">
-                              <button
-                                type="button"
-                                onClick={() => toggleGerente(grupo.gerente)}
-                                className="group flex flex-1 items-center gap-2 text-left"
-                                aria-expanded={aberto}
-                                aria-controls={`posts-${grupo.gerente}`}
+                              <Link
+                                to="/mesa-operacional/$gerente"
+                                params={{ gerente: grupo.gerente }}
+                                className="flex flex-1 items-center gap-2 transition-colors hover:text-primary"
                               >
-                                {aberto ? (
-                                  <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
-                                ) : (
-                                  <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
-                                )}
+                                <ArrowRight className="size-4 shrink-0 text-muted-foreground group-hover:text-primary" />
                                 <UserRound className="size-4 shrink-0" />
                                 <span className="truncate">{grupo.gerente}</span>
-                              </button>
+                              </Link>
                               <span className="flex items-center gap-1.5">
                                 <Badge variant={pct === 100 && total > 0 ? "default" : "secondary"}>
                                   {grupo.feitos}/{total}
@@ -588,56 +570,6 @@ function MesaOperacionalPage() {
                             </CardTitle>
                             <Progress value={pct} className="h-1.5" />
                           </CardHeader>
-                          {aberto && (
-                            <CardContent id={`posts-${grupo.gerente}`} className="space-y-2">
-                              {total === 0 ? (
-                                <p className="text-xs text-muted-foreground">
-                                  Nenhum posto de serviço cadastrado para esta área.
-                                </p>
-                              ) : (
-                                grupo.lista.map((posto) => (
-                                  <div
-                                    key={posto.id}
-                                    className="flex items-start gap-3 rounded-lg border border-border px-3 py-2"
-                                  >
-                                    <Checkbox
-                                      checked={posto.checkFeito}
-                                      onCheckedChange={(v) =>
-                                        checkMut.mutate({ postoId: posto.id, feito: v === true })
-                                      }
-                                      aria-label={`Check-in do posto ${posto.nome}`}
-                                      className="mt-0.5"
-                                    />
-                                    <div className="min-w-0 flex-1">
-                                      <p className="truncate text-sm font-medium">{posto.nome}</p>
-                                      <p className="truncate text-xs text-muted-foreground">
-                                        {[posto.cliente, posto.localidade]
-                                          .filter(Boolean)
-                                          .join(" · ") || "Sem localidade"}
-                                      </p>
-                                      {posto.checkFeito && posto.checkEm ? (
-                                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
-                                          Check-in às{" "}
-                                          {new Date(posto.checkEm).toLocaleTimeString("pt-BR", {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                          })}
-                                        </p>
-                                      ) : null}
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => removerMut.mutate(posto.id)}
-                                      className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                                      aria-label={`Remover posto ${posto.nome}`}
-                                    >
-                                      <Trash2 className="size-4" />
-                                    </button>
-                                  </div>
-                                ))
-                              )}
-                            </CardContent>
-                          )}
                         </Card>
                       );
                     })}
