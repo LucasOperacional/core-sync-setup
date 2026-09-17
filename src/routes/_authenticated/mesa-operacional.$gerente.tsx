@@ -314,3 +314,66 @@ function GerentePostosPage() {
     </main>
   );
 }
+
+function RelatorioPosto({
+  postoId,
+  relatorio,
+  relatorioEm,
+  salvando,
+  onSalvar,
+}: {
+  postoId: string;
+  relatorio: string | null;
+  relatorioEm: string | null;
+  salvando: boolean;
+  onSalvar: (texto: string) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const [texto, setTexto] = useState(relatorio ?? "");
+
+  return (
+    <div className="mt-1.5">
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+        aria-expanded={aberto}
+        aria-label={`Relatório do posto ${postoId}`}
+      >
+        <FileText className="size-3.5" />
+        {relatorio ? "Ver/editar relatório" : "Adicionar relatório"}
+      </button>
+      {relatorio && relatorioEm ? (
+        <p className="text-[11px] text-muted-foreground">
+          Registrado em{" "}
+          {new Date(relatorioEm).toLocaleString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </p>
+      ) : null}
+      {aberto ? (
+        <div className="mt-1.5 space-y-1.5">
+          <Textarea
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            placeholder="Escreva o relatório deste posto..."
+            rows={3}
+            className="text-sm"
+          />
+          <Button
+            size="sm"
+            disabled={salvando || texto.trim().length === 0}
+            onClick={() => onSalvar(texto)}
+          >
+            {salvando ? <Loader2 className="size-4 animate-spin" /> : null}
+            Salvar relatório
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
