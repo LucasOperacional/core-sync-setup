@@ -350,6 +350,7 @@ export const importarPostosVagasNexti = createServerFn({ method: "POST" })
       const nomeLimpo = nome.toUpperCase().trim();
       // Postos administrativos que não devem ser listados como postos de serviço.
       if (nomeLimpo === "CIOP" || nomeLimpo.startsWith("CIOP ") || nomeLimpo.startsWith("CIOP-")) continue;
+      if (nomeLimpo === "CARGILL" || nomeLimpo.startsWith("CARGILL ") || nomeLimpo.startsWith("CARGILL-")) continue;
       const vagas = inteiro(
         escolher(item, ["vacantJob", "vacantJobs", "vagas", "vacancy", "vacancies"]),
       );
