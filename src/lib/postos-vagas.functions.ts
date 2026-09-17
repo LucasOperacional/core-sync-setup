@@ -167,10 +167,20 @@ export const listarCargosPorPosto = createServerFn({ method: "GET" })
     const porPosto: Record<string, Map<string, number>> = {};
     const tamanho = 1000;
 
+    // O cadastro de pessoas traz apenas o código do cargo; resolve o nome em nexti_careers.
+    const { data: careers, error: erroCareers } = await context.supabase
+      .from("nexti_careers")
+      .select("nexti_id, name");
+    if (erroCareers) return { ok: false, porPosto: {}, erro: erroCareers.message };
+    const nomeCargo = new Map<number, string>();
+    for (const c of careers ?? []) {
+      if (c.nexti_id != null && c.name) nomeCargo.set(Number(c.nexti_id), c.name);
+    }
+
     for (let pagina = 0; pagina < 20; pagina++) {
       const { data, error } = await context.supabase
         .from("nexti_persons")
-        .select("workplace_id, career_name, demission_date")
+        .select("workplace_id, career_id, career_name, demission_date")
         .range(pagina * tamanho, pagina * tamanho + tamanho - 1);
 
       if (error) return { ok: false, porPosto: {}, erro: error.message };
@@ -178,7 +188,10 @@ export const listarCargosPorPosto = createServerFn({ method: "GET" })
       for (const l of linhas) {
         if (l.demission_date) continue;
         if (l.workplace_id == null) continue;
-        const cargo = normalizarCargo(l.career_name);
+        const nome =
+          l.career_name ||
+          (l.career_id != null ? nomeCargo.get(Number(l.career_id)) : undefined);
+        const cargo = normalizarCargo(nome);
         const chave = String(l.workplace_id);
         const mapa = (porPosto[chave] ??= new Map());
         mapa.set(cargo, (mapa.get(cargo) ?? 0) + 1);
