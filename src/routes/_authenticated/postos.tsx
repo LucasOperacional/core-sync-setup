@@ -261,7 +261,7 @@ function PostosPage() {
                           </tr>
                           {expandido ? (
                             <tr className="border-b last:border-0 bg-muted/30">
-                              <td colSpan={6} className="px-3 py-3">
+                              <td colSpan={7} className="px-3 py-3">
                                 {cargosQuery.isLoading ? (
                                   <p className="text-sm text-muted-foreground">
                                     Carregando cargos...
