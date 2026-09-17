@@ -9,6 +9,8 @@ export type PostoVaga = {
   cidade: string | null;
   uf: string | null;
   ativo: boolean;
+  /** Data de encerramento do posto na NEXTI (null = ativo). */
+  encerradoEm: string | null;
   /** Quantidade de vagas disponíveis informada pela NEXTI (campo vacantJob). */
   vagas: number;
 };
