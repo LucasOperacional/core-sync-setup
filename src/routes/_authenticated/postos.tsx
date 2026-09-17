@@ -187,27 +187,80 @@ function PostosPage() {
                       <th className="py-2 pr-3">Cliente</th>
                       <th className="py-2 pr-3">Cidade / UF</th>
                       <th className="py-2 pr-3">Situação</th>
+                      <th className="py-2 pr-3 text-right">Cargos</th>
                       <th className="py-2 pr-3 text-right">Vagas</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filtrados.map((p) => (
-                      <tr key={`${p.nextiId ?? p.nome}`} className="border-b last:border-0">
-                        <td className="py-2 pr-3 font-medium">{p.nome}</td>
-                        <td className="py-2 pr-3 text-muted-foreground">{p.cliente ?? "—"}</td>
-                        <td className="py-2 pr-3 text-muted-foreground">
-                          {[p.cidade, p.uf].filter(Boolean).join(" / ") || "—"}
-                        </td>
-                        <td className="py-2 pr-3">
-                          <Badge variant={p.ativo ? "secondary" : "outline"}>
-                            {p.ativo ? "Ativo" : "Inativo"}
-                          </Badge>
-                        </td>
-                        <td className="py-2 pr-3 text-right">
-                          <Badge variant={p.vagas > 0 ? "default" : "outline"}>{p.vagas}</Badge>
-                        </td>
-                      </tr>
-                    ))}
+                    {filtrados.map((p) => {
+                      const chave = String(p.nextiId ?? p.nome);
+                      const cargos = p.nextiId
+                        ? (cargosQuery.data?.porPosto?.[String(p.nextiId)] ?? [])
+                        : [];
+                      const totalPessoas = cargos.reduce((s, c) => s + c.quantidade, 0);
+                      const expandido = aberto === chave;
+                      return (
+                        <React.Fragment key={chave}>
+                          <tr
+                            className="cursor-pointer border-b last:border-0 hover:bg-muted/40"
+                            onClick={() => setAberto(expandido ? null : chave)}
+                          >
+                            <td className="py-2 pr-3 font-medium">
+                              <span className="inline-flex items-center gap-1.5">
+                                {expandido ? (
+                                  <ChevronDown className="size-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="size-4 text-muted-foreground" />
+                                )}
+                                {p.nome}
+                              </span>
+                            </td>
+                            <td className="py-2 pr-3 text-muted-foreground">{p.cliente ?? "—"}</td>
+                            <td className="py-2 pr-3 text-muted-foreground">
+                              {[p.cidade, p.uf].filter(Boolean).join(" / ") || "—"}
+                            </td>
+                            <td className="py-2 pr-3">
+                              <Badge variant={p.ativo ? "secondary" : "outline"}>
+                                {p.ativo ? "Ativo" : "Inativo"}
+                              </Badge>
+                            </td>
+                            <td className="py-2 pr-3 text-right text-muted-foreground">
+                              {cargos.length > 0 ? `${cargos.length} · ${totalPessoas} pessoas` : "—"}
+                            </td>
+                            <td className="py-2 pr-3 text-right">
+                              <Badge variant={p.vagas > 0 ? "default" : "outline"}>{p.vagas}</Badge>
+                            </td>
+                          </tr>
+                          {expandido ? (
+                            <tr className="border-b last:border-0 bg-muted/30">
+                              <td colSpan={6} className="px-3 py-3">
+                                <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
+                                  Cargos lotados neste posto
+                                </p>
+                                {cargosQuery.isLoading ? (
+                                  <p className="text-sm text-muted-foreground">
+                                    Carregando cargos...
+                                  </p>
+                                ) : cargos.length === 0 ? (
+                                  <p className="text-sm text-muted-foreground">
+                                    Nenhum colaborador ativo lotado neste posto.
+                                  </p>
+                                ) : (
+                                  <div className="flex flex-wrap gap-2">
+                                    {cargos.map((c) => (
+                                      <Badge key={c.cargo} variant="secondary" className="gap-1.5">
+                                        {c.cargo}
+                                        <span className="font-semibold">{c.quantidade}</span>
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          ) : null}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
