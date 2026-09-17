@@ -62,6 +62,7 @@ import { Route as AssinarMovimentacaoTokenRouteImport } from './routes/assinar-m
 import { Route as AssinarTokenRouteImport } from './routes/assinar.$token'
 import { Route as AuthenticatedGerentesIndexRouteImport } from './routes/_authenticated/gerentes.index'
 import { Route as AuthenticatedGerentesSlugRouteImport } from './routes/_authenticated/gerentes.$slug'
+import { Route as AuthenticatedMesaOperacionalGerenteRouteImport } from './routes/_authenticated/mesa-operacional.$gerente'
 import { Route as AuthenticatedRelatoriosGerenteSlugRouteImport } from './routes/_authenticated/relatorios-gerente.$slug'
 import { Route as AuthenticatedRelatoriosVisitaIdRouteImport } from './routes/_authenticated/relatorios-visita.$id'
 import { Route as ApiPublicEvolutionWebhookRouteImport } from './routes/api/public/evolution-webhook'
@@ -380,6 +381,12 @@ const AuthenticatedGerentesSlugRoute =
     path: '/gerentes/$slug',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMesaOperacionalGerenteRoute =
+  AuthenticatedMesaOperacionalGerenteRouteImport.update({
+    id: '/$gerente',
+    path: '/$gerente',
+    getParentRoute: () => AuthenticatedMesaOperacionalRoute,
+  } as any)
 const AuthenticatedRelatoriosGerenteSlugRoute =
   AuthenticatedRelatoriosGerenteSlugRouteImport.update({
     id: '/relatorios-gerente/$slug',
@@ -534,7 +541,7 @@ export interface FileRoutesByFullPath {
   '/indicadores': typeof AuthenticatedIndicadoresRoute
   '/lgpd': typeof AuthenticatedLgpdRoute
   '/logs-atividades': typeof AuthenticatedLogsAtividadesRoute
-  '/mesa-operacional': typeof AuthenticatedMesaOperacionalRoute
+  '/mesa-operacional': typeof AuthenticatedMesaOperacionalRouteWithChildren
   '/movimentacao-posto': typeof AuthenticatedMovimentacaoPostoRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/nxs-control': typeof AuthenticatedNxsControlRoute
@@ -558,6 +565,7 @@ export interface FileRoutesByFullPath {
   '/assinar-movimentacao/$token': typeof AssinarMovimentacaoTokenRoute
   '/assinar/$token': typeof AssinarTokenRoute
   '/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
+  '/mesa-operacional/$gerente': typeof AuthenticatedMesaOperacionalGerenteRoute
   '/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
   '/relatorios-visita/$id': typeof AuthenticatedRelatoriosVisitaIdRoute
   '/api/public/evolution-webhook': typeof ApiPublicEvolutionWebhookRoute
@@ -609,7 +617,7 @@ export interface FileRoutesByTo {
   '/indicadores': typeof AuthenticatedIndicadoresRoute
   '/lgpd': typeof AuthenticatedLgpdRoute
   '/logs-atividades': typeof AuthenticatedLogsAtividadesRoute
-  '/mesa-operacional': typeof AuthenticatedMesaOperacionalRoute
+  '/mesa-operacional': typeof AuthenticatedMesaOperacionalRouteWithChildren
   '/movimentacao-posto': typeof AuthenticatedMovimentacaoPostoRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/nxs-control': typeof AuthenticatedNxsControlRoute
@@ -634,6 +642,7 @@ export interface FileRoutesByTo {
   '/assinar/$token': typeof AssinarTokenRoute
   '/': typeof AuthenticatedIndexRoute
   '/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
+  '/mesa-operacional/$gerente': typeof AuthenticatedMesaOperacionalGerenteRoute
   '/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
   '/relatorios-visita/$id': typeof AuthenticatedRelatoriosVisitaIdRoute
   '/api/public/evolution-webhook': typeof ApiPublicEvolutionWebhookRoute
@@ -687,7 +696,7 @@ export interface FileRoutesById {
   '/_authenticated/indicadores': typeof AuthenticatedIndicadoresRoute
   '/_authenticated/lgpd': typeof AuthenticatedLgpdRoute
   '/_authenticated/logs-atividades': typeof AuthenticatedLogsAtividadesRoute
-  '/_authenticated/mesa-operacional': typeof AuthenticatedMesaOperacionalRoute
+  '/_authenticated/mesa-operacional': typeof AuthenticatedMesaOperacionalRouteWithChildren
   '/_authenticated/movimentacao-posto': typeof AuthenticatedMovimentacaoPostoRoute
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/_authenticated/nxs-control': typeof AuthenticatedNxsControlRoute
@@ -712,6 +721,7 @@ export interface FileRoutesById {
   '/assinar/$token': typeof AssinarTokenRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
+  '/_authenticated/mesa-operacional/$gerente': typeof AuthenticatedMesaOperacionalGerenteRoute
   '/_authenticated/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
   '/_authenticated/relatorios-visita/$id': typeof AuthenticatedRelatoriosVisitaIdRoute
   '/api/public/evolution-webhook': typeof ApiPublicEvolutionWebhookRoute
@@ -790,6 +800,7 @@ export interface FileRouteTypes {
     | '/assinar-movimentacao/$token'
     | '/assinar/$token'
     | '/gerentes/$slug'
+    | '/mesa-operacional/$gerente'
     | '/relatorios-gerente/$slug'
     | '/relatorios-visita/$id'
     | '/api/public/evolution-webhook'
@@ -866,6 +877,7 @@ export interface FileRouteTypes {
     | '/assinar/$token'
     | '/'
     | '/gerentes/$slug'
+    | '/mesa-operacional/$gerente'
     | '/relatorios-gerente/$slug'
     | '/relatorios-visita/$id'
     | '/api/public/evolution-webhook'
@@ -943,6 +955,7 @@ export interface FileRouteTypes {
     | '/assinar/$token'
     | '/_authenticated/'
     | '/_authenticated/gerentes/$slug'
+    | '/_authenticated/mesa-operacional/$gerente'
     | '/_authenticated/relatorios-gerente/$slug'
     | '/_authenticated/relatorios-visita/$id'
     | '/api/public/evolution-webhook'
@@ -1373,6 +1386,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGerentesSlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/mesa-operacional/$gerente': {
+      id: '/_authenticated/mesa-operacional/$gerente'
+      path: '/$gerente'
+      fullPath: '/mesa-operacional/$gerente'
+      preLoaderRoute: typeof AuthenticatedMesaOperacionalGerenteRouteImport
+      parentRoute: typeof AuthenticatedMesaOperacionalRoute
+    }
     '/_authenticated/relatorios-gerente/$slug': {
       id: '/_authenticated/relatorios-gerente/$slug'
       path: '/relatorios-gerente/$slug'
@@ -1530,6 +1550,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedMesaOperacionalRouteChildren {
+  AuthenticatedMesaOperacionalGerenteRoute: typeof AuthenticatedMesaOperacionalGerenteRoute
+}
+
+const AuthenticatedMesaOperacionalRouteChildren: AuthenticatedMesaOperacionalRouteChildren =
+  {
+    AuthenticatedMesaOperacionalGerenteRoute:
+      AuthenticatedMesaOperacionalGerenteRoute,
+  }
+
+const AuthenticatedMesaOperacionalRouteWithChildren =
+  AuthenticatedMesaOperacionalRoute._addFileChildren(
+    AuthenticatedMesaOperacionalRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAberturaDeVagasRoute: typeof AuthenticatedAberturaDeVagasRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
@@ -1552,7 +1587,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndicadoresRoute: typeof AuthenticatedIndicadoresRoute
   AuthenticatedLgpdRoute: typeof AuthenticatedLgpdRoute
   AuthenticatedLogsAtividadesRoute: typeof AuthenticatedLogsAtividadesRoute
-  AuthenticatedMesaOperacionalRoute: typeof AuthenticatedMesaOperacionalRoute
+  AuthenticatedMesaOperacionalRoute: typeof AuthenticatedMesaOperacionalRouteWithChildren
   AuthenticatedMovimentacaoPostoRoute: typeof AuthenticatedMovimentacaoPostoRoute
   AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
   AuthenticatedNxsControlRoute: typeof AuthenticatedNxsControlRoute
@@ -1603,7 +1638,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndicadoresRoute: AuthenticatedIndicadoresRoute,
   AuthenticatedLgpdRoute: AuthenticatedLgpdRoute,
   AuthenticatedLogsAtividadesRoute: AuthenticatedLogsAtividadesRoute,
-  AuthenticatedMesaOperacionalRoute: AuthenticatedMesaOperacionalRoute,
+  AuthenticatedMesaOperacionalRoute:
+    AuthenticatedMesaOperacionalRouteWithChildren,
   AuthenticatedMovimentacaoPostoRoute: AuthenticatedMovimentacaoPostoRoute,
   AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
   AuthenticatedNxsControlRoute: AuthenticatedNxsControlRoute,
