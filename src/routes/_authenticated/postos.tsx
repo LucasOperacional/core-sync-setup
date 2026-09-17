@@ -271,24 +271,25 @@ function PostosPage() {
                                         Cargos principais
                                       </p>
                                       <div className="flex flex-wrap gap-2">
-                                        {cargos.filter((c) => c.principal).length === 0 ? (
-                                          <span className="text-sm text-muted-foreground">
-                                            Nenhum dos cargos principais lotado.
-                                          </span>
-                                        ) : (
-                                          cargos
-                                            .filter((c) => c.principal)
-                                            .map((c) => (
-                                              <Badge
-                                                key={c.cargo}
-                                                variant="default"
-                                                className="gap-1.5"
-                                              >
-                                                {c.cargo}
-                                                <span className="font-semibold">{c.quantidade}</span>
-                                              </Badge>
-                                            ))
-                                        )}
+                                        {[
+                                          "AUXILIAR DE LIMPEZA",
+                                          "PORTEIRO I",
+                                          "PORTEIRO II",
+                                          "VIGIA",
+                                        ].map((nome) => {
+                                          const q =
+                                            cargos.find((c) => c.cargo === nome)?.quantidade ?? 0;
+                                          return (
+                                            <Badge
+                                              key={nome}
+                                              variant={q === 0 ? "outline" : "default"}
+                                              className="gap-1.5"
+                                            >
+                                              {nome}
+                                              <span className="font-semibold">{q}</span>
+                                            </Badge>
+                                          );
+                                        })}
                                       </div>
                                     </div>
                                     <div>
