@@ -225,7 +225,29 @@ function PostosPage() {
                               </Badge>
                             </td>
                             <td className="py-2 pr-3 text-right text-muted-foreground">
-                              {cargos.length > 0 ? `${cargos.length} · ${totalPessoas} pessoas` : "—"}
+                              {cargos.length > 0 ? (
+                                <span className="inline-flex flex-wrap justify-end gap-x-2 gap-y-0.5 text-xs">
+                                  {[
+                                    ["AUX", "AUXILIAR DE LIMPEZA"],
+                                    ["P1", "PORTEIRO I"],
+                                    ["P2", "PORTEIRO II"],
+                                    ["VIG", "VIGIA"],
+                                  ].map(([sigla, nome]) => {
+                                    const q = cargos.find((c) => c.cargo === nome)?.quantidade ?? 0;
+                                    return (
+                                      <span
+                                        key={nome}
+                                        className={q === 0 ? "text-muted-foreground/60" : ""}
+                                        title={nome}
+                                      >
+                                        {sigla}: <strong>{q}</strong>
+                                      </span>
+                                    );
+                                  })}
+                                </span>
+                              ) : (
+                                "—"
+                              )}
                             </td>
                             <td className="py-2 pr-3 text-right">
                               <Badge variant={p.vagas > 0 ? "default" : "outline"}>{p.vagas}</Badge>
