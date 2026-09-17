@@ -184,6 +184,43 @@ function GerentePostosPage() {
               </Badge>
             </div>
             <Progress value={pct} className="h-2 w-full" />
+            <div className="flex w-full justify-end pt-1">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={postosDoGerente.length === 0 || removerTodosMut.isPending}
+                  >
+                    {removerTodosMut.isPending ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="size-4" />
+                    )}
+                    Remover todos os postos
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remover todos os postos?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Essa ação vai apagar todos os {postosDoGerente.length} posto(s) do gerente{" "}
+                      <strong>{gerente}</strong>. Os check-ins históricos também serão perdidos.
+                      Essa ação não pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => removerTodosMut.mutate()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Sim, remover todos
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </CardContent>
         </Card>
 
