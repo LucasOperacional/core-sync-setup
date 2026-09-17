@@ -81,9 +81,27 @@ function PostosPage() {
 
   const todos = postosQuery.data?.postos ?? [];
 
+  // Remove postos da TEKTRON SEGURANÇA e os que começam com TS ou FGR.
+  const permitidos = useMemo(
+    () =>
+      todos.filter((p) => {
+        const nome = p.nome.toUpperCase().trim();
+        if (/^(TS|FGR)[\s\-–.]/.test(nome) || nome === "TS" || nome === "FGR") return false;
+        const contexto = [p.empresa, p.cliente, p.nome]
+          .filter(Boolean)
+          .join(" ")
+          .toUpperCase()
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "");
+        if (contexto.includes("TEKTRON SEGURANCA")) return false;
+        return true;
+      }),
+    [todos],
+  );
+
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
-    return todos.filter((p) => {
+    return permitidos.filter((p) => {
       if (somenteComVaga && p.vagas <= 0) return false;
       if (!termo) return true;
       return [p.nome, p.cliente, p.empresa, p.cidade, p.uf]
