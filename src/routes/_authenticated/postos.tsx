@@ -45,6 +45,8 @@ function PostosPage() {
 
   const [busca, setBusca] = useState("");
   const [somenteComVaga, setSomenteComVaga] = useState(false);
+  const [aberto, setAberto] = useState<string | null>(null);
+  const listarCargos = useServerFn(listarCargosPorPosto);
 
   // A página abre primeiro; os dados da NEXTI entram depois (regra global).
   const pronto = useNextiDiferido();
