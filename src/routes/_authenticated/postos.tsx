@@ -137,8 +137,8 @@ function PostosPage() {
   const todos = postosQuery.data?.postos ?? [];
 
   // Remove postos encerrados na NEXTI (data fim ou motivo preenchido), da
-  // TEKTRON SEGURANÇA, os que começam com TS ou FGR, e os postos
-  // administrativos de afastados/demitidos/desaparecidos.
+  // TEKTRON SEGURANÇA, os que começam com TS ou FGR, os postos
+  // administrativos de afastados/demitidos/desaparecidos e o posto CIOP.
   const permitidos = useMemo(
     () =>
       todos.filter((p) => {
@@ -152,6 +152,7 @@ function PostosPage() {
           "MATERNIDADE",
           "DESAPARECIDOS",
           "DEMITIDOS",
+          "CIOP",
         ];
         if (nomesBloqueados.includes(nome)) return false;
         const contexto = [p.empresa, p.cliente, p.nome]
