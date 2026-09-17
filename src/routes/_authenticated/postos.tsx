@@ -144,7 +144,8 @@ function PostosPage() {
       todos.filter((p) => {
         if (!p.ativo || p.encerradoEm != null || p.motivoEncerramento != null) return false;
         const nome = p.nome.toUpperCase().trim();
-        if (/^(TS|FGR)(\s|[-–.])/.test(nome) || nome === "TS" || nome === "FGR") return false;
+        // Remove postos da FGR ou TS, tanto no início do nome quanto no contexto.
+        if (/^(TS|FGR)\b/i.test(nome) || nome === "TS" || nome === "FGR") return false;
         const nomesBloqueados = [
           "AFASTADO INSS",
           "INSS",
@@ -160,6 +161,7 @@ function PostosPage() {
           .normalize("NFD")
           .replace(/[̀-ͯ]/g, "");
         if (contexto.includes("TEKTRON SEGURANCA")) return false;
+        if (contexto.includes("FGR")) return false;
         return true;
       }),
     [todos],
