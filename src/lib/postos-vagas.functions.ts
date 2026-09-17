@@ -1,0 +1,231 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+export type PostoVaga = {
+  nextiId: number | null;
+  nome: string;
+  cliente: string | null;
+  empresa: string | null;
+  cidade: string | null;
+  uf: string | null;
+  ativo: boolean;
+  /** Quantidade de vagas disponíveis informada pela NEXTI (campo vacantJob). */
+  vagas: number;
+};
+
+export type PostosVagasResultado = {
+  ok: boolean;
+  postos: PostoVaga[];
+  atualizadoEm: string | null;
+  erro?: string;
+};
+
+export type ImportarVagasResultado = {
+  ok: boolean;
+  lidos: number;
+  gravados: number;
+  totalVagas: number;
+  erro?: string;
+};
+
+type Rec = Record<string, unknown>;
+
+function ehRec(v: unknown): v is Rec {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function escolher(obj: Rec, chaves: string[]): unknown {
+  const lower = new Map(Object.keys(obj).map((k) => [k.toLowerCase(), k]));
+  for (const k of chaves) {
+    const real = lower.get(k.toLowerCase());
+    if (!real) continue;
+    const valor = obj[real];
+    if (valor !== undefined && valor !== null && valor !== "") return valor;
+  }
+  return undefined;
+}
+
+function texto(v: unknown): string | null {
+  if (typeof v === "string") return v.trim() || null;
+  if (typeof v === "number") return String(v);
+  if (ehRec(v)) {
+    const nome = escolher(v, ["name", "nome", "description", "fantasyName"]);
+    if (typeof nome === "string") return nome.trim() || null;
+  }
+  return null;
+}
+
+function inteiro(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
+}
+
+function listaDoPayload(payload: unknown): Rec[] {
+  if (Array.isArray(payload)) return payload.filter(ehRec);
+  if (!ehRec(payload)) return [];
+  for (const k of ["content", "data", "items", "list", "records", "result", "results", "rows"]) {
+    const v = payload[k];
+    if (Array.isArray(v)) return v.filter(ehRec);
+    if (ehRec(v)) {
+      const aninhado = listaDoPayload(v);
+      if (aninhado.length > 0) return aninhado;
+    }
+  }
+  return [];
+}
+
+type LinhaBanco = {
+  nexti_id: number | null;
+  name: string | null;
+  client_name: string | null;
+  company_name: string | null;
+  city: string | null;
+  state: string | null;
+  active: boolean | null;
+  vacant_job: number | null;
+  last_synced_at?: string | null;
+};
+
+function paraPosto(row: LinhaBanco): PostoVaga {
+  return {
+    nextiId: row.nexti_id ?? null,
+    nome: row.name ?? "",
+    cliente: row.client_name,
+    empresa: row.company_name,
+    cidade: row.city,
+    uf: row.state,
+    ativo: row.active ?? true,
+    vagas: row.vacant_job ?? 0,
+  };
+}
+
+/** Lista os postos já importados, com a quantidade de vagas de cada um. */
+export const listarPostosVagas = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<PostosVagasResultado> => {
+    const { data, error } = await context.supabase
+      .from("nexti_workplaces")
+      .select("nexti_id, name, client_name, company_name, city, state, active, vacant_job, last_synced_at")
+      .order("name", { ascending: true })
+      .limit(5000);
+
+    if (error) return { ok: false, postos: [], atualizadoEm: null, erro: error.message };
+
+    const linhas = (data ?? []) as LinhaBanco[];
+    const atualizadoEm = linhas
+      .map((l) => l.last_synced_at ?? null)
+      .filter((v): v is string => Boolean(v))
+      .sort()
+      .at(-1) ?? null;
+
+    return {
+      ok: true,
+      atualizadoEm,
+      postos: linhas.filter((l) => (l.name ?? "").trim().length > 0).map(paraPosto),
+    };
+  });
+
+/**
+ * Importa automaticamente os postos da NEXTI, reconhecendo a quantidade de
+ * vagas disponíveis de cada posto (campo `vacantJob` da API).
+ */
+export const importarPostosVagasNexti = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<ImportarVagasResultado> => {
+    const { loadConfig, normalizeBaseUrl, requestNexti } = await import("@/lib/nexti.functions");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    let config;
+    try {
+      const bruta = await loadConfig(context.supabase as never);
+      config = { ...bruta, baseUrl: normalizeBaseUrl(bruta.baseUrl) };
+    } catch (e) {
+      return {
+        ok: false,
+        lidos: 0,
+        gravados: 0,
+        totalVagas: 0,
+        erro: e instanceof Error ? e.message : "Configuração da NEXTI indisponível.",
+      };
+    }
+
+    const coletados: Rec[] = [];
+    let erro: string | undefined;
+
+    for (const endpoint of ["/api/workplaces/all", "/workplaces/all", "/api/workplace/all"]) {
+      try {
+        const parcial: Rec[] = [];
+        for (let page = 0; page < 40; page++) {
+          const resposta = await requestNexti({
+            config,
+            endpoint,
+            method: "GET",
+            query: { page, size: 200 },
+          });
+          const lista = listaDoPayload(resposta.data);
+          if (lista.length === 0) break;
+          parcial.push(...lista);
+          if (lista.length < 200) break;
+        }
+        if (parcial.length > 0) {
+          coletados.push(...parcial);
+          break;
+        }
+      } catch (e) {
+        erro = e instanceof Error ? e.message : String(e);
+      }
+    }
+
+    if (coletados.length === 0) {
+      return {
+        ok: false,
+        lidos: 0,
+        gravados: 0,
+        totalVagas: 0,
+        erro: erro ?? "A API da NEXTI não retornou postos de serviço.",
+      };
+    }
+
+    const agora = new Date().toISOString();
+    const porId = new Map<number, LinhaBanco & { updated_at: string; raw_payload: unknown }>();
+    let totalVagas = 0;
+
+    for (const item of coletados) {
+      const id = Number(escolher(item, ["id", "nextiId", "workplaceId"]));
+      const nome = texto(escolher(item, ["name", "nome", "description", "workplaceName"]));
+      if (!Number.isFinite(id) || !nome) continue;
+      const vagas = inteiro(
+        escolher(item, ["vacantJob", "vacantJobs", "vagas", "vacancy", "vacancies"]),
+      );
+      totalVagas += vagas;
+      porId.set(id, {
+        nexti_id: id,
+        name: nome,
+        client_name: texto(escolher(item, ["clientName", "cliente", "customerName"])),
+        company_name: texto(escolher(item, ["companyName", "empresa"])),
+        city: texto(escolher(item, ["cityName", "city", "cidade"])),
+        state: texto(escolher(item, ["federatedUnitInitials", "state", "uf", "estado"])),
+        active: escolher(item, ["active"]) !== false,
+        vacant_job: vagas,
+        last_synced_at: agora,
+        updated_at: agora,
+        raw_payload: item,
+      });
+    }
+
+    const linhas = [...porId.values()];
+    let gravados = 0;
+
+    for (let i = 0; i < linhas.length; i += 250) {
+      const bloco = linhas.slice(i, i + 250);
+      const { error } = await supabaseAdmin
+        .from("nexti_workplaces")
+        .upsert(bloco as never, { onConflict: "nexti_id" });
+      if (error) {
+        return { ok: false, lidos: coletados.length, gravados, totalVagas, erro: error.message };
+      }
+      gravados += bloco.length;
+    }
+
+    return { ok: true, lidos: coletados.length, gravados, totalVagas };
+  });
