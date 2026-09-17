@@ -89,7 +89,7 @@ function PostosPage() {
       todos.filter((p) => {
         if (!p.ativo || p.encerradoEm != null || p.motivoEncerramento != null) return false;
         const nome = p.nome.toUpperCase().trim();
-        if (/^(TS|FGR)[\s\–-.]/.test(nome) || nome === "TS" || nome === "FGR") return false;
+        if (/^(TS|FGR)(\s|[-–.])/.test(nome) || nome === "TS" || nome === "FGR") return false;
         const nomesBloqueados = [
           "AFASTADO INSS",
           "INSS",
