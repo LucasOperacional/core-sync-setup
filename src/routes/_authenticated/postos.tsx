@@ -187,19 +187,33 @@ function PostosPage() {
         icon={Building2}
         description="Importe os postos direto da NEXTI, reconhecendo automaticamente a quantidade de vagas disponíveis em cada posto."
         actions={
-          <Button
-            onClick={() => importacao.mutate()}
-            disabled={importacao.isPending}
-            className="gap-2"
-          >
-            {importacao.isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Download className="size-4" />
-            )}
-            {importacao.isPending ? "Importando..." : "Importar postos da NEXTI"}
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+              <RefreshCw
+                className={`size-4 text-muted-foreground ${
+                  auto && importacao.isPending ? "animate-spin" : ""
+                }`}
+              />
+              <Label htmlFor="sync-auto" className="cursor-pointer text-sm">
+                Sincronizar automaticamente
+              </Label>
+              <Switch id="sync-auto" checked={auto} onCheckedChange={alternarAuto} />
+            </div>
+            <Button
+              onClick={() => importacao.mutate({ silencioso: false })}
+              disabled={importacao.isPending}
+              className="gap-2"
+            >
+              {importacao.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Download className="size-4" />
+              )}
+              {importacao.isPending ? "Importando..." : "Importar postos da NEXTI"}
+            </Button>
+          </div>
         }
+
       />
 
       <div className="mx-auto max-w-[88rem] space-y-4 px-4 py-6 sm:px-6 lg:px-8">
