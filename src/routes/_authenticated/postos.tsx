@@ -166,6 +166,7 @@ function PostosPage() {
         if (contexto.includes("CARGILL")) return false;
         if (contexto.includes("FERISTA")) return false;
         if (contexto.includes("JOVEM APRENDIZ")) return false;
+        if (nome.startsWith("RESERVA -")) return false;
         return true;
       }),
     [todos],
