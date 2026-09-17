@@ -2041,6 +2041,9 @@ export type Database = {
         Row: {
           data: string
           feito: boolean
+          gerente_relatorio: string | null
+          gerente_relatorio_em: string | null
+          gerente_relatorio_por: string | null
           id: string
           observacao: string | null
           posto_id: string
@@ -2051,6 +2054,9 @@ export type Database = {
         Insert: {
           data?: string
           feito?: boolean
+          gerente_relatorio?: string | null
+          gerente_relatorio_em?: string | null
+          gerente_relatorio_por?: string | null
           id?: string
           observacao?: string | null
           posto_id: string
@@ -2061,6 +2067,9 @@ export type Database = {
         Update: {
           data?: string
           feito?: boolean
+          gerente_relatorio?: string | null
+          gerente_relatorio_em?: string | null
+          gerente_relatorio_por?: string | null
           id?: string
           observacao?: string | null
           posto_id?: string
