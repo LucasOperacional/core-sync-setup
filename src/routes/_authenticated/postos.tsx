@@ -29,6 +29,8 @@ import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 
 const CHAVE_AUTO = "postos-sync-automatica-v1";
 const INTERVALO_MS = 30 * 60 * 1000; // 30 minutos
+const CHAVE_AUTO_CONTAGEM = "postos-contagem-automatica-v1";
+const INTERVALO_CONTAGEM_MS = 5 * 60 * 1000; // 5 minutos
 
 
 export const Route = createFileRoute("/_authenticated/postos")({
