@@ -101,7 +101,7 @@ function GerentePostosPage() {
       <div className="mx-auto w-full max-w-4xl space-y-6">
         <header className="space-y-2">
           <Link
-            to="/_authenticated/mesa-operacional"
+            to="/mesa-operacional"
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-4" /> Voltar à Mesa Operacional
