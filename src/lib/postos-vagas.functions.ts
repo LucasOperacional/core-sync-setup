@@ -49,6 +49,34 @@ function escolher(obj: Rec, chaves: string[]): unknown {
   return undefined;
 }
 
+/** Converte datas da NEXTI (ddMMyyyyHHmmss, ddMMyyyy, dd/MM/yyyy, ISO) para YYYY-MM-DD. */
+function normalizarData(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  if (!s) return null;
+  const digitos = s.replace(/\D/g, "");
+  if (/^\d{14}$/.test(digitos) || /^\d{8}$/.test(digitos)) {
+    const dia = digitos.slice(0, 2);
+    const mes = digitos.slice(2, 4);
+    const ano = digitos.slice(4, 8);
+    const d = Number(dia);
+    const m = Number(mes);
+    const a = Number(ano);
+    if (d >= 1 && d <= 31 && m >= 1 && m <= 12 && a >= 1900 && a <= 2200) {
+      return `${ano}-${mes}-${dia}`;
+    }
+    return null;
+  }
+  const br = s.match(/^(\d{2})[/-](\d{2})[/-](\d{4})/);
+  if (br) return `${br[3]}-${br[2]}-${br[1]}`;
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const dt = new Date(s);
+  if (!Number.isNaN(dt.getTime())) return dt.toISOString().slice(0, 10);
+  return null;
+}
+
+
 function texto(v: unknown): string | null {
   if (typeof v === "string") return v.trim() || null;
   if (typeof v === "number") return String(v);
