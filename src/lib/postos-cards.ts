@@ -382,8 +382,9 @@ export function useCategoriasPostos() {
 
   return {
     categorias,
-    carregando:
-      (pessoasQuery.isLoading && !pessoasQuery.data) || (nextiQuery.isLoading && !nextiQuery.data),
+    // A consulta ao vivo da NEXTI é lenta (API externa) e NÃO deve segurar a tela:
+    // os cards aparecem com os dados do banco e são completados quando ela chega.
+    carregando: pessoasQuery.isLoading && !pessoasQuery.data,
     atualizando: pessoasQuery.isFetching || nextiQuery.isFetching,
     erroNexti: nextiQuery.isError || nextiQuery.data?.ok === false,
   };
