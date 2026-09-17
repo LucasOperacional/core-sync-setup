@@ -133,6 +133,20 @@ export const removerPostoMesa = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const removerTodosSchema = z.object({ gerenteNome: z.string().min(2) });
+
+export const removerTodosPostosMesa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => removerTodosSchema.parse(input))
+  .handler(async ({ context, data }): Promise<MesaResultado> => {
+    const { error } = await context.supabase
+      .from("mesa_postos_servico")
+      .delete()
+      .eq("gerente_nome", data.gerenteNome.trim());
+    if (error) return { ok: false, erro: error.message };
+    return { ok: true };
+  });
+
 export const registrarCheckinMesa = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => checkSchema.parse(input))

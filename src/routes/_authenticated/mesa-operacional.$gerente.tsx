@@ -6,6 +6,18 @@ import { ArrowLeft, CheckCircle2, Loader2, Search, Trash2, UserRound } from "luc
 import { toast } from "sonner";
 
 import { FloatingNav } from "@/components/FloatingNav";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -17,6 +29,7 @@ import {
   listarPostosMesa,
   registrarCheckinMesa,
   removerPostoMesa,
+  removerTodosPostosMesa,
 } from "@/lib/mesa-operacional.functions";
 
 export const Route = createFileRoute("/_authenticated/mesa-operacional/$gerente")({
@@ -73,6 +86,19 @@ function GerentePostosPage() {
         return;
       }
       toast.success("Posto removido");
+      atualizar();
+    },
+  });
+
+  const removerTodos = useServerFn(removerTodosPostosMesa);
+  const removerTodosMut = useMutation({
+    mutationFn: () => removerTodos({ data: { gerenteNome: gerente } }),
+    onSuccess: (r) => {
+      if (!r.ok) {
+        toast.error(r.erro || "Não foi possível remover todos os postos");
+        return;
+      }
+      toast.success("Todos os postos deste gerente foram removidos");
       atualizar();
     },
   });
@@ -158,6 +184,43 @@ function GerentePostosPage() {
               </Badge>
             </div>
             <Progress value={pct} className="h-2 w-full" />
+            <div className="flex w-full justify-end pt-1">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={postosDoGerente.length === 0 || removerTodosMut.isPending}
+                  >
+                    {removerTodosMut.isPending ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="size-4" />
+                    )}
+                    Remover todos os postos
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remover todos os postos?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Essa ação vai apagar todos os {postosDoGerente.length} posto(s) do gerente{" "}
+                      <strong>{gerente}</strong>. Os check-ins históricos também serão perdidos.
+                      Essa ação não pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => removerTodosMut.mutate()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Sim, remover todos
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </CardContent>
         </Card>
 
