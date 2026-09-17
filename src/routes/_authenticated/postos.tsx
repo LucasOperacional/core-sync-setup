@@ -225,7 +225,29 @@ function PostosPage() {
                               </Badge>
                             </td>
                             <td className="py-2 pr-3 text-right text-muted-foreground">
-                              {cargos.length > 0 ? `${cargos.length} · ${totalPessoas} pessoas` : "—"}
+                              {cargos.length > 0 ? (
+                                <span className="inline-flex flex-wrap justify-end gap-x-2 gap-y-0.5 text-xs">
+                                  {[
+                                    ["AUX", "AUXILIAR DE LIMPEZA"],
+                                    ["P1", "PORTEIRO I"],
+                                    ["P2", "PORTEIRO II"],
+                                    ["VIG", "VIGIA"],
+                                  ].map(([sigla, nome]) => {
+                                    const q = cargos.find((c) => c.cargo === nome)?.quantidade ?? 0;
+                                    return (
+                                      <span
+                                        key={nome}
+                                        className={q === 0 ? "text-muted-foreground/60" : ""}
+                                        title={nome}
+                                      >
+                                        {sigla}: <strong>{q}</strong>
+                                      </span>
+                                    );
+                                  })}
+                                </span>
+                              ) : (
+                                "—"
+                              )}
                             </td>
                             <td className="py-2 pr-3 text-right">
                               <Badge variant={p.vagas > 0 ? "default" : "outline"}>{p.vagas}</Badge>
@@ -249,24 +271,25 @@ function PostosPage() {
                                         Cargos principais
                                       </p>
                                       <div className="flex flex-wrap gap-2">
-                                        {cargos.filter((c) => c.principal).length === 0 ? (
-                                          <span className="text-sm text-muted-foreground">
-                                            Nenhum dos cargos principais lotado.
-                                          </span>
-                                        ) : (
-                                          cargos
-                                            .filter((c) => c.principal)
-                                            .map((c) => (
-                                              <Badge
-                                                key={c.cargo}
-                                                variant="default"
-                                                className="gap-1.5"
-                                              >
-                                                {c.cargo}
-                                                <span className="font-semibold">{c.quantidade}</span>
-                                              </Badge>
-                                            ))
-                                        )}
+                                        {[
+                                          "AUXILIAR DE LIMPEZA",
+                                          "PORTEIRO I",
+                                          "PORTEIRO II",
+                                          "VIGIA",
+                                        ].map((nome) => {
+                                          const q =
+                                            cargos.find((c) => c.cargo === nome)?.quantidade ?? 0;
+                                          return (
+                                            <Badge
+                                              key={nome}
+                                              variant={q === 0 ? "outline" : "default"}
+                                              className="gap-1.5"
+                                            >
+                                              {nome}
+                                              <span className="font-semibold">{q}</span>
+                                            </Badge>
+                                          );
+                                        })}
                                       </div>
                                     </div>
                                     <div>
