@@ -316,6 +316,12 @@ function PostosPage() {
                   · sincronização automática às {new Date(ultimaAuto).toLocaleTimeString("pt-BR")}
                 </span>
               ) : null}
+              {ultimaContagem ? (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  · contagem atualizada às{" "}
+                  {new Date(ultimaContagem).toLocaleTimeString("pt-BR")}
+                </span>
+              ) : null}
 
             </CardTitle>
             <div className="flex flex-wrap items-center gap-2">
