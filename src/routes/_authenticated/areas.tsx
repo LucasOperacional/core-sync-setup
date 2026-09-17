@@ -30,6 +30,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { AREAS_GERENTES, iniciaisGerente, nomeAmigavel } from "@/lib/areas-gerentes";
 import { normalizarNome } from "@/lib/gerentes-area-a";
+import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 import {
   listarPostosDoGerente,
   adicionarPostoAoGerente,
@@ -253,10 +254,12 @@ function PainelPostos({
     return () => clearTimeout(t);
   }, [buscaNexti]);
 
+  // A página abre primeiro; a busca de postos na NEXTI só dispara depois.
+  const nextiPronto = useNextiDiferido();
   const { data: resultadoNexti, isFetching: buscandoNexti } = useQuery({
     queryKey: ["postos-nexti", termoNexti],
     queryFn: () => buscarNexti({ data: { termo: termoNexti, limite: 50 } }),
-    enabled: isAdmin,
+    enabled: isAdmin && nextiPronto,
   });
 
   const todosPostos = data?.ok ? data.postos : [];

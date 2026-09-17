@@ -45,6 +45,7 @@ import {
   nxsEmpresas,
   nxsPainel,
 } from "@/lib/nxs.functions";
+import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 
 export const Route = createFileRoute("/_authenticated/nxs-control")({
   head: () => ({
@@ -121,9 +122,12 @@ function NxsControlPage() {
   const [novaEmpresa, setNovaEmpresa] = useState("");
   const [conectado, setConectado] = useState(false);
 
+  // A página abre primeiro; as empresas da NEXTI chegam em seguida.
+  const nextiPronto = useNextiDiferido();
   const empresasQuery = useQuery({
     queryKey: ["nxs-empresas"],
     queryFn: () => carregarEmpresas(),
+    enabled: nextiPronto,
   });
 
   const empresas = useMemo(() => empresasQuery.data ?? [], [empresasQuery.data]);

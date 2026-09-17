@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { syncNexti, type NextiModulo } from "@/lib/nexti-sync.functions";
+import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 import {
   invalidarConsultasProtocoloFolhas,
   notificarAtualizacaoProtocoloFolhas,
@@ -104,12 +105,16 @@ export function SincronizacaoAutomaticaNexti() {
     [queryClient],
   );
 
+  // A página abre primeiro; a sincronização automática com a NEXTI só
+  // começa depois que a tela já está visível (regra global).
+  const nextiPronto = useNextiDiferido();
+
   useEffect(() => {
-    if (!ativo) return;
+    if (!ativo || !nextiPronto) return;
     void sincronizar(false);
     const id = window.setInterval(() => void sincronizar(false), INTERVALO_MS);
     return () => window.clearInterval(id);
-  }, [ativo, sincronizar]);
+  }, [ativo, nextiPronto, sincronizar]);
 
   function alternar(valor: boolean) {
     setAtivo(valor);

@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Download, Home, LayoutDashboard, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { importarGerentesNexti, listarGerentesNexti } from "@/lib/gerentes-nexti.functions";
+import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 
 export const Route = createFileRoute("/_authenticated/gerentes/")({
   head: () => ({
@@ -31,9 +32,12 @@ function GerentesIndexPage() {
   const importar = useServerFn(importarGerentesNexti);
   const queryClient = useQueryClient();
 
+  // A página abre primeiro; a consulta à NEXTI só dispara depois (regra global).
+  const nextiPronto = useNextiDiferido();
   const gerentes = useQuery({
     queryKey: ["gerentes-nexti"],
     queryFn: () => listar(),
+    enabled: nextiPronto,
   });
 
   const importacao = useMutation({
