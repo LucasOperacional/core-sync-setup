@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Building2, ChevronDown, ChevronRight, Download, Loader2, Search } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import {
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  Download,
+  Loader2,
+  RefreshCw,
+  Search,
+} from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/PageHeader";
@@ -10,12 +18,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   importarPostosVagasNexti,
   listarCargosPorPosto,
   listarPostosVagas,
 } from "@/lib/postos-vagas.functions";
 import { useNextiDiferido } from "@/lib/use-nexti-diferido";
+
+const CHAVE_AUTO = "postos-sync-automatica-v1";
+const INTERVALO_MS = 30 * 60 * 1000; // 30 minutos
+
 
 export const Route = createFileRoute("/_authenticated/postos")({
   head: () => ({
@@ -64,20 +78,61 @@ function PostosPage() {
     staleTime: 300_000,
   });
 
+  const [auto, setAuto] = useState(false);
+  const [ultimaAuto, setUltimaAuto] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setAuto(window.localStorage.getItem(CHAVE_AUTO) === "1");
+  }, []);
+
   const importacao = useMutation({
-    mutationFn: () => importar(),
-    onSuccess: (r) => {
+    mutationFn: (opts?: { silencioso?: boolean }) =>
+      importar().then((r) => ({ r, silencioso: opts?.silencioso === true })),
+    onSuccess: ({ r, silencioso }) => {
       if (!r.ok) {
-        toast.error(r.erro ?? "Não foi possível importar os postos da NEXTI.");
+        if (!silencioso) toast.error(r.erro ?? "Não foi possível importar os postos da NEXTI.");
         return;
       }
-      toast.success(
-        `${r.gravados} postos importados da NEXTI · ${r.totalVagas} vagas disponíveis.`,
-      );
+      if (silencioso) {
+        setUltimaAuto(new Date().toISOString());
+      } else {
+        toast.success(
+          `${r.gravados} postos importados da NEXTI · ${r.totalVagas} vagas disponíveis.`,
+        );
+      }
       void queryClient.invalidateQueries({ queryKey: ["postos-vagas"] });
+      void queryClient.invalidateQueries({ queryKey: ["postos-cargos"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
   });
+
+  // Sincronização automática com a NEXTI a cada 30 minutos.
+  const importacaoRef = useRef(importacao);
+  importacaoRef.current = importacao;
+  useEffect(() => {
+    if (!auto || !pronto) return;
+    const rodar = () => {
+      if (importacaoRef.current.isPending) return;
+      importacaoRef.current.mutate({ silencioso: true });
+    };
+    rodar();
+    const id = window.setInterval(rodar, INTERVALO_MS);
+    return () => window.clearInterval(id);
+  }, [auto, pronto]);
+
+  const alternarAuto = (v: boolean) => {
+    setAuto(v);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(CHAVE_AUTO, v ? "1" : "0");
+    }
+    toast.success(
+      v
+        ? "Sincronização automática ativada: os postos são atualizados a cada 30 minutos."
+        : "Sincronização automática desativada.",
+    );
+  };
+
 
   const todos = postosQuery.data?.postos ?? [];
 
@@ -132,19 +187,33 @@ function PostosPage() {
         icon={Building2}
         description="Importe os postos direto da NEXTI, reconhecendo automaticamente a quantidade de vagas disponíveis em cada posto."
         actions={
-          <Button
-            onClick={() => importacao.mutate()}
-            disabled={importacao.isPending}
-            className="gap-2"
-          >
-            {importacao.isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Download className="size-4" />
-            )}
-            {importacao.isPending ? "Importando..." : "Importar postos da NEXTI"}
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+              <RefreshCw
+                className={`size-4 text-muted-foreground ${
+                  auto && importacao.isPending ? "animate-spin" : ""
+                }`}
+              />
+              <Label htmlFor="sync-auto" className="cursor-pointer text-sm">
+                Sincronizar automaticamente
+              </Label>
+              <Switch id="sync-auto" checked={auto} onCheckedChange={alternarAuto} />
+            </div>
+            <Button
+              onClick={() => importacao.mutate({ silencioso: false })}
+              disabled={importacao.isPending}
+              className="gap-2"
+            >
+              {importacao.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Download className="size-4" />
+              )}
+              {importacao.isPending ? "Importando..." : "Importar postos da NEXTI"}
+            </Button>
+          </div>
         }
+
       />
 
       <div className="mx-auto max-w-[88rem] space-y-4 px-4 py-6 sm:px-6 lg:px-8">
@@ -179,6 +248,12 @@ function PostosPage() {
                   {new Date(postosQuery.data.atualizadoEm).toLocaleString("pt-BR")}
                 </span>
               ) : null}
+              {ultimaAuto ? (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  · sincronização automática às {new Date(ultimaAuto).toLocaleTimeString("pt-BR")}
+                </span>
+              ) : null}
+
             </CardTitle>
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative">
