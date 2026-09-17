@@ -314,10 +314,8 @@ export const importarPostosVagasNexti = createServerFn({ method: "POST" })
       );
       totalVagas += vagas;
       const finishDateRaw = escolher(item, ["finishDate", "finish_date", "encerramento"]);
-      const finishDate =
-        typeof finishDateRaw === "string" && finishDateRaw.trim().length > 0
-          ? finishDateRaw.trim()
-          : null;
+      const finishDate = normalizarData(finishDateRaw);
+
       const motivoEncerramentoRaw = escolher(item, [
         "closingReason",
         "closing_reason",
