@@ -238,6 +238,7 @@ function MesaOperacionalPage() {
   }, [postos, busca]);
 
   const totalFeitos = postos.filter((p) => p.checkFeito).length;
+  const pctGeral = postos.length ? Math.round((totalFeitos / postos.length) * 100) : 0;
 
   return (
     <main className="min-h-screen px-4 py-8 pb-32">
@@ -280,9 +281,18 @@ function MesaOperacionalPage() {
                 />
               </div>
             </div>
-            <Badge variant="secondary" className="h-9 px-3 text-sm">
-              {totalFeitos} de {postos.length} com check-in
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="h-9 px-3 text-sm">
+                {totalFeitos} de {postos.length} com check-in
+              </Badge>
+              <Badge
+                variant={pctGeral === 100 && postos.length > 0 ? "default" : "outline"}
+                className="h-9 px-3 text-sm font-semibold"
+              >
+                {pctGeral}%
+              </Badge>
+            </div>
+            <Progress value={pctGeral} className="h-2 w-full" />
           </CardContent>
         </Card>
 
@@ -516,6 +526,9 @@ function MesaOperacionalPage() {
                     <Badge variant="secondary">
                       {feitos}/{totalPostos} check-ins
                     </Badge>
+                    <Badge variant="outline" className="font-semibold">
+                      {totalPostos ? Math.round((feitos / totalPostos) * 100) : 0}%
+                    </Badge>
                   </div>
                   <div className="grid gap-4 lg:grid-cols-2">
                     {doCoordenador.map((grupo) => {
@@ -529,9 +542,17 @@ function MesaOperacionalPage() {
                         <UserRound className="size-4" />
                         {grupo.gerente}
                       </span>
-                      <Badge variant={pct === 100 && total > 0 ? "default" : "secondary"}>
-                        {grupo.feitos}/{total}
-                      </Badge>
+                      <span className="flex items-center gap-1.5">
+                        <Badge variant={pct === 100 && total > 0 ? "default" : "secondary"}>
+                          {grupo.feitos}/{total}
+                        </Badge>
+                        <Badge
+                          variant={pct === 100 && total > 0 ? "default" : "outline"}
+                          className="font-semibold"
+                        >
+                          {pct}%
+                        </Badge>
+                      </span>
                     </CardTitle>
                     <Progress value={pct} className="h-1.5" />
                   </CardHeader>
