@@ -133,6 +133,42 @@ function PostosPage() {
     );
   };
 
+  // Atualização automática só da contagem (colaboradores/cargos e vagas),
+  // sem reimportar tudo da NEXTI.
+  const [autoContagem, setAutoContagem] = useState(false);
+  const [ultimaContagem, setUltimaContagem] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setAutoContagem(window.localStorage.getItem(CHAVE_AUTO_CONTAGEM) === "1");
+  }, []);
+
+  useEffect(() => {
+    if (!autoContagem || !pronto) return;
+    const rodar = () => {
+      void queryClient.invalidateQueries({ queryKey: ["postos-vagas"] });
+      void queryClient.invalidateQueries({ queryKey: ["postos-cargos"] });
+      setUltimaContagem(new Date().toISOString());
+    };
+    rodar();
+    const id = window.setInterval(rodar, INTERVALO_CONTAGEM_MS);
+    return () => window.clearInterval(id);
+  }, [autoContagem, pronto, queryClient]);
+
+  const alternarAutoContagem = (v: boolean) => {
+    setAutoContagem(v);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(CHAVE_AUTO_CONTAGEM, v ? "1" : "0");
+    }
+    toast.success(
+      v
+        ? "Contagem de postos atualizada automaticamente a cada 5 minutos."
+        : "Atualização automática da contagem desativada.",
+    );
+  };
+
+
+
 
   const todos = postosQuery.data?.postos ?? [];
 
