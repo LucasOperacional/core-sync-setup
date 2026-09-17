@@ -163,6 +163,7 @@ function PostosPage() {
           .replace(/[̀-ͯ]/g, "");
         if (contexto.includes("TEKTRON SEGURANCA")) return false;
         if (contexto.includes("FGR")) return false;
+        if (contexto.includes("CARGILL")) return false;
         return true;
       }),
     [todos],
