@@ -6,6 +6,18 @@ import { ArrowLeft, CheckCircle2, Loader2, Search, Trash2, UserRound } from "luc
 import { toast } from "sonner";
 
 import { FloatingNav } from "@/components/FloatingNav";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -17,6 +29,7 @@ import {
   listarPostosMesa,
   registrarCheckinMesa,
   removerPostoMesa,
+  removerTodosPostosMesa,
 } from "@/lib/mesa-operacional.functions";
 
 export const Route = createFileRoute("/_authenticated/mesa-operacional/$gerente")({
