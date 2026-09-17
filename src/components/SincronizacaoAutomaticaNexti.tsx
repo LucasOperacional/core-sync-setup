@@ -104,8 +104,12 @@ export function SincronizacaoAutomaticaNexti() {
     [queryClient],
   );
 
+  // A página abre primeiro; a sincronização automática com a NEXTI só
+  // começa depois que a tela já está visível (regra global).
+  const nextiPronto = useNextiDiferido();
+
   useEffect(() => {
-    if (!ativo) return;
+    if (!ativo || !nextiPronto) return;
     void sincronizar(false);
     const id = window.setInterval(() => void sincronizar(false), INTERVALO_MS);
     return () => window.clearInterval(id);

@@ -41,10 +41,13 @@ function semAcento(v: string): string {
  * direto da API da NEXTI, com filtro por periodo de demissao e busca por texto.
  */
 export function DemitidosNextiCard() {
+  // A página abre primeiro; a consulta à NEXTI só dispara depois (regra global).
+  const nextiPronto = useNextiDiferido();
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["nexti", "demitidos"],
     queryFn: () => listarDemitidosNexti(),
     staleTime: 60_000,
+    enabled: nextiPronto,
   });
 
   const [dia, setDia] = useState("");
