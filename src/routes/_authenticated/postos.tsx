@@ -81,12 +81,21 @@ function PostosPage() {
 
   const todos = postosQuery.data?.postos ?? [];
 
-  // Remove postos da TEKTRON SEGURANÇA e os que começam com TS ou FGR.
+  // Remove postos da TEKTRON SEGURANÇA, os que começam com TS ou FGR,
+  // e os postos administrativos de afastados/demitidos/desaparecidos.
   const permitidos = useMemo(
     () =>
       todos.filter((p) => {
         const nome = p.nome.toUpperCase().trim();
         if (/^(TS|FGR)[\s\-–.]/.test(nome) || nome === "TS" || nome === "FGR") return false;
+        const nomesBloqueados = [
+          "AFASTADO INSS",
+          "INSS",
+          "MATERNIDADE",
+          "DESAPARECIDOS",
+          "DEMITIDOS",
+        ];
+        if (nomesBloqueados.includes(nome)) return false;
         const contexto = [p.empresa, p.cliente, p.nome]
           .filter(Boolean)
           .join(" ")
