@@ -125,6 +125,53 @@ export const listarPostosVagas = createServerFn({ method: "GET" })
     };
   });
 
+export type CargoPosto = { cargo: string; quantidade: number };
+export type CargosPorPostoResultado = {
+  ok: boolean;
+  /** Chave: nexti_id do posto. */
+  porPosto: Record<string, CargoPosto[]>;
+  erro?: string;
+};
+
+/** Lista os cargos lotados em cada posto, a partir dos colaboradores ativos da NEXTI. */
+export const listarCargosPorPosto = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<CargosPorPostoResultado> => {
+    const porPosto: Record<string, Map<string, number>> = {};
+    const tamanho = 1000;
+
+    for (let pagina = 0; pagina < 20; pagina++) {
+      const { data, error } = await context.supabase
+        .from("nexti_persons")
+        .select("workplace_id, career_name, demission_date")
+        .range(pagina * tamanho, pagina * tamanho + tamanho - 1);
+
+      if (error) return { ok: false, porPosto: {}, erro: error.message };
+      const linhas = data ?? [];
+      for (const l of linhas) {
+        if (l.demission_date) continue;
+        if (l.workplace_id == null) continue;
+        const cargo = (l.career_name ?? "").trim() || "Sem cargo informado";
+        const chave = String(l.workplace_id);
+        const mapa = (porPosto[chave] ??= new Map());
+        mapa.set(cargo, (mapa.get(cargo) ?? 0) + 1);
+      }
+      if (linhas.length < tamanho) break;
+    }
+
+    return {
+      ok: true,
+      porPosto: Object.fromEntries(
+        Object.entries(porPosto).map(([k, m]) => [
+          k,
+          [...m.entries()]
+            .map(([cargo, quantidade]) => ({ cargo, quantidade }))
+            .sort((a, b) => b.quantidade - a.quantidade || a.cargo.localeCompare(b.cargo)),
+        ]),
+      ),
+    };
+  });
+
 /**
  * Importa automaticamente os postos da NEXTI, reconhecendo a quantidade de
  * vagas disponíveis de cada posto (campo `vacantJob` da API).
