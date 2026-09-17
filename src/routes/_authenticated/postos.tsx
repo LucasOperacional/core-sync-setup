@@ -29,6 +29,8 @@ import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 
 const CHAVE_AUTO = "postos-sync-automatica-v1";
 const INTERVALO_MS = 30 * 60 * 1000; // 30 minutos
+const CHAVE_AUTO_CONTAGEM = "postos-contagem-automatica-v1";
+const INTERVALO_CONTAGEM_MS = 5 * 60 * 1000; // 5 minutos
 
 
 export const Route = createFileRoute("/_authenticated/postos")({
@@ -133,6 +135,42 @@ function PostosPage() {
     );
   };
 
+  // Atualização automática só da contagem (colaboradores/cargos e vagas),
+  // sem reimportar tudo da NEXTI.
+  const [autoContagem, setAutoContagem] = useState(false);
+  const [ultimaContagem, setUltimaContagem] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setAutoContagem(window.localStorage.getItem(CHAVE_AUTO_CONTAGEM) === "1");
+  }, []);
+
+  useEffect(() => {
+    if (!autoContagem || !pronto) return;
+    const rodar = () => {
+      void queryClient.invalidateQueries({ queryKey: ["postos-vagas"] });
+      void queryClient.invalidateQueries({ queryKey: ["postos-cargos"] });
+      setUltimaContagem(new Date().toISOString());
+    };
+    rodar();
+    const id = window.setInterval(rodar, INTERVALO_CONTAGEM_MS);
+    return () => window.clearInterval(id);
+  }, [autoContagem, pronto, queryClient]);
+
+  const alternarAutoContagem = (v: boolean) => {
+    setAutoContagem(v);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(CHAVE_AUTO_CONTAGEM, v ? "1" : "0");
+    }
+    toast.success(
+      v
+        ? "Contagem de postos atualizada automaticamente a cada 5 minutos."
+        : "Atualização automática da contagem desativada.",
+    );
+  };
+
+
+
 
   const todos = postosQuery.data?.postos ?? [];
 
@@ -206,6 +244,24 @@ function PostosPage() {
               </Label>
               <Switch id="sync-auto" checked={auto} onCheckedChange={alternarAuto} />
             </div>
+            <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+              <RefreshCw
+                className={`size-4 text-muted-foreground ${
+                  autoContagem && (postosQuery.isFetching || cargosQuery.isFetching)
+                    ? "animate-spin"
+                    : ""
+                }`}
+              />
+              <Label htmlFor="sync-contagem" className="cursor-pointer text-sm">
+                Atualizar contagem automaticamente
+              </Label>
+              <Switch
+                id="sync-contagem"
+                checked={autoContagem}
+                onCheckedChange={alternarAutoContagem}
+              />
+            </div>
+
             <Button
               onClick={() => importacao.mutate({ silencioso: false })}
               disabled={importacao.isPending}
@@ -258,6 +314,12 @@ function PostosPage() {
               {ultimaAuto ? (
                 <span className="ml-2 text-xs font-normal text-muted-foreground">
                   · sincronização automática às {new Date(ultimaAuto).toLocaleTimeString("pt-BR")}
+                </span>
+              ) : null}
+              {ultimaContagem ? (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  · contagem atualizada às{" "}
+                  {new Date(ultimaContagem).toLocaleTimeString("pt-BR")}
                 </span>
               ) : null}
 
