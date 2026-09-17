@@ -287,6 +287,15 @@ function GerentePostosPage() {
                       })}
                     </p>
                   ) : null}
+                  <RelatorioPosto
+                    postoId={posto.id}
+                    relatorio={posto.relatorio}
+                    relatorioEm={posto.relatorioEm}
+                    salvando={relatorioMut.isPending}
+                    onSalvar={(texto) =>
+                      relatorioMut.mutate({ postoId: posto.id, relatorio: texto })
+                    }
+                  />
                 </div>
                 <button
                   type="button"
