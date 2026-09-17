@@ -9,6 +9,8 @@ export type PostoVaga = {
   cidade: string | null;
   uf: string | null;
   ativo: boolean;
+  /** Data de encerramento do posto na NEXTI (null = ativo). */
+  encerradoEm: string | null;
   /** Quantidade de vagas disponíveis informada pela NEXTI (campo vacantJob). */
   vagas: number;
 };
@@ -82,6 +84,7 @@ type LinhaBanco = {
   city: string | null;
   state: string | null;
   active: boolean | null;
+  finish_date: string | null;
   vacant_job: number | null;
   last_synced_at?: string | null;
 };
@@ -95,6 +98,7 @@ function paraPosto(row: LinhaBanco): PostoVaga {
     cidade: row.city,
     uf: row.state,
     ativo: row.active ?? true,
+    encerradoEm: row.finish_date ?? null,
     vagas: row.vacant_job ?? 0,
   };
 }
@@ -105,7 +109,9 @@ export const listarPostosVagas = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<PostosVagasResultado> => {
     const { data, error } = await context.supabase
       .from("nexti_workplaces")
-      .select("nexti_id, name, client_name, company_name, city, state, active, vacant_job, last_synced_at")
+      .select(
+        "nexti_id, name, client_name, company_name, city, state, active, finish_date, vacant_job, last_synced_at",
+      )
       .order("name", { ascending: true })
       .limit(5000);
 
@@ -121,7 +127,10 @@ export const listarPostosVagas = createServerFn({ method: "GET" })
     return {
       ok: true,
       atualizadoEm,
-      postos: linhas.filter((l) => (l.name ?? "").trim().length > 0).map(paraPosto),
+      postos: linhas
+        .filter((l) => (l.name ?? "").trim().length > 0)
+        .filter((l) => l.active !== false && l.finish_date == null)
+        .map(paraPosto),
     };
   });
 
@@ -295,6 +304,11 @@ export const importarPostosVagasNexti = createServerFn({ method: "POST" })
         escolher(item, ["vacantJob", "vacantJobs", "vagas", "vacancy", "vacancies"]),
       );
       totalVagas += vagas;
+      const finishDateRaw = escolher(item, ["finishDate", "finish_date", "encerramento"]);
+      const finishDate =
+        typeof finishDateRaw === "string" && finishDateRaw.trim().length > 0
+          ? finishDateRaw.trim()
+          : null;
       porId.set(id, {
         nexti_id: id,
         name: nome,
@@ -302,7 +316,8 @@ export const importarPostosVagasNexti = createServerFn({ method: "POST" })
         company_name: texto(escolher(item, ["companyName", "empresa"])),
         city: texto(escolher(item, ["cityName", "city", "cidade"])),
         state: texto(escolher(item, ["federatedUnitInitials", "state", "uf", "estado"])),
-        active: escolher(item, ["active"]) !== false,
+        active: escolher(item, ["active"]) !== false && finishDate == null,
+        finish_date: finishDate,
         vacant_job: vagas,
         last_synced_at: agora,
         updated_at: agora,
