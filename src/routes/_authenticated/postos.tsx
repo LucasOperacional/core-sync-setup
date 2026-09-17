@@ -187,6 +187,7 @@ function PostosPage() {
                       <th className="py-2 pr-3">Cliente</th>
                       <th className="py-2 pr-3">Cidade / UF</th>
                       <th className="py-2 pr-3">Situação</th>
+                      <th className="py-2 pr-3 text-right">Colaboradores</th>
                       <th className="py-2 pr-3 text-right">Cargos</th>
                       <th className="py-2 pr-3 text-right">Vagas</th>
                     </tr>
