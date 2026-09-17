@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { listarDemitidosNexti } from "@/lib/nexti-demitidos.functions";
+import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 
 /** Converte a data recebida da NEXTI para o formato AAAA-MM-DD (comparavel). */
 function dataIso(valor: string | null): string | null {
