@@ -114,7 +114,7 @@ export function SincronizacaoAutomaticaNexti() {
     void sincronizar(false);
     const id = window.setInterval(() => void sincronizar(false), INTERVALO_MS);
     return () => window.clearInterval(id);
-  }, [ativo, sincronizar]);
+  }, [ativo, nextiPronto, sincronizar]);
 
   function alternar(valor: boolean) {
     setAtivo(valor);

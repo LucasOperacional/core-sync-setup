@@ -31,9 +31,12 @@ function GerentesIndexPage() {
   const importar = useServerFn(importarGerentesNexti);
   const queryClient = useQueryClient();
 
+  // A página abre primeiro; a consulta à NEXTI só dispara depois (regra global).
+  const nextiPronto = useNextiDiferido();
   const gerentes = useQuery({
     queryKey: ["gerentes-nexti"],
     queryFn: () => listar(),
+    enabled: nextiPronto,
   });
 
   const importacao = useMutation({
