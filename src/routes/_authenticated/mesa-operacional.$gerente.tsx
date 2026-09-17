@@ -34,11 +34,13 @@ import { Progress } from "@/components/ui/progress";
 import { normalizarNome } from "@/lib/gerentes-area-a";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  buscarRelatorioGeralMesa,
   hojeBrasilia,
   listarPostosMesa,
   registrarCheckinMesa,
   removerPostoMesa,
   removerTodosPostosMesa,
+  salvarRelatorioGeralMesa,
   salvarRelatorioMesa,
 } from "@/lib/mesa-operacional.functions";
 
