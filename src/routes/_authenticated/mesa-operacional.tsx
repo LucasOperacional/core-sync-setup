@@ -77,6 +77,16 @@ function MesaOperacionalPage() {
   const [loteBusca, setLoteBusca] = useState("");
   const [loteSelecao, setLoteSelecao] = useState<string[]>([]);
   const [loteTexto, setLoteTexto] = useState("");
+  const [gerentesAbertos, setGerentesAbertos] = useState<Set<string>>(() => new Set());
+
+  const toggleGerente = (gerente: string) => {
+    setGerentesAbertos((prev) => {
+      const next = new Set(prev);
+      if (next.has(gerente)) next.delete(gerente);
+      else next.add(gerente);
+      return next;
+    });
+  };
 
   const nexti = useQuery({
     queryKey: ["mesa-postos-nexti"],
