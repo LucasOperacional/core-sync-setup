@@ -2,7 +2,15 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle2, Loader2, Search, Trash2, UserRound } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  FileText,
+  Loader2,
+  Search,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { FloatingNav } from "@/components/FloatingNav";
@@ -24,12 +32,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { normalizarNome } from "@/lib/gerentes-area-a";
+import { Textarea } from "@/components/ui/textarea";
 import {
   hojeBrasilia,
   listarPostosMesa,
   registrarCheckinMesa,
   removerPostoMesa,
   removerTodosPostosMesa,
+  salvarRelatorioMesa,
 } from "@/lib/mesa-operacional.functions";
 
 export const Route = createFileRoute("/_authenticated/mesa-operacional/$gerente")({
@@ -101,6 +111,21 @@ function GerentePostosPage() {
       toast.success("Todos os postos deste gerente foram removidos");
       atualizar();
     },
+  });
+
+  const salvarRelatorio = useServerFn(salvarRelatorioMesa);
+  const relatorioMut = useMutation({
+    mutationFn: (v: { postoId: string; relatorio: string }) =>
+      salvarRelatorio({ data: { postoId: v.postoId, data: dia, relatorio: v.relatorio } }),
+    onSuccess: (r) => {
+      if (!r.ok) {
+        toast.error(r.erro || "Não foi possível salvar o relatório");
+        return;
+      }
+      toast.success("Relatório registrado com data e hora");
+      atualizar();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar o relatório"),
   });
 
   const postosDoGerente = useMemo(() => {
@@ -262,6 +287,15 @@ function GerentePostosPage() {
                       })}
                     </p>
                   ) : null}
+                  <RelatorioPosto
+                    postoId={posto.id}
+                    relatorio={posto.relatorio}
+                    relatorioEm={posto.relatorioEm}
+                    salvando={relatorioMut.isPending}
+                    onSalvar={(texto) =>
+                      relatorioMut.mutate({ postoId: posto.id, relatorio: texto })
+                    }
+                  />
                 </div>
                 <button
                   type="button"
@@ -278,5 +312,68 @@ function GerentePostosPage() {
       </div>
       <FloatingNav />
     </main>
+  );
+}
+
+function RelatorioPosto({
+  postoId,
+  relatorio,
+  relatorioEm,
+  salvando,
+  onSalvar,
+}: {
+  postoId: string;
+  relatorio: string | null;
+  relatorioEm: string | null;
+  salvando: boolean;
+  onSalvar: (texto: string) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const [texto, setTexto] = useState(relatorio ?? "");
+
+  return (
+    <div className="mt-1.5">
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+        aria-expanded={aberto}
+        aria-label={`Relatório do posto ${postoId}`}
+      >
+        <FileText className="size-3.5" />
+        {relatorio ? "Ver/editar relatório" : "Adicionar relatório"}
+      </button>
+      {relatorio && relatorioEm ? (
+        <p className="text-[11px] text-muted-foreground">
+          Registrado em{" "}
+          {new Date(relatorioEm).toLocaleString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </p>
+      ) : null}
+      {aberto ? (
+        <div className="mt-1.5 space-y-1.5">
+          <Textarea
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            placeholder="Escreva o relatório deste posto..."
+            rows={3}
+            className="text-sm"
+          />
+          <Button
+            size="sm"
+            disabled={salvando || texto.trim().length === 0}
+            onClick={() => onSalvar(texto)}
+          >
+            {salvando ? <Loader2 className="size-4 animate-spin" /> : null}
+            Salvar relatório
+          </Button>
+        </div>
+      ) : null}
+    </div>
   );
 }

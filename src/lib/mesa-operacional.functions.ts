@@ -13,6 +13,9 @@ export type PostoServicoMesa = {
   checkFeito: boolean;
   checkObservacao: string | null;
   checkEm: string | null;
+  /** Relatório do dia consultado (quando existir). */
+  relatorio: string | null;
+  relatorioEm: string | null;
 };
 
 export type ListarMesaResultado = {
@@ -75,11 +78,19 @@ export const listarPostosMesa = createServerFn({ method: "GET" })
 
     const mapa = new Map((checks ?? []).map((c) => [c.posto_id, c]));
 
+    const { data: relatorios } = await context.supabase
+      .from("mesa_relatorios")
+      .select("posto_id, relatorio, registrado_em")
+      .eq("data", dia);
+
+    const mapaRel = new Map((relatorios ?? []).map((r) => [r.posto_id, r]));
+
     return {
       ok: true,
       data: dia,
       postos: (postos ?? []).map((p) => {
         const c = mapa.get(p.id);
+        const r = mapaRel.get(p.id);
         return {
           id: p.id,
           nome: p.nome,
@@ -90,9 +101,36 @@ export const listarPostosMesa = createServerFn({ method: "GET" })
           checkFeito: c?.feito ?? false,
           checkObservacao: c?.observacao ?? null,
           checkEm: c?.registrado_em ?? null,
+          relatorio: r?.relatorio ?? null,
+          relatorioEm: r?.registrado_em ?? null,
         };
       }),
     };
+  });
+
+const relatorioSchema = z.object({
+  postoId: z.string().uuid(),
+  data: z.string(),
+  relatorio: z.string().min(1).max(5000),
+});
+
+/** Salva (ou atualiza) o relatório do posto na data, registrando data e hora. */
+export const salvarRelatorioMesa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => relatorioSchema.parse(input))
+  .handler(async ({ context, data }): Promise<MesaResultado> => {
+    const { error } = await context.supabase.from("mesa_relatorios").upsert(
+      {
+        posto_id: data.postoId,
+        data: data.data,
+        relatorio: data.relatorio.trim(),
+        registrado_por: context.userId,
+        registrado_em: new Date().toISOString(),
+      },
+      { onConflict: "posto_id,data" },
+    );
+    if (error) return { ok: false, erro: error.message };
+    return { ok: true };
   });
 
 export const cadastrarPostoMesa = createServerFn({ method: "POST" })
