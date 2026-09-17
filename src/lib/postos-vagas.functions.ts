@@ -318,6 +318,14 @@ export const importarPostosVagasNexti = createServerFn({ method: "POST" })
         typeof finishDateRaw === "string" && finishDateRaw.trim().length > 0
           ? finishDateRaw.trim()
           : null;
+      const motivoEncerramentoRaw = escolher(item, [
+        "closingReason",
+        "closing_reason",
+        "closingReasonName",
+        "motivoEncerramento",
+        "motivo_encerramento",
+      ]);
+      const motivoEncerramento = texto(motivoEncerramentoRaw);
       porId.set(id, {
         nexti_id: id,
         name: nome,
@@ -325,8 +333,9 @@ export const importarPostosVagasNexti = createServerFn({ method: "POST" })
         company_name: texto(escolher(item, ["companyName", "empresa"])),
         city: texto(escolher(item, ["cityName", "city", "cidade"])),
         state: texto(escolher(item, ["federatedUnitInitials", "state", "uf", "estado"])),
-        active: escolher(item, ["active"]) !== false && finishDate == null,
+        active: escolher(item, ["active"]) !== false && finishDate == null && motivoEncerramento == null,
         finish_date: finishDate,
+        closing_reason: motivoEncerramento,
         vacant_job: vagas,
         last_synced_at: agora,
         updated_at: agora,
