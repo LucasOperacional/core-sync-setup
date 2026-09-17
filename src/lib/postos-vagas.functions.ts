@@ -125,13 +125,40 @@ export const listarPostosVagas = createServerFn({ method: "GET" })
     };
   });
 
-export type CargoPosto = { cargo: string; quantidade: number };
+export type CargoPosto = { cargo: string; quantidade: number; principal: boolean };
 export type CargosPorPostoResultado = {
   ok: boolean;
   /** Chave: nexti_id do posto. */
   porPosto: Record<string, CargoPosto[]>;
   erro?: string;
 };
+
+const CARGOS_PRINCIPAIS = new Set([
+  "AUXILIAR DE LIMPEZA",
+  "PORTEIRO I",
+  "PORTEIRO II",
+  "VIGIA",
+]);
+
+function normalizarCargo(raw: string | null | undefined): string {
+  const limpo = (raw ?? "").toUpperCase().replace(/\s+/g, " ").trim();
+  if (!limpo) return "Sem cargo informado";
+
+  if (limpo.includes("AUXILIAR") && limpo.includes("LIMPEZA")) return "AUXILIAR DE LIMPEZA";
+  if (limpo.includes("PORTEIRO") || limpo.includes("PORTA")) {
+    if (limpo.includes("II") || limpo.includes("2")) return "PORTEIRO II";
+    if (limpo.includes("I") || limpo.includes("1") || limpo.includes("PRIMEIRO"))
+      return "PORTEIRO I";
+    return "PORTEIRO I";
+  }
+  if (limpo.includes("VIGIA") || limpo.includes("VIGILANTE")) return "VIGIA";
+
+  return raw?.trim() || "Sem cargo informado";
+}
+
+function cargoPrincipal(cargo: string): boolean {
+  return CARGOS_PRINCIPAIS.has(cargo.toUpperCase());
+}
 
 /** Lista os cargos lotados em cada posto, a partir dos colaboradores ativos da NEXTI. */
 export const listarCargosPorPosto = createServerFn({ method: "GET" })
@@ -151,7 +178,7 @@ export const listarCargosPorPosto = createServerFn({ method: "GET" })
       for (const l of linhas) {
         if (l.demission_date) continue;
         if (l.workplace_id == null) continue;
-        const cargo = (l.career_name ?? "").trim() || "Sem cargo informado";
+        const cargo = normalizarCargo(l.career_name);
         const chave = String(l.workplace_id);
         const mapa = (porPosto[chave] ??= new Map());
         mapa.set(cargo, (mapa.get(cargo) ?? 0) + 1);
@@ -162,12 +189,15 @@ export const listarCargosPorPosto = createServerFn({ method: "GET" })
     return {
       ok: true,
       porPosto: Object.fromEntries(
-        Object.entries(porPosto).map(([k, m]) => [
-          k,
-          [...m.entries()]
-            .map(([cargo, quantidade]) => ({ cargo, quantidade }))
-            .sort((a, b) => b.quantidade - a.quantidade || a.cargo.localeCompare(b.cargo)),
-        ]),
+        Object.entries(porPosto).map(([k, m]) => {
+          const lista = [...m.entries()]
+            .map(([cargo, quantidade]) => ({ cargo, quantidade, principal: cargoPrincipal(cargo) }))
+            .sort((a, b) => {
+              if (a.principal !== b.principal) return a.principal ? -1 : 1;
+              return b.quantidade - a.quantidade || a.cargo.localeCompare(b.cargo);
+            });
+          return [k, lista];
+        }),
       ),
     };
   });
