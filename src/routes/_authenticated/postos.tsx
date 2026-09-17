@@ -244,6 +244,24 @@ function PostosPage() {
               </Label>
               <Switch id="sync-auto" checked={auto} onCheckedChange={alternarAuto} />
             </div>
+            <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+              <RefreshCw
+                className={`size-4 text-muted-foreground ${
+                  autoContagem && (postosQuery.isFetching || cargosQuery.isFetching)
+                    ? "animate-spin"
+                    : ""
+                }`}
+              />
+              <Label htmlFor="sync-contagem" className="cursor-pointer text-sm">
+                Atualizar contagem automaticamente
+              </Label>
+              <Switch
+                id="sync-contagem"
+                checked={autoContagem}
+                onCheckedChange={alternarAutoContagem}
+              />
+            </div>
+
             <Button
               onClick={() => importacao.mutate({ silencioso: false })}
               disabled={importacao.isPending}
