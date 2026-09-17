@@ -34,11 +34,13 @@ import { Progress } from "@/components/ui/progress";
 import { normalizarNome } from "@/lib/gerentes-area-a";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  buscarRelatorioGeralMesa,
   hojeBrasilia,
   listarPostosMesa,
   registrarCheckinMesa,
   removerPostoMesa,
   removerTodosPostosMesa,
+  salvarRelatorioGeralMesa,
   salvarRelatorioMesa,
 } from "@/lib/mesa-operacional.functions";
 
@@ -249,6 +251,8 @@ function GerentePostosPage() {
           </CardContent>
         </Card>
 
+        <RelatorioGeralCard gerente={gerente} dia={dia} />
+
         {isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" /> Carregando postos...
@@ -312,6 +316,113 @@ function GerentePostosPage() {
       </div>
       <FloatingNav />
     </main>
+  );
+}
+
+/** Relatório geral do dia do gerente (não vinculado a um posto). */
+function RelatorioGeralCard({ gerente, dia }: { gerente: string; dia: string }) {
+  const buscar = useServerFn(buscarRelatorioGeralMesa);
+  const salvar = useServerFn(salvarRelatorioGeralMesa);
+  const queryClient = useQueryClient();
+  const chave = ["mesa-relatorio-geral", gerente, dia] as const;
+
+  const { data } = useQuery({
+    queryKey: chave,
+    queryFn: () => buscar({ data: { gerenteNome: gerente, data: dia } }),
+    staleTime: 30_000,
+  });
+
+  const [texto, setTexto] = useState("");
+  const [editando, setEditando] = useState(false);
+
+  const salvarMut = useMutation({
+    mutationFn: (v: string) =>
+      salvar({ data: { gerenteNome: gerente, data: dia, relatorio: v } }),
+    onSuccess: (r) => {
+      if (!r.ok) {
+        toast.error(r.erro || "Não foi possível salvar o relatório geral");
+        return;
+      }
+      toast.success("Relatório geral registrado com data e hora");
+      setEditando(false);
+      queryClient.invalidateQueries({ queryKey: chave });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar"),
+  });
+
+  const temRelatorio = Boolean(data?.relatorio);
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <FileText className="size-4" />
+          Relatório geral do dia
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {temRelatorio && data?.registradoEm ? (
+          <p className="text-xs text-muted-foreground">
+            Registrado em{" "}
+            {new Date(data.registradoEm).toLocaleString("pt-BR", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Nenhum relatório geral registrado nesta data.
+          </p>
+        )}
+
+        {temRelatorio && !editando ? (
+          <p className="whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-3 text-sm">
+            {data?.relatorio}
+          </p>
+        ) : null}
+
+        {editando || !temRelatorio ? (
+          <div className="space-y-2">
+            <Textarea
+              value={texto || data?.relatorio || ""}
+              onChange={(e) => setTexto(e.target.value)}
+              placeholder="Escreva o relatório geral do dia deste gerente..."
+              rows={4}
+              className="text-sm"
+            />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                disabled={salvarMut.isPending || (texto || data?.relatorio || "").trim().length === 0}
+                onClick={() => salvarMut.mutate(texto || data?.relatorio || "")}
+              >
+                {salvarMut.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+                Salvar relatório geral
+              </Button>
+              {editando ? (
+                <Button size="sm" variant="ghost" onClick={() => setEditando(false)}>
+                  Cancelar
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setTexto(data?.relatorio ?? "");
+              setEditando(true);
+            }}
+          >
+            Editar relatório
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

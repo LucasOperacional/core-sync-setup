@@ -131,6 +131,58 @@ export const salvarRelatorioMesa = createServerFn({ method: "POST" })
     );
     if (error) return { ok: false, erro: error.message };
     return { ok: true };
+});
+
+// ---------------------------------------------------------------------------
+// Relatório geral do gerente (por dia, sem vínculo com posto)
+// ---------------------------------------------------------------------------
+
+export type RelatorioGeral = { relatorio: string | null; registradoEm: string | null };
+
+const relatorioGeralSchema = z.object({
+  gerenteNome: z.string().min(2),
+  data: z.string(),
+  relatorio: z.string().min(1).max(10000),
+});
+
+export const buscarRelatorioGeralMesa = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ gerenteNome: z.string().min(2), data: z.string() }).parse(input),
+  )
+  .handler(async ({ context, data }): Promise<RelatorioGeral> => {
+    const { data: row } = await context.supabase
+      .from("mesa_relatorios")
+      .select("relatorio, registrado_em")
+      .is("posto_id", null)
+      .eq("gerente_nome", data.gerenteNome.trim())
+      .eq("data", data.data)
+      .maybeSingle();
+    return { relatorio: row?.relatorio ?? null, registradoEm: row?.registrado_em ?? null };
+  });
+
+/** Salva (ou atualiza) o relatório geral do gerente na data, registrando data e hora. */
+export const salvarRelatorioGeralMesa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => relatorioGeralSchema.parse(input))
+  .handler(async ({ context, data }): Promise<MesaResultado> => {
+    const gerente = data.gerenteNome.trim();
+    await context.supabase
+      .from("mesa_relatorios")
+      .delete()
+      .is("posto_id", null)
+      .eq("gerente_nome", gerente)
+      .eq("data", data.data);
+    const { error } = await context.supabase.from("mesa_relatorios").insert({
+      posto_id: null,
+      gerente_nome: gerente,
+      data: data.data,
+      relatorio: data.relatorio.trim(),
+      registrado_por: context.userId,
+      registrado_em: new Date().toISOString(),
+    });
+    if (error) return { ok: false, erro: error.message };
+    return { ok: true };
   });
 
 export const cadastrarPostoMesa = createServerFn({ method: "POST" })

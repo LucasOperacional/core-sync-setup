@@ -2126,24 +2126,27 @@ export type Database = {
       mesa_relatorios: {
         Row: {
           data: string
+          gerente_nome: string | null
           id: string
-          posto_id: string
+          posto_id: string | null
           registrado_em: string
           registrado_por: string | null
           relatorio: string
         }
         Insert: {
           data: string
+          gerente_nome?: string | null
           id?: string
-          posto_id: string
+          posto_id?: string | null
           registrado_em?: string
           registrado_por?: string | null
           relatorio: string
         }
         Update: {
           data?: string
+          gerente_nome?: string | null
           id?: string
-          posto_id?: string
+          posto_id?: string | null
           registrado_em?: string
           registrado_por?: string | null
           relatorio?: string
