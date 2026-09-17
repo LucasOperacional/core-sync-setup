@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Building2, ChevronDown, ChevronRight, Download, Loader2, Search } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import {
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  Download,
+  Loader2,
+  RefreshCw,
+  Search,
+} from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/PageHeader";
@@ -10,12 +18,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   importarPostosVagasNexti,
   listarCargosPorPosto,
   listarPostosVagas,
 } from "@/lib/postos-vagas.functions";
 import { useNextiDiferido } from "@/lib/use-nexti-diferido";
+
+const CHAVE_AUTO = "postos-sync-automatica-v1";
+const INTERVALO_MS = 30 * 60 * 1000; // 30 minutos
+
 
 export const Route = createFileRoute("/_authenticated/postos")({
   head: () => ({
