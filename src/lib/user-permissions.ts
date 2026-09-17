@@ -95,6 +95,11 @@ export const AVAILABLE_PAGES = [
     description: "Check-in diário dos postos de serviço por gerente de área",
   },
   {
+    key: "postos",
+    label: "Postos de Serviço",
+    description: "Postos importados da NEXTI com as vagas disponíveis em cada posto",
+  },
+  {
     key: "indicadores",
     label: "Indicadores",
     description: "Tempo de execução dos relatórios de campo e das fichas de avaliação",

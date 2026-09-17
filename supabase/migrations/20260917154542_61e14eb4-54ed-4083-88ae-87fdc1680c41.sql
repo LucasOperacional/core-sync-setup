@@ -1,0 +1,1 @@
+ALTER TABLE public.nexti_workplaces ADD COLUMN IF NOT EXISTS vacant_job integer;

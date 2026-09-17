@@ -3146,6 +3146,7 @@ export type Database = {
           raw_payload: Json
           state: string | null
           updated_at: string
+          vacant_job: number | null
           zip_code: string | null
         }
         Insert: {
@@ -3174,6 +3175,7 @@ export type Database = {
           raw_payload?: Json
           state?: string | null
           updated_at?: string
+          vacant_job?: number | null
           zip_code?: string | null
         }
         Update: {
@@ -3202,6 +3204,7 @@ export type Database = {
           raw_payload?: Json
           state?: string | null
           updated_at?: string
+          vacant_job?: number | null
           zip_code?: string | null
         }
         Relationships: []
