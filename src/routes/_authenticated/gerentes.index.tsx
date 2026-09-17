@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Download, Home, LayoutDashboard, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { importarGerentesNexti, listarGerentesNexti } from "@/lib/gerentes-nexti.functions";
+import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 
 export const Route = createFileRoute("/_authenticated/gerentes/")({
   head: () => ({

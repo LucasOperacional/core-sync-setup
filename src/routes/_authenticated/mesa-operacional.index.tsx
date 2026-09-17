@@ -77,11 +77,14 @@ function MesaOperacionalPage() {
   const [loteSelecao, setLoteSelecao] = useState<string[]>([]);
   const [loteTexto, setLoteTexto] = useState("");
 
+  // A página abre primeiro; a lista de postos da NEXTI chega em seguida.
+  const nextiPronto = useNextiDiferido();
   const nexti = useQuery({
     queryKey: ["mesa-postos-nexti"],
     queryFn: () => carregarNexti({ data: undefined as never }),
     staleTime: 10 * 60_000,
     gcTime: 30 * 60_000,
+    enabled: nextiPronto,
   });
   const postosNexti = nexti.data?.postos ?? [];
 
