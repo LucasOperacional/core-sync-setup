@@ -234,9 +234,6 @@ function PostosPage() {
                           {expandido ? (
                             <tr className="border-b last:border-0 bg-muted/30">
                               <td colSpan={6} className="px-3 py-3">
-                                <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
-                                  Cargos lotados neste posto
-                                </p>
                                 {cargosQuery.isLoading ? (
                                   <p className="text-sm text-muted-foreground">
                                     Carregando cargos...
@@ -246,13 +243,51 @@ function PostosPage() {
                                     Nenhum colaborador ativo lotado neste posto.
                                   </p>
                                 ) : (
-                                  <div className="flex flex-wrap gap-2">
-                                    {cargos.map((c) => (
-                                      <Badge key={c.cargo} variant="secondary" className="gap-1.5">
-                                        {c.cargo}
-                                        <span className="font-semibold">{c.quantidade}</span>
-                                      </Badge>
-                                    ))}
+                                  <div className="space-y-3">
+                                    <div>
+                                      <p className="mb-2 text-xs font-medium uppercase text-primary">
+                                        Cargos principais
+                                      </p>
+                                      <div className="flex flex-wrap gap-2">
+                                        {cargos.filter((c) => c.principal).length === 0 ? (
+                                          <span className="text-sm text-muted-foreground">
+                                            Nenhum dos cargos principais lotado.
+                                          </span>
+                                        ) : (
+                                          cargos
+                                            .filter((c) => c.principal)
+                                            .map((c) => (
+                                              <Badge
+                                                key={c.cargo}
+                                                variant="default"
+                                                className="gap-1.5"
+                                              >
+                                                {c.cargo}
+                                                <span className="font-semibold">{c.quantidade}</span>
+                                              </Badge>
+                                            ))
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
+                                        Demais cargos
+                                      </p>
+                                      <div className="flex flex-wrap gap-2">
+                                        {cargos
+                                          .filter((c) => !c.principal)
+                                          .map((c) => (
+                                            <Badge
+                                              key={c.cargo}
+                                              variant="secondary"
+                                              className="gap-1.5"
+                                            >
+                                              {c.cargo}
+                                              <span className="font-semibold">{c.quantidade}</span>
+                                            </Badge>
+                                          ))}
+                                      </div>
+                                    </div>
                                   </div>
                                 )}
                               </td>
