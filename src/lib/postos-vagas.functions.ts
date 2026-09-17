@@ -299,6 +299,11 @@ export const importarPostosVagasNexti = createServerFn({ method: "POST" })
         escolher(item, ["vacantJob", "vacantJobs", "vagas", "vacancy", "vacancies"]),
       );
       totalVagas += vagas;
+      const finishDateRaw = escolher(item, ["finishDate", "finish_date", "encerramento"]);
+      const finishDate =
+        typeof finishDateRaw === "string" && finishDateRaw.trim().length > 0
+          ? finishDateRaw.trim()
+          : null;
       porId.set(id, {
         nexti_id: id,
         name: nome,
@@ -306,7 +311,8 @@ export const importarPostosVagasNexti = createServerFn({ method: "POST" })
         company_name: texto(escolher(item, ["companyName", "empresa"])),
         city: texto(escolher(item, ["cityName", "city", "cidade"])),
         state: texto(escolher(item, ["federatedUnitInitials", "state", "uf", "estado"])),
-        active: escolher(item, ["active"]) !== false,
+        active: escolher(item, ["active"]) !== false && finishDate == null,
+        finish_date: finishDate,
         vacant_job: vagas,
         last_synced_at: agora,
         updated_at: agora,
