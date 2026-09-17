@@ -352,6 +352,7 @@ export const importarPostosVagasNexti = createServerFn({ method: "POST" })
       if (nomeLimpo === "CIOP" || nomeLimpo.startsWith("CIOP ") || nomeLimpo.startsWith("CIOP-")) continue;
       if (nomeLimpo === "CARGILL" || nomeLimpo.startsWith("CARGILL ") || nomeLimpo.startsWith("CARGILL-")) continue;
       if (nomeLimpo === "FERISTA" || nomeLimpo.startsWith("FERISTA ") || nomeLimpo.startsWith("FERISTA-")) continue;
+      if (nomeLimpo === "JOVEM APRENDIZ" || nomeLimpo.startsWith("JOVEM APRENDIZ ") || nomeLimpo.startsWith("JOVEM APRENDIZ-")) continue;
       const vagas = inteiro(
         escolher(item, ["vacantJob", "vacantJobs", "vagas", "vacancy", "vacancies"]),
       );
