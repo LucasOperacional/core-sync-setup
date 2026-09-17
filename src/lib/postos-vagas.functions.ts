@@ -109,7 +109,9 @@ export const listarPostosVagas = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<PostosVagasResultado> => {
     const { data, error } = await context.supabase
       .from("nexti_workplaces")
-      .select("nexti_id, name, client_name, company_name, city, state, active, vacant_job, last_synced_at")
+      .select(
+        "nexti_id, name, client_name, company_name, city, state, active, finish_date, vacant_job, last_synced_at",
+      )
       .order("name", { ascending: true })
       .limit(5000);
 
@@ -125,7 +127,10 @@ export const listarPostosVagas = createServerFn({ method: "GET" })
     return {
       ok: true,
       atualizadoEm,
-      postos: linhas.filter((l) => (l.name ?? "").trim().length > 0).map(paraPosto),
+      postos: linhas
+        .filter((l) => (l.name ?? "").trim().length > 0)
+        .filter((l) => l.active !== false && l.finish_date == null)
+        .map(paraPosto),
     };
   });
 
