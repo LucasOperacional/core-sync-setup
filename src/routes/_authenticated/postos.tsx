@@ -78,20 +78,61 @@ function PostosPage() {
     staleTime: 300_000,
   });
 
+  const [auto, setAuto] = useState(false);
+  const [ultimaAuto, setUltimaAuto] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setAuto(window.localStorage.getItem(CHAVE_AUTO) === "1");
+  }, []);
+
   const importacao = useMutation({
-    mutationFn: () => importar(),
-    onSuccess: (r) => {
+    mutationFn: (opts?: { silencioso?: boolean }) =>
+      importar().then((r) => ({ r, silencioso: opts?.silencioso === true })),
+    onSuccess: ({ r, silencioso }) => {
       if (!r.ok) {
-        toast.error(r.erro ?? "Não foi possível importar os postos da NEXTI.");
+        if (!silencioso) toast.error(r.erro ?? "Não foi possível importar os postos da NEXTI.");
         return;
       }
-      toast.success(
-        `${r.gravados} postos importados da NEXTI · ${r.totalVagas} vagas disponíveis.`,
-      );
+      if (silencioso) {
+        setUltimaAuto(new Date().toISOString());
+      } else {
+        toast.success(
+          `${r.gravados} postos importados da NEXTI · ${r.totalVagas} vagas disponíveis.`,
+        );
+      }
       void queryClient.invalidateQueries({ queryKey: ["postos-vagas"] });
+      void queryClient.invalidateQueries({ queryKey: ["postos-cargos"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
   });
+
+  // Sincronização automática com a NEXTI a cada 30 minutos.
+  const importacaoRef = useRef(importacao);
+  importacaoRef.current = importacao;
+  useEffect(() => {
+    if (!auto || !pronto) return;
+    const rodar = () => {
+      if (importacaoRef.current.isPending) return;
+      importacaoRef.current.mutate({ silencioso: true });
+    };
+    rodar();
+    const id = window.setInterval(rodar, INTERVALO_MS);
+    return () => window.clearInterval(id);
+  }, [auto, pronto]);
+
+  const alternarAuto = (v: boolean) => {
+    setAuto(v);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(CHAVE_AUTO, v ? "1" : "0");
+    }
+    toast.success(
+      v
+        ? "Sincronização automática ativada: os postos são atualizados a cada 30 minutos."
+        : "Sincronização automática desativada.",
+    );
+  };
+
 
   const todos = postosQuery.data?.postos ?? [];
 
