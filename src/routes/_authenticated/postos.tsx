@@ -142,7 +142,7 @@ function PostosPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">Postos cadastrados</CardTitle>
             </CardHeader>
-            <CardContent className="text-2xl font-semibold">{todos.length}</CardContent>
+            <CardContent className="text-2xl font-semibold">{permitidos.length}</CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
