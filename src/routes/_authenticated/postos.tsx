@@ -164,6 +164,7 @@ function PostosPage() {
         if (contexto.includes("TEKTRON SEGURANCA")) return false;
         if (contexto.includes("FGR")) return false;
         if (contexto.includes("CARGILL")) return false;
+        if (contexto.includes("FERISTA")) return false;
         return true;
       }),
     [todos],
