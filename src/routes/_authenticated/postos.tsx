@@ -81,19 +81,37 @@ function PostosPage() {
 
   const todos = postosQuery.data?.postos ?? [];
 
+  // Remove postos da TEKTRON SEGURANÇA e os que começam com TS ou FGR.
+  const permitidos = useMemo(
+    () =>
+      todos.filter((p) => {
+        const nome = p.nome.toUpperCase().trim();
+        if (/^(TS|FGR)[\s\-–.]/.test(nome) || nome === "TS" || nome === "FGR") return false;
+        const contexto = [p.empresa, p.cliente, p.nome]
+          .filter(Boolean)
+          .join(" ")
+          .toUpperCase()
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "");
+        if (contexto.includes("TEKTRON SEGURANCA")) return false;
+        return true;
+      }),
+    [todos],
+  );
+
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
-    return todos.filter((p) => {
+    return permitidos.filter((p) => {
       if (somenteComVaga && p.vagas <= 0) return false;
       if (!termo) return true;
       return [p.nome, p.cliente, p.empresa, p.cidade, p.uf]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(termo));
     });
-  }, [todos, busca, somenteComVaga]);
+  }, [permitidos, busca, somenteComVaga]);
 
-  const totalVagas = todos.reduce((s, p) => s + p.vagas, 0);
-  const comVagas = todos.filter((p) => p.vagas > 0).length;
+  const totalVagas = permitidos.reduce((s, p) => s + p.vagas, 0);
+  const comVagas = permitidos.filter((p) => p.vagas > 0).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -124,7 +142,7 @@ function PostosPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">Postos cadastrados</CardTitle>
             </CardHeader>
-            <CardContent className="text-2xl font-semibold">{todos.length}</CardContent>
+            <CardContent className="text-2xl font-semibold">{permitidos.length}</CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
