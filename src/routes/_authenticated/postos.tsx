@@ -57,6 +57,13 @@ function PostosPage() {
     staleTime: 60_000,
   });
 
+  const cargosQuery = useQuery({
+    queryKey: ["postos-cargos"],
+    queryFn: () => listarCargos(),
+    enabled: pronto,
+    staleTime: 300_000,
+  });
+
   const importacao = useMutation({
     mutationFn: () => importar(),
     onSuccess: (r) => {
