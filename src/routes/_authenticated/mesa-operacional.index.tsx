@@ -35,7 +35,7 @@ import {
   type PostoServicoMesa,
 } from "@/lib/mesa-operacional.functions";
 
-export const Route = createFileRoute("/_authenticated/mesa-operacional")({
+export const Route = createFileRoute("/_authenticated/mesa-operacional/")({
   head: () => ({
     meta: [
       { title: "Mesa Operacional — Check-in dos postos" },

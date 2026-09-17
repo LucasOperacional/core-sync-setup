@@ -37,7 +37,6 @@ import { Route as AuthenticatedIaOperacionalRouteImport } from './routes/_authen
 import { Route as AuthenticatedIndicadoresRouteImport } from './routes/_authenticated/indicadores'
 import { Route as AuthenticatedLgpdRouteImport } from './routes/_authenticated/lgpd'
 import { Route as AuthenticatedLogsAtividadesRouteImport } from './routes/_authenticated/logs-atividades'
-import { Route as AuthenticatedMesaOperacionalRouteImport } from './routes/_authenticated/mesa-operacional'
 import { Route as AuthenticatedMovimentacaoPostoRouteImport } from './routes/_authenticated/movimentacao-posto'
 import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
 import { Route as AuthenticatedNxsControlRouteImport } from './routes/_authenticated/nxs-control'
@@ -62,6 +61,7 @@ import { Route as AssinarMovimentacaoTokenRouteImport } from './routes/assinar-m
 import { Route as AssinarTokenRouteImport } from './routes/assinar.$token'
 import { Route as AuthenticatedGerentesIndexRouteImport } from './routes/_authenticated/gerentes.index'
 import { Route as AuthenticatedGerentesSlugRouteImport } from './routes/_authenticated/gerentes.$slug'
+import { Route as AuthenticatedMesaOperacionalIndexRouteImport } from './routes/_authenticated/mesa-operacional.index'
 import { Route as AuthenticatedMesaOperacionalGerenteRouteImport } from './routes/_authenticated/mesa-operacional.$gerente'
 import { Route as AuthenticatedRelatoriosGerenteSlugRouteImport } from './routes/_authenticated/relatorios-gerente.$slug'
 import { Route as AuthenticatedRelatoriosVisitaIdRouteImport } from './routes/_authenticated/relatorios-visita.$id'
@@ -237,12 +237,6 @@ const AuthenticatedLogsAtividadesRoute =
     path: '/logs-atividades',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedMesaOperacionalRoute =
-  AuthenticatedMesaOperacionalRouteImport.update({
-    id: '/mesa-operacional',
-    path: '/mesa-operacional',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedMovimentacaoPostoRoute =
   AuthenticatedMovimentacaoPostoRouteImport.update({
     id: '/movimentacao-posto',
@@ -381,11 +375,17 @@ const AuthenticatedGerentesSlugRoute =
     path: '/gerentes/$slug',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMesaOperacionalIndexRoute =
+  AuthenticatedMesaOperacionalIndexRouteImport.update({
+    id: '/mesa-operacional/',
+    path: '/mesa-operacional/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMesaOperacionalGerenteRoute =
   AuthenticatedMesaOperacionalGerenteRouteImport.update({
-    id: '/$gerente',
-    path: '/$gerente',
-    getParentRoute: () => AuthenticatedMesaOperacionalRoute,
+    id: '/mesa-operacional/$gerente',
+    path: '/mesa-operacional/$gerente',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedRelatoriosGerenteSlugRoute =
   AuthenticatedRelatoriosGerenteSlugRouteImport.update({
@@ -541,7 +541,6 @@ export interface FileRoutesByFullPath {
   '/indicadores': typeof AuthenticatedIndicadoresRoute
   '/lgpd': typeof AuthenticatedLgpdRoute
   '/logs-atividades': typeof AuthenticatedLogsAtividadesRoute
-  '/mesa-operacional': typeof AuthenticatedMesaOperacionalRouteWithChildren
   '/movimentacao-posto': typeof AuthenticatedMovimentacaoPostoRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/nxs-control': typeof AuthenticatedNxsControlRoute
@@ -577,6 +576,7 @@ export interface FileRoutesByFullPath {
   '/api/public/rastreio-ping': typeof ApiPublicRastreioPingRoute
   '/api/public/whatsapp-webhook': typeof ApiPublicWhatsappWebhookRoute
   '/gerentes/': typeof AuthenticatedGerentesIndexRoute
+  '/mesa-operacional/': typeof AuthenticatedMesaOperacionalIndexRoute
   '/api/public/assinatura/assinar': typeof ApiPublicAssinaturaAssinarRoute
   '/api/public/assinatura/codigo': typeof ApiPublicAssinaturaCodigoRoute
   '/api/public/assinatura/documento': typeof ApiPublicAssinaturaDocumentoRoute
@@ -617,7 +617,6 @@ export interface FileRoutesByTo {
   '/indicadores': typeof AuthenticatedIndicadoresRoute
   '/lgpd': typeof AuthenticatedLgpdRoute
   '/logs-atividades': typeof AuthenticatedLogsAtividadesRoute
-  '/mesa-operacional': typeof AuthenticatedMesaOperacionalRouteWithChildren
   '/movimentacao-posto': typeof AuthenticatedMovimentacaoPostoRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/nxs-control': typeof AuthenticatedNxsControlRoute
@@ -654,6 +653,7 @@ export interface FileRoutesByTo {
   '/api/public/rastreio-ping': typeof ApiPublicRastreioPingRoute
   '/api/public/whatsapp-webhook': typeof ApiPublicWhatsappWebhookRoute
   '/gerentes': typeof AuthenticatedGerentesIndexRoute
+  '/mesa-operacional': typeof AuthenticatedMesaOperacionalIndexRoute
   '/api/public/assinatura/assinar': typeof ApiPublicAssinaturaAssinarRoute
   '/api/public/assinatura/codigo': typeof ApiPublicAssinaturaCodigoRoute
   '/api/public/assinatura/documento': typeof ApiPublicAssinaturaDocumentoRoute
@@ -696,7 +696,6 @@ export interface FileRoutesById {
   '/_authenticated/indicadores': typeof AuthenticatedIndicadoresRoute
   '/_authenticated/lgpd': typeof AuthenticatedLgpdRoute
   '/_authenticated/logs-atividades': typeof AuthenticatedLogsAtividadesRoute
-  '/_authenticated/mesa-operacional': typeof AuthenticatedMesaOperacionalRouteWithChildren
   '/_authenticated/movimentacao-posto': typeof AuthenticatedMovimentacaoPostoRoute
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/_authenticated/nxs-control': typeof AuthenticatedNxsControlRoute
@@ -733,6 +732,7 @@ export interface FileRoutesById {
   '/api/public/rastreio-ping': typeof ApiPublicRastreioPingRoute
   '/api/public/whatsapp-webhook': typeof ApiPublicWhatsappWebhookRoute
   '/_authenticated/gerentes/': typeof AuthenticatedGerentesIndexRoute
+  '/_authenticated/mesa-operacional/': typeof AuthenticatedMesaOperacionalIndexRoute
   '/api/public/assinatura/assinar': typeof ApiPublicAssinaturaAssinarRoute
   '/api/public/assinatura/codigo': typeof ApiPublicAssinaturaCodigoRoute
   '/api/public/assinatura/documento': typeof ApiPublicAssinaturaDocumentoRoute
@@ -776,7 +776,6 @@ export interface FileRouteTypes {
     | '/indicadores'
     | '/lgpd'
     | '/logs-atividades'
-    | '/mesa-operacional'
     | '/movimentacao-posto'
     | '/notificacoes'
     | '/nxs-control'
@@ -812,6 +811,7 @@ export interface FileRouteTypes {
     | '/api/public/rastreio-ping'
     | '/api/public/whatsapp-webhook'
     | '/gerentes/'
+    | '/mesa-operacional/'
     | '/api/public/assinatura/assinar'
     | '/api/public/assinatura/codigo'
     | '/api/public/assinatura/documento'
@@ -852,7 +852,6 @@ export interface FileRouteTypes {
     | '/indicadores'
     | '/lgpd'
     | '/logs-atividades'
-    | '/mesa-operacional'
     | '/movimentacao-posto'
     | '/notificacoes'
     | '/nxs-control'
@@ -889,6 +888,7 @@ export interface FileRouteTypes {
     | '/api/public/rastreio-ping'
     | '/api/public/whatsapp-webhook'
     | '/gerentes'
+    | '/mesa-operacional'
     | '/api/public/assinatura/assinar'
     | '/api/public/assinatura/codigo'
     | '/api/public/assinatura/documento'
@@ -930,7 +930,6 @@ export interface FileRouteTypes {
     | '/_authenticated/indicadores'
     | '/_authenticated/lgpd'
     | '/_authenticated/logs-atividades'
-    | '/_authenticated/mesa-operacional'
     | '/_authenticated/movimentacao-posto'
     | '/_authenticated/notificacoes'
     | '/_authenticated/nxs-control'
@@ -967,6 +966,7 @@ export interface FileRouteTypes {
     | '/api/public/rastreio-ping'
     | '/api/public/whatsapp-webhook'
     | '/_authenticated/gerentes/'
+    | '/_authenticated/mesa-operacional/'
     | '/api/public/assinatura/assinar'
     | '/api/public/assinatura/codigo'
     | '/api/public/assinatura/documento'
@@ -1211,13 +1211,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLogsAtividadesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/mesa-operacional': {
-      id: '/_authenticated/mesa-operacional'
-      path: '/mesa-operacional'
-      fullPath: '/mesa-operacional'
-      preLoaderRoute: typeof AuthenticatedMesaOperacionalRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/movimentacao-posto': {
       id: '/_authenticated/movimentacao-posto'
       path: '/movimentacao-posto'
@@ -1386,12 +1379,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGerentesSlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/mesa-operacional/': {
+      id: '/_authenticated/mesa-operacional/'
+      path: '/mesa-operacional'
+      fullPath: '/mesa-operacional/'
+      preLoaderRoute: typeof AuthenticatedMesaOperacionalIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/mesa-operacional/$gerente': {
       id: '/_authenticated/mesa-operacional/$gerente'
-      path: '/$gerente'
+      path: '/mesa-operacional/$gerente'
       fullPath: '/mesa-operacional/$gerente'
       preLoaderRoute: typeof AuthenticatedMesaOperacionalGerenteRouteImport
-      parentRoute: typeof AuthenticatedMesaOperacionalRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/relatorios-gerente/$slug': {
       id: '/_authenticated/relatorios-gerente/$slug'
@@ -1550,21 +1550,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedMesaOperacionalRouteChildren {
-  AuthenticatedMesaOperacionalGerenteRoute: typeof AuthenticatedMesaOperacionalGerenteRoute
-}
-
-const AuthenticatedMesaOperacionalRouteChildren: AuthenticatedMesaOperacionalRouteChildren =
-  {
-    AuthenticatedMesaOperacionalGerenteRoute:
-      AuthenticatedMesaOperacionalGerenteRoute,
-  }
-
-const AuthenticatedMesaOperacionalRouteWithChildren =
-  AuthenticatedMesaOperacionalRoute._addFileChildren(
-    AuthenticatedMesaOperacionalRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAberturaDeVagasRoute: typeof AuthenticatedAberturaDeVagasRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
@@ -1587,7 +1572,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndicadoresRoute: typeof AuthenticatedIndicadoresRoute
   AuthenticatedLgpdRoute: typeof AuthenticatedLgpdRoute
   AuthenticatedLogsAtividadesRoute: typeof AuthenticatedLogsAtividadesRoute
-  AuthenticatedMesaOperacionalRoute: typeof AuthenticatedMesaOperacionalRouteWithChildren
   AuthenticatedMovimentacaoPostoRoute: typeof AuthenticatedMovimentacaoPostoRoute
   AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
   AuthenticatedNxsControlRoute: typeof AuthenticatedNxsControlRoute
@@ -1609,9 +1593,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVerificadorAtestadosRoute: typeof AuthenticatedVerificadorAtestadosRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedGerentesSlugRoute: typeof AuthenticatedGerentesSlugRoute
+  AuthenticatedMesaOperacionalGerenteRoute: typeof AuthenticatedMesaOperacionalGerenteRoute
   AuthenticatedRelatoriosGerenteSlugRoute: typeof AuthenticatedRelatoriosGerenteSlugRoute
   AuthenticatedRelatoriosVisitaIdRoute: typeof AuthenticatedRelatoriosVisitaIdRoute
   AuthenticatedGerentesIndexRoute: typeof AuthenticatedGerentesIndexRoute
+  AuthenticatedMesaOperacionalIndexRoute: typeof AuthenticatedMesaOperacionalIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1638,8 +1624,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndicadoresRoute: AuthenticatedIndicadoresRoute,
   AuthenticatedLgpdRoute: AuthenticatedLgpdRoute,
   AuthenticatedLogsAtividadesRoute: AuthenticatedLogsAtividadesRoute,
-  AuthenticatedMesaOperacionalRoute:
-    AuthenticatedMesaOperacionalRouteWithChildren,
   AuthenticatedMovimentacaoPostoRoute: AuthenticatedMovimentacaoPostoRoute,
   AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
   AuthenticatedNxsControlRoute: AuthenticatedNxsControlRoute,
@@ -1665,10 +1649,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedVerificadorAtestadosRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedGerentesSlugRoute: AuthenticatedGerentesSlugRoute,
+  AuthenticatedMesaOperacionalGerenteRoute:
+    AuthenticatedMesaOperacionalGerenteRoute,
   AuthenticatedRelatoriosGerenteSlugRoute:
     AuthenticatedRelatoriosGerenteSlugRoute,
   AuthenticatedRelatoriosVisitaIdRoute: AuthenticatedRelatoriosVisitaIdRoute,
   AuthenticatedGerentesIndexRoute: AuthenticatedGerentesIndexRoute,
+  AuthenticatedMesaOperacionalIndexRoute:
+    AuthenticatedMesaOperacionalIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
