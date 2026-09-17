@@ -84,6 +84,7 @@ type LinhaBanco = {
   city: string | null;
   state: string | null;
   active: boolean | null;
+  finish_date: string | null;
   vacant_job: number | null;
   last_synced_at?: string | null;
 };
@@ -97,6 +98,7 @@ function paraPosto(row: LinhaBanco): PostoVaga {
     cidade: row.city,
     uf: row.state,
     ativo: row.active ?? true,
+    encerradoEm: row.finish_date ?? null,
     vagas: row.vacant_job ?? 0,
   };
 }
