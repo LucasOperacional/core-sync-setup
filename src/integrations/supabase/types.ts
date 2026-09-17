@@ -2114,6 +2114,41 @@ export type Database = {
         }
         Relationships: []
       }
+      mesa_relatorios: {
+        Row: {
+          data: string
+          id: string
+          posto_id: string
+          registrado_em: string
+          registrado_por: string | null
+          relatorio: string
+        }
+        Insert: {
+          data: string
+          id?: string
+          posto_id: string
+          registrado_em?: string
+          registrado_por?: string | null
+          relatorio: string
+        }
+        Update: {
+          data?: string
+          id?: string
+          posto_id?: string
+          registrado_em?: string
+          registrado_por?: string | null
+          relatorio?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mesa_relatorios_posto_id_fkey"
+            columns: ["posto_id"]
+            isOneToOne: false
+            referencedRelation: "mesa_postos_servico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monitor_cron: {
         Row: {
           created_at: string
