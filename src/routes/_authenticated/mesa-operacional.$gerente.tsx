@@ -113,6 +113,21 @@ function GerentePostosPage() {
     },
   });
 
+  const salvarRelatorio = useServerFn(salvarRelatorioMesa);
+  const relatorioMut = useMutation({
+    mutationFn: (v: { postoId: string; relatorio: string }) =>
+      salvarRelatorio({ data: { postoId: v.postoId, data: dia, relatorio: v.relatorio } }),
+    onSuccess: (r) => {
+      if (!r.ok) {
+        toast.error(r.erro || "Não foi possível salvar o relatório");
+        return;
+      }
+      toast.success("Relatório registrado com data e hora");
+      atualizar();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar o relatório"),
+  });
+
   const postosDoGerente = useMemo(() => {
     const base = data?.postos ?? [];
     const doGerente = base.filter(
