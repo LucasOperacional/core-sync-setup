@@ -548,7 +548,7 @@ function MesaOperacionalPage() {
                           <CardHeader className="pb-3">
                             <CardTitle className="flex items-center justify-between gap-2 text-sm">
                               <Link
-                                to="/_authenticated/mesa-operacional/$gerente"
+                                to="/mesa-operacional/$gerente"
                                 params={{ gerente: grupo.gerente }}
                                 className="flex flex-1 items-center gap-2 transition-colors hover:text-primary"
                               >
