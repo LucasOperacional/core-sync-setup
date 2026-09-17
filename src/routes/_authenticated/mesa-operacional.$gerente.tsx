@@ -90,6 +90,19 @@ function GerentePostosPage() {
     },
   });
 
+  const removerTodos = useServerFn(removerTodosPostosMesa);
+  const removerTodosMut = useMutation({
+    mutationFn: () => removerTodos({ data: { gerenteNome: gerente } }),
+    onSuccess: (r) => {
+      if (!r.ok) {
+        toast.error(r.erro || "Não foi possível remover todos os postos");
+        return;
+      }
+      toast.success("Todos os postos deste gerente foram removidos");
+      atualizar();
+    },
+  });
+
   const postosDoGerente = useMemo(() => {
     const base = data?.postos ?? [];
     const doGerente = base.filter(
