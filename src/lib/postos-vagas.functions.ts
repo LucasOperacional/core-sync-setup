@@ -11,6 +11,8 @@ export type PostoVaga = {
   ativo: boolean;
   /** Data de encerramento do posto na NEXTI (null = ativo). */
   encerradoEm: string | null;
+  /** Motivo de encerramento do posto na NEXTI (null = sem encerramento). */
+  motivoEncerramento: string | null;
   /** Quantidade de vagas disponíveis informada pela NEXTI (campo vacantJob). */
   vagas: number;
 };
@@ -85,6 +87,7 @@ type LinhaBanco = {
   state: string | null;
   active: boolean | null;
   finish_date: string | null;
+  closing_reason: string | null;
   vacant_job: number | null;
   last_synced_at?: string | null;
 };
@@ -99,6 +102,7 @@ function paraPosto(row: LinhaBanco): PostoVaga {
     uf: row.state,
     ativo: row.active ?? true,
     encerradoEm: row.finish_date ?? null,
+    motivoEncerramento: row.closing_reason?.trim() || null,
     vagas: row.vacant_job ?? 0,
   };
 }
@@ -110,7 +114,7 @@ export const listarPostosVagas = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("nexti_workplaces")
       .select(
-        "nexti_id, name, client_name, company_name, city, state, active, finish_date, vacant_job, last_synced_at",
+        "nexti_id, name, client_name, company_name, city, state, active, finish_date, closing_reason, vacant_job, last_synced_at",
       )
       .order("name", { ascending: true })
       .limit(5000);
@@ -129,7 +133,12 @@ export const listarPostosVagas = createServerFn({ method: "GET" })
       atualizadoEm,
       postos: linhas
         .filter((l) => (l.name ?? "").trim().length > 0)
-        .filter((l) => l.active !== false && l.finish_date == null)
+        .filter(
+          (l) =>
+            l.active !== false &&
+            l.finish_date == null &&
+            (l.closing_reason ?? "").trim().length === 0,
+        )
         .map(paraPosto),
     };
   });
