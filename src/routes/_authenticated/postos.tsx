@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Building2, Download, Loader2, Search } from "lucide-react";
+import { Building2, ChevronDown, ChevronRight, Download, Loader2, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -10,7 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { importarPostosVagasNexti, listarPostosVagas } from "@/lib/postos-vagas.functions";
+import {
+  importarPostosVagasNexti,
+  listarCargosPorPosto,
+  listarPostosVagas,
+} from "@/lib/postos-vagas.functions";
 import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 
 export const Route = createFileRoute("/_authenticated/postos")({
