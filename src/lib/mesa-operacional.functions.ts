@@ -13,6 +13,9 @@ export type PostoServicoMesa = {
   checkFeito: boolean;
   checkObservacao: string | null;
   checkEm: string | null;
+  /** Relatório do dia consultado (quando existir). */
+  relatorio: string | null;
+  relatorioEm: string | null;
 };
 
 export type ListarMesaResultado = {
