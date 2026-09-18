@@ -270,7 +270,10 @@ function MesaOperacionalPage() {
       : postos;
 
     const mapa = new Map<string, PostoServicoMesa[]>();
-    for (const gerente of AREAS_GERENTES) mapa.set(gerente, []);
+    for (const gerente of AREAS_GERENTES) {
+      if (coordenadorVisivel && coordenadorDoGerente(gerente) !== coordenadorVisivel) continue;
+      mapa.set(gerente, []);
+    }
     for (const p of filtrados) {
       const lista = mapa.get(p.gerenteNome) ?? [];
       lista.push(p);
