@@ -87,6 +87,7 @@ function MesaOperacionalPage() {
   const [loteBusca, setLoteBusca] = useState("");
   const [loteSelecao, setLoteSelecao] = useState<string[]>([]);
   const [loteTexto, setLoteTexto] = useState("");
+  const [loteCompacto, setLoteCompacto] = useState(false);
 
   // A página abre primeiro; a lista de postos da NEXTI chega em seguida.
   const nextiPronto = useNextiDiferido();
@@ -514,6 +515,14 @@ function MesaOperacionalPage() {
                 disabled={loteSelecao.length === 0}
               >
                 Limpar seleção
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={loteCompacto ? "secondary" : "ghost"}
+                onClick={() => setLoteCompacto((v) => !v)}
+              >
+                {loteCompacto ? "Visão completa" : "Visão reduzida"}
               </Button>
               <span>{loteSelecao.length} selecionado(s)</span>
             </div>
