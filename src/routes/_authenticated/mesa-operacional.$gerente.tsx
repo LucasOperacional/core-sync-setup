@@ -492,6 +492,33 @@ function RelatorioGeralCard({ gerente, dia }: { gerente: string; dia: string }) 
   );
 }
 
+function IconeStatusRelatorio({ relatorio }: { relatorio: string | null }) {
+  const texto = (relatorio ?? "").trim();
+  const semEfetivo = normalizarNome(texto).includes("SEM EFETIVO");
+  if (semEfetivo) {
+    return (
+      <CircleAlert
+        className="size-4 shrink-0 text-red-600 dark:text-red-400"
+        aria-label="Relato com SEM EFETIVO"
+      />
+    );
+  }
+  if (texto.length > 0) {
+    return (
+      <CircleAlert
+        className="size-4 shrink-0 text-amber-500 dark:text-amber-400"
+        aria-label="Posto com relato registrado"
+      />
+    );
+  }
+  return (
+    <CheckCircle2
+      className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400"
+      aria-label="Posto sem relato"
+    />
+  );
+}
+
 function RelatorioPosto({
   postoId,
   relatorio,
