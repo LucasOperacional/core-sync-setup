@@ -264,12 +264,15 @@ function MesaOperacionalPage() {
       .map(([gerente, lista]) => ({
         gerente,
         lista,
-        feitos: lista.filter((p) => p.checkFeito).length,
+        // Só conta quando a folha está sem inconsistência e sem pedido de justificativa.
+        feitos: lista.filter((p) => postoConcluido(p)).length,
+        pendentes: lista.filter((p) => !folhaLimpa(p)).length,
       }))
       .filter((g) => g.lista.length > 0 || !termo);
-  }, [postos, busca]);
+  }, [postos, busca, pendenciaPorPosto]);
 
-  const totalFeitos = postos.filter((p) => p.checkFeito).length;
+  const totalFeitos = postos.filter((p) => postoConcluido(p)).length;
+  const totalPostosComPendencia = postos.filter((p) => !folhaLimpa(p)).length;
   const pctGeral = postos.length ? Math.round((totalFeitos / postos.length) * 100) : 0;
 
   return (
