@@ -239,7 +239,15 @@ function MesaOperacionalPage() {
     loteMut.mutate(lista);
   };
 
-  const postos = data?.postos ?? [];
+  const todosPostos = data?.postos ?? [];
+  // Cada usuário da mesa enxerga apenas os gerentes do seu coordenador.
+  const postos = useMemo(
+    () =>
+      coordenadorVisivel
+        ? todosPostos.filter((p) => coordenadorDoGerente(p.gerenteNome) === coordenadorVisivel)
+        : todosPostos,
+    [todosPostos, coordenadorVisivel],
+  );
 
   const grupos = useMemo(() => {
     const termo = normalizarNome(busca);
