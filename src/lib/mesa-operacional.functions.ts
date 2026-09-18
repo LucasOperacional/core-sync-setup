@@ -676,6 +676,42 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
         // sem atestados disponíveis, segue apenas com as inconsistências
       }
 
+      // Quem tem QUALQUER marcação no dia (para achar quem não tem nenhuma)
+      const comMarcacao = new Set<number>();
+      const nomesComMarcacao = new Set<string>();
+      try {
+        const ini = `${diaMes}${mes}${ano}000000`;
+        const fim = `${diaMes}${mes}${ano}235959`;
+        for (const endpoint of [
+          `/api/clockings/start/${ini}/finish/${fim}`,
+          `/clockings/start/${ini}/finish/${fim}`,
+        ]) {
+          try {
+            for (let page = 0; page < 40; page++) {
+              const resposta = await requestNexti({
+                config,
+                endpoint,
+                method: "GET",
+                query: { page, size: 500 },
+              });
+              const lista = listaDoPayload(resposta.data);
+              for (const m of lista) {
+                const idPessoa = Number(escolher(m, ["personId", "person_id", "idPerson"]));
+                if (Number.isFinite(idPessoa)) comMarcacao.add(idPessoa);
+                const nomePessoa = texto(escolher(m, ["personName", "person_name", "nome"]));
+                if (nomePessoa) nomesComMarcacao.add(chavePosto(nomePessoa));
+              }
+              if (lista.length < 500) break;
+            }
+            break;
+          } catch {
+            // tenta o próximo caminho
+          }
+        }
+      } catch {
+        // sem marcações disponíveis, segue apenas com as inconsistências
+      }
+
       const mapa = new Map<string, PendenciaFolhaPosto>();
       for (const item of itens) {
         const idLocal = Number(item["workplaceId"] ?? 0);
