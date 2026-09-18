@@ -310,6 +310,30 @@ function GerentePostosPage() {
                       })}
                     </p>
                   ) : null}
+                  {(() => {
+                    const pend = pendenciaDoPosto(posto.nome);
+                    if (!pend) {
+                      return posto.checkFeito ? (
+                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                          Folhas sem inconsistência e sem pedido de justificativa.
+                        </p>
+                      ) : null;
+                    }
+                    return (
+                      <div className="mt-1 rounded-md border border-destructive/30 bg-destructive/5 p-2">
+                        <p className="text-[11px] font-semibold text-destructive">
+                          {pend.colaboradores.length} colaborador(es) com folha pendente
+                        </p>
+                        <ul className="mt-0.5 space-y-0.5">
+                          {pend.colaboradores.map((c) => (
+                            <li key={c.nome} className="text-[11px] text-muted-foreground">
+                              {c.nome} — {c.motivos.join(", ")}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })()}
                   <RelatorioPosto
                     postoId={posto.id}
                     relatorio={posto.relatorio}
