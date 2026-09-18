@@ -164,7 +164,11 @@ function GerentePostosPage() {
       }
     >();
     for (const p of folhas.data?.pendencias ?? [])
-      mapa.set(p.chave, { total: p.total, colaboradores: p.colaboradores });
+      mapa.set(p.chave, {
+        total: p.total,
+        comAtestado: p.comAtestado,
+        colaboradores: p.colaboradores,
+      });
     return mapa;
   }, [folhas.data]);
   const pendenciaDoPosto = (nome: string) => pendenciaPorPosto.get(chavePosto(nome)) ?? null;
