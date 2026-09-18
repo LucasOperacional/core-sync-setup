@@ -650,13 +650,29 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
         const motivo = MOTIVOS[tipo] ?? tipo ?? "Inconsistência";
         const pessoa = String(item["personName"] ?? "Colaborador sem nome").trim();
 
-        const atual = mapa.get(chave) ?? { chave, posto, total: 0, colaboradores: [] };
+        const idPessoa = Number(item["personId"]);
+        const temAtestado =
+          (Number.isFinite(idPessoa) && comAtestado.has(idPessoa)) ||
+          nomesComAtestado.has(chavePosto(pessoa));
+
+        const atual: PendenciaFolhaPosto = mapa.get(chave) ?? {
+          chave,
+          posto,
+          total: 0,
+          comAtestado: 0,
+          colaboradores: [],
+        };
         atual.total += 1;
         const existente = atual.colaboradores.find((c) => c.nome === pessoa);
         if (existente) {
           if (!existente.motivos.includes(motivo)) existente.motivos.push(motivo);
+          if (temAtestado && !existente.atestado) {
+            existente.atestado = true;
+            atual.comAtestado += 1;
+          }
         } else {
-          atual.colaboradores.push({ nome: pessoa, motivos: [motivo] });
+          atual.colaboradores.push({ nome: pessoa, motivos: [motivo], atestado: temAtestado });
+          if (temAtestado) atual.comAtestado += 1;
         }
         mapa.set(chave, atual);
       }
