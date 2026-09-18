@@ -36,3 +36,23 @@ export function coordenadorDoGerente(gerente: string): Coordenador {
 export function rotuloCoordenador(c: Coordenador): string {
   return `Coordenador ${c === "VANDERLEI" ? "Vanderlei" : "Jefferson"}`;
 }
+
+/**
+ * Regra de visibilidade da Mesa Operacional: cada usuário abaixo enxerga
+ * apenas os gerentes de área do seu coordenador. Demais usuários veem tudo.
+ */
+const COORDENADOR_POR_USUARIO: Record<string, Coordenador> = {
+  "lucasdallan@gmail.com": "VANDERLEI",
+  "mariana.silva@grupotektron.com.br": "JEFFERSON",
+};
+
+/** Coordenador que o usuário pode visualizar, ou null quando vê todos. */
+export function coordenadorVisivelPara(email?: string | null): Coordenador | null {
+  if (!email) return null;
+  const chaveEmail = email.trim().toLowerCase();
+  if (COORDENADOR_POR_USUARIO[chaveEmail]) return COORDENADOR_POR_USUARIO[chaveEmail];
+  const usuario = chaveEmail.split("@")[0] ?? "";
+  if (usuario === "lucasdallan") return "VANDERLEI";
+  if (usuario.startsWith("mariana")) return "JEFFERSON";
+  return null;
+}
