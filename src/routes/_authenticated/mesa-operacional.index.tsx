@@ -154,12 +154,36 @@ function MesaOperacionalPage() {
   const checkMut = useMutation({
     mutationFn: (v: { postoId: string; feito: boolean }) =>
       marcar({ data: { postoId: v.postoId, data: dia, feito: v.feito } }),
-    onSuccess: (r) => {
-      if (!r.ok) toast.error(r.erro || "Não foi possível salvar o check-in");
-      atualizar();
+    // Atualiza a tela na hora do clique e só confirma com o servidor depois.
+    onMutate: async (v) => {
+      await queryClient.cancelQueries({ queryKey: chave });
+      const anterior = queryClient.getQueryData<{ postos?: { id: string; checkFeito?: boolean }[] }>(
+        chave,
+      );
+      queryClient.setQueryData(chave, (atual: typeof anterior) =>
+        atual?.postos
+          ? {
+              ...atual,
+              postos: atual.postos.map((p) =>
+                p.id === v.postoId ? { ...p, checkFeito: v.feito } : p,
+              ),
+            }
+          : atual,
+      );
+      return { anterior };
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar o check-in"),
+    onSuccess: (r) => {
+      if (!r.ok) {
+        toast.error(r.erro || "Não foi possível salvar o check-in");
+        atualizar();
+      }
+    },
+    onError: (e, _v, ctx) => {
+      if (ctx?.anterior) queryClient.setQueryData(chave, ctx.anterior);
+      toast.error(e instanceof Error ? e.message : "Falha ao salvar o check-in");
+    },
   });
+
 
   const removerMut = useMutation({
     mutationFn: (id: string) => remover({ data: { id } }),
