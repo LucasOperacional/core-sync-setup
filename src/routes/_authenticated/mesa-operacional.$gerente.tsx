@@ -431,6 +431,7 @@ function GerentePostosPage() {
 function RelatorioGeralCard({ gerente, dia }: { gerente: string; dia: string }) {
   const buscar = useServerFn(buscarRelatorioGeralMesa);
   const salvar = useServerFn(salvarRelatorioGeralMesa);
+  const limpar = useServerFn(limparRelatorioGeralMesa);
   const queryClient = useQueryClient();
   const chave = ["mesa-relatorio-geral", gerente, dia] as const;
 
@@ -456,6 +457,21 @@ function RelatorioGeralCard({ gerente, dia }: { gerente: string; dia: string }) 
       queryClient.invalidateQueries({ queryKey: chave });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar"),
+  });
+
+  const limparMut = useMutation({
+    mutationFn: () => limpar({ data: { gerenteNome: gerente, data: dia } }),
+    onSuccess: (r) => {
+      if (!r.ok) {
+        toast.error(r.erro || "Não foi possível limpar o relatório geral");
+        return;
+      }
+      toast.success("Relatório geral removido");
+      setEditando(false);
+      setTexto("");
+      queryClient.invalidateQueries({ queryKey: chave });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao limpar"),
   });
 
   const temRelatorio = Boolean(data?.relatorio);
