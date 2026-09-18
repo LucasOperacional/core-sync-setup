@@ -786,10 +786,11 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
             const temAtestado =
               (Number.isFinite(idPessoa) && comAtestado.has(idPessoa)) ||
               nomesComAtestado.has(chavePosto(nome));
+            const dataFormatada = dia ? new Date(`${dia}T00:00:00`).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" }) : "hoje";
             atual.total += 1;
             atual.colaboradores.push({
               nome,
-              motivos: ["Sem nenhuma marcação no dia"],
+              motivos: [`Sem nenhuma marcação em ${dataFormatada}`],
               atestado: temAtestado,
             });
             if (temAtestado) atual.comAtestado += 1;
