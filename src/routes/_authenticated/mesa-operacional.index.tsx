@@ -23,7 +23,13 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { AREAS_GERENTES } from "@/lib/areas-gerentes";
 import { normalizarNome } from "@/lib/gerentes-area-a";
-import { COORDENADORES, coordenadorDoGerente, rotuloCoordenador } from "@/lib/coordenadores";
+import {
+  COORDENADORES,
+  coordenadorDoGerente,
+  coordenadorVisivelPara,
+  rotuloCoordenador,
+} from "@/lib/coordenadores";
+import { useSessao } from "@/hooks/use-sessao";
 import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 import {
   buscarPostosNexti,
