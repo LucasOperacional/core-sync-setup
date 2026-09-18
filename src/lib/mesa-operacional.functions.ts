@@ -133,6 +133,25 @@ export const salvarRelatorioMesa = createServerFn({ method: "POST" })
     return { ok: true };
 });
 
+const limparRelatorioSchema = z.object({
+  postoId: z.string().uuid(),
+  data: z.string(),
+});
+
+/** Remove o relatório do posto na data. */
+export const limparRelatorioMesa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => limparRelatorioSchema.parse(input))
+  .handler(async ({ context, data }): Promise<MesaResultado> => {
+    const { error } = await context.supabase
+      .from("mesa_relatorios")
+      .delete()
+      .eq("posto_id", data.postoId)
+      .eq("data", data.data);
+    if (error) return { ok: false, erro: error.message };
+    return { ok: true };
+  });
+
 // ---------------------------------------------------------------------------
 // Relatório geral do gerente (por dia, sem vínculo com posto)
 // ---------------------------------------------------------------------------
@@ -181,6 +200,26 @@ export const salvarRelatorioGeralMesa = createServerFn({ method: "POST" })
       registrado_por: context.userId,
       registrado_em: new Date().toISOString(),
     });
+    if (error) return { ok: false, erro: error.message };
+    return { ok: true };
+  });
+
+const limparRelatorioGeralSchema = z.object({
+  gerenteNome: z.string().min(2),
+  data: z.string(),
+});
+
+/** Remove o relatório geral do gerente na data. */
+export const limparRelatorioGeralMesa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => limparRelatorioGeralSchema.parse(input))
+  .handler(async ({ context, data }): Promise<MesaResultado> => {
+    const { error } = await context.supabase
+      .from("mesa_relatorios")
+      .delete()
+      .is("posto_id", null)
+      .eq("gerente_nome", data.gerenteNome.trim())
+      .eq("data", data.data);
     if (error) return { ok: false, erro: error.message };
     return { ok: true };
   });

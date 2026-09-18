@@ -38,6 +38,8 @@ import {
   buscarRelatorioGeralMesa,
   chavePosto,
   hojeBrasilia,
+  limparRelatorioGeralMesa,
+  limparRelatorioMesa,
   listarFolhasPendentesMesa,
   listarPostosMesa,
   registrarCheckinMesa,
@@ -155,6 +157,20 @@ function GerentePostosPage() {
       atualizar();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar o relatório"),
+  });
+
+  const limparRelatorio = useServerFn(limparRelatorioMesa);
+  const limparRelatorioMut = useMutation({
+    mutationFn: (postoId: string) => limparRelatorio({ data: { postoId, data: dia } }),
+    onSuccess: (r) => {
+      if (!r.ok) {
+        toast.error(r.erro || "Não foi possível limpar o relatório");
+        return;
+      }
+      toast.success("Relatório removido");
+      atualizar();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao limpar o relatório"),
   });
 
   const postosDoGerente = useMemo(() => {
@@ -386,9 +402,11 @@ function GerentePostosPage() {
                     relatorio={posto.relatorio}
                     relatorioEm={posto.relatorioEm}
                     salvando={relatorioMut.isPending}
+                    limpando={limparRelatorioMut.isPending}
                     onSalvar={(texto) =>
                       relatorioMut.mutate({ postoId: posto.id, relatorio: texto })
                     }
+                    onLimpar={() => limparRelatorioMut.mutate(posto.id)}
                   />
                 </div>
                 <button
@@ -413,6 +431,7 @@ function GerentePostosPage() {
 function RelatorioGeralCard({ gerente, dia }: { gerente: string; dia: string }) {
   const buscar = useServerFn(buscarRelatorioGeralMesa);
   const salvar = useServerFn(salvarRelatorioGeralMesa);
+  const limpar = useServerFn(limparRelatorioGeralMesa);
   const queryClient = useQueryClient();
   const chave = ["mesa-relatorio-geral", gerente, dia] as const;
 
@@ -438,6 +457,21 @@ function RelatorioGeralCard({ gerente, dia }: { gerente: string; dia: string }) 
       queryClient.invalidateQueries({ queryKey: chave });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar"),
+  });
+
+  const limparMut = useMutation({
+    mutationFn: () => limpar({ data: { gerenteNome: gerente, data: dia } }),
+    onSuccess: (r) => {
+      if (!r.ok) {
+        toast.error(r.erro || "Não foi possível limpar o relatório geral");
+        return;
+      }
+      toast.success("Relatório geral removido");
+      setEditando(false);
+      setTexto("");
+      queryClient.invalidateQueries({ queryKey: chave });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao limpar"),
   });
 
   const temRelatorio = Boolean(data?.relatorio);
@@ -500,16 +534,31 @@ function RelatorioGeralCard({ gerente, dia }: { gerente: string; dia: string }) 
             </div>
           </div>
         ) : (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setTexto(data?.relatorio ?? "");
-              setEditando(true);
-            }}
-          >
-            Editar relatório
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setTexto(data?.relatorio ?? "");
+                setEditando(true);
+              }}
+            >
+              Editar relatório
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={limparMut.isPending}
+              onClick={() => {
+                if (confirm("Deseja limpar o relatório geral deste gerente?")) {
+                  limparMut.mutate();
+                }
+              }}
+            >
+              {limparMut.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              Limpar relatório
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
@@ -548,13 +597,17 @@ function RelatorioPosto({
   relatorio,
   relatorioEm,
   salvando,
+  limpando,
   onSalvar,
+  onLimpar,
 }: {
   postoId: string;
   relatorio: string | null;
   relatorioEm: string | null;
   salvando: boolean;
+  limpando: boolean;
   onSalvar: (texto: string) => void;
+  onLimpar: () => void;
 }) {
   const [aberto, setAberto] = useState(false);
   const [texto, setTexto] = useState(relatorio ?? "");
@@ -592,14 +645,31 @@ function RelatorioPosto({
             rows={3}
             className="text-sm"
           />
-          <Button
-            size="sm"
-            disabled={salvando || texto.trim().length === 0}
-            onClick={() => onSalvar(texto)}
-          >
-            {salvando ? <Loader2 className="size-4 animate-spin" /> : null}
-            Salvar relatório
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              disabled={salvando || limpando || texto.trim().length === 0}
+              onClick={() => onSalvar(texto)}
+            >
+              {salvando ? <Loader2 className="size-4 animate-spin" /> : null}
+              Salvar relatório
+            </Button>
+            {relatorio ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={salvando || limpando}
+                onClick={() => {
+                  if (confirm("Deseja limpar o relatório deste posto?")) {
+                    onLimpar();
+                  }
+                }}
+              >
+                {limpando ? <Loader2 className="size-4 animate-spin" /> : null}
+                Limpar relatório
+              </Button>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>
