@@ -480,3 +480,124 @@ export const importarPostosMesaLote = createServerFn({ method: "POST" })
     }
     return { ok: true, criados, repetidos, falhas };
   });
+
+// ---------------------------------------------------------------------------
+// Conferência das folhas dos colaboradores (inconsistências da NEXTI)
+// ---------------------------------------------------------------------------
+
+export type ColaboradorPendente = { nome: string; motivos: string[] };
+
+export type PendenciaFolhaPosto = {
+  /** Nome do posto normalizado (sem acentos, maiúsculo). */
+  chave: string;
+  posto: string;
+  total: number;
+  colaboradores: ColaboradorPendente[];
+};
+
+export type FolhasMesaResultado = {
+  ok: boolean;
+  data: string;
+  pendencias: PendenciaFolhaPosto[];
+  total: number;
+  erro?: string;
+};
+
+/** Normaliza nome de posto para comparação. */
+export function chavePosto(nome: string): string {
+  return nome
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, " ")
+    .trim();
+}
+
+const MOTIVOS: Record<string, string> = {
+  NOT_REGISTERED: "Ausência de marcação (pedido de justificativa)",
+  INVALID_TIME: "Horário inválido",
+  DEVICE_NOT_AUTHORIZED: "Terminal não autorizado",
+};
+
+/**
+ * Lista as folhas com pendência na NEXTI no dia (inconsistências ainda não
+ * tratadas pela mesa e pedidos de justificativa), agrupadas por posto.
+ */
+export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => dataSchema.parse(input ?? {}))
+  .handler(async ({ context, data }): Promise<FolhasMesaResultado> => {
+    const dia = data.data && /^\d{4}-\d{2}-\d{2}$/.test(data.data) ? data.data : hojeBrasilia();
+    const [ano, mes, diaMes] = dia.split("-");
+    const referenceDate = `${diaMes}${mes}${ano}`;
+
+    try {
+      const { loadConfig, normalizeBaseUrl, requestNexti } = await import("@/lib/nexti.functions");
+      const config = await loadConfig((context as { supabase: unknown }).supabase);
+      config.baseUrl = normalizeBaseUrl(config.baseUrl);
+
+      // Nome dos postos da NEXTI (workplaceId -> nome)
+      const nomePosto = new Map<number, string>();
+      const { data: locais } = await context.supabase
+        .from("nexti_workplaces")
+        .select("nexti_id, name")
+        .limit(5000);
+      for (const l of (locais ?? []) as Array<{ nexti_id: number | null; name: string | null }>) {
+        if (l.nexti_id != null && l.name) nomePosto.set(Number(l.nexti_id), l.name);
+      }
+
+      type Item = Record<string, unknown>;
+      const itens: Item[] = [];
+      for (let page = 0; page < 25; page++) {
+        const resposta = await requestNexti({
+          config,
+          endpoint: "/api/clockings/inconsistencies",
+          method: "GET",
+          query: { referenceDate, page, size: 200 },
+        });
+        const payload = resposta.data as Record<string, unknown> | null;
+        const lista = Array.isArray(payload?.["content"])
+          ? (payload?.["content"] as Item[])
+          : Array.isArray(payload)
+            ? (payload as Item[])
+            : [];
+        itens.push(...lista);
+        if (lista.length < 200 || payload?.["last"] === true) break;
+      }
+
+      const mapa = new Map<string, PendenciaFolhaPosto>();
+      for (const item of itens) {
+        const idLocal = Number(item["workplaceId"] ?? 0);
+        const nome =
+          nomePosto.get(idLocal) ??
+          (typeof item["workplaceName"] === "string" ? (item["workplaceName"] as string) : "") ??
+          "";
+        const posto = nome || "Sem posto identificado";
+        const chave = chavePosto(posto);
+        const tipo = String(item["clockingTypeName"] ?? "");
+        const motivo = MOTIVOS[tipo] ?? tipo ?? "Inconsistência";
+        const pessoa = String(item["personName"] ?? "Colaborador sem nome").trim();
+
+        const atual = mapa.get(chave) ?? { chave, posto, total: 0, colaboradores: [] };
+        atual.total += 1;
+        const existente = atual.colaboradores.find((c) => c.nome === pessoa);
+        if (existente) {
+          if (!existente.motivos.includes(motivo)) existente.motivos.push(motivo);
+        } else {
+          atual.colaboradores.push({ nome: pessoa, motivos: [motivo] });
+        }
+        mapa.set(chave, atual);
+      }
+
+      const pendencias = [...mapa.values()].sort((a, b) => b.total - a.total);
+      return { ok: true, data: dia, pendencias, total: itens.length };
+    } catch (error) {
+      return {
+        ok: false,
+        data: dia,
+        pendencias: [],
+        total: 0,
+        erro: error instanceof Error ? error.message : "Falha ao consultar a NEXTI.",
+      };
+    }
+  });
