@@ -318,7 +318,7 @@ function MesaOperacionalPage() {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="h-9 px-3 text-sm">
-                {totalFeitos} de {postos.length} com check-in
+                {totalFeitos} de {postos.length} com folha conferida
               </Badge>
               <Badge
                 variant={pctGeral === 100 && postos.length > 0 ? "default" : "outline"}
@@ -326,7 +326,21 @@ function MesaOperacionalPage() {
               >
                 {pctGeral}%
               </Badge>
+              {totalPostosComPendencia > 0 ? (
+                <Badge variant="destructive" className="h-9 px-3 text-sm">
+                  {totalPostosComPendencia} posto(s) com folha pendente
+                </Badge>
+              ) : null}
+              {folhas.isFetching ? (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Loader2 className="size-3 animate-spin" /> conferindo folhas...
+                </span>
+              ) : null}
             </div>
+            <p className="w-full text-xs text-muted-foreground">
+              A porcentagem só sobe quando o posto tem check-in e nenhuma folha com inconsistência
+              ou pedido de justificativa na NEXTI.
+            </p>
             <Progress value={pctGeral} className="h-2 w-full" />
           </CardContent>
         </Card>
