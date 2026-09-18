@@ -539,7 +539,10 @@ function MesaOperacionalPage() {
               ) : (
                 <ul className="divide-y">
                   {nextiFiltrados.map((p) => (
-                    <li key={`${p.nextiId ?? p.nome}`} className="flex items-center gap-3 p-2">
+                    <li
+                      key={`${p.nextiId ?? p.nome}`}
+                      className={`flex items-center gap-3 ${loteCompacto ? "px-2 py-1" : "p-2"}`}
+                    >
                       <Checkbox
                         checked={loteSelecao.includes(p.nome)}
                         onCheckedChange={(v) =>
@@ -552,10 +555,14 @@ function MesaOperacionalPage() {
                         aria-label={`Selecionar ${p.nome}`}
                       />
                       <div className="min-w-0">
-                        <p className="truncate text-sm">{p.nome}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {[p.cliente, p.localidade].filter(Boolean).join(" · ") || "—"}
+                        <p className={`truncate ${loteCompacto ? "text-xs" : "text-sm"}`}>
+                          {p.nome}
                         </p>
+                        {!loteCompacto && (
+                          <p className="truncate text-xs text-muted-foreground">
+                            {[p.cliente, p.localidade].filter(Boolean).join(" · ") || "—"}
+                          </p>
+                        )}
                       </div>
                     </li>
                   ))}
