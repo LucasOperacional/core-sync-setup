@@ -217,13 +217,116 @@ export const resolverPessoasMovimentacaoLote = createServerFn({ method: "POST" }
             text(pessoa["workplaceName"] ?? pessoa["postoAtual"]) ||
             (postoAtualId !== null ? (postos.get(postoAtualId) ?? "") : ""),
           encontrado: personId !== null,
-          erro: personId === null ? "Colaborador sem identificador válido na NEXTI." : undefined,
+          ...(personId === null
+            ? { erro: "Colaborador sem identificador válido na NEXTI." }
+            : {}),
         };
       });
       return { ok: true as const, pessoas: resultados };
     } catch (error) {
       return { ok: false as const, erro: mensagemErroNexti(error), pessoas: [] as PessoaMovimentacaoLote[] };
     }
+  });
+
+export type ResultadoMovimentacaoLote = {
+  colaborador: string;
+  ok: boolean;
+  mensagem: string;
+  nextiTransferId?: string;
+};
+
+/** Valida e movimenta diretamente na NEXTI cada colaborador válido do lote. */
+export const executarMovimentacaoPostoLote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => movimentacaoLoteSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const resultados: ResultadoMovimentacaoLote[] = [];
+    try {
+      const config = await loadConfig(context.supabase);
+      config.baseUrl = normalizeBaseUrl(config.baseUrl);
+      let workplaceExternalId = data.novoPostoExternalId;
+      if (!workplaceExternalId) {
+        try {
+          const resposta = await requestNexti({
+            config,
+            endpoint: `/workplaces/${data.novoPostoId}`,
+            method: "GET",
+          });
+          const posto = unwrapValue(resposta.data);
+          if (isRecord(posto)) workplaceExternalId = text(posto["externalId"]);
+        } catch {
+          // O ID interno do posto é suficiente para o envio.
+        }
+      }
+
+      const vistos = new Set<number>();
+      for (const pessoa of data.pessoas) {
+        if (vistos.has(pessoa.personId)) continue;
+        vistos.add(pessoa.personId);
+        if (pessoa.postoAtualId === data.novoPostoId) {
+          resultados.push({
+            colaborador: pessoa.colaborador,
+            ok: false,
+            mensagem: "Já está no posto de destino.",
+          });
+          continue;
+        }
+        try {
+          const validacao = await validarVagaCompativel(
+            config,
+            pessoa.personId,
+            data.novoPostoId,
+            data.dataMovimentacao,
+            workplaceExternalId,
+          );
+          if (!validacao.ok) {
+            resultados.push({
+              colaborador: pessoa.colaborador,
+              ok: false,
+              mensagem: validacao.erro,
+            });
+            continue;
+          }
+          const resposta = await requestNexti({
+            config,
+            endpoint: "/workplacetransfers",
+            method: "POST",
+            body: {
+              personId: pessoa.personId,
+              personExternalId: pessoa.personExternalId || undefined,
+              workplaceId: data.novoPostoId,
+              workplaceExternalId: workplaceExternalId || undefined,
+              transferDateTime: dataHoraNexti(data.dataMovimentacao),
+              observation: data.motivo,
+            },
+          });
+          const payload = (resposta.data ?? {}) as NextiResponse;
+          const rawId = payload.value?.id ?? payload.id ?? null;
+          resultados.push({
+            colaborador: pessoa.colaborador,
+            ok: true,
+            mensagem: `Movimentado para ${data.novoPosto}.`,
+            ...(rawId === null ? {} : { nextiTransferId: String(rawId) }),
+          });
+        } catch (error) {
+          resultados.push({
+            colaborador: pessoa.colaborador,
+            ok: false,
+            mensagem: mensagemErroNexti(error),
+          });
+        }
+      }
+    } catch (error) {
+      for (const pessoa of data.pessoas) {
+        resultados.push({
+          colaborador: pessoa.colaborador,
+          ok: false,
+          mensagem: mensagemErroNexti(error),
+        });
+      }
+    }
+    const sucessos = resultados.filter((item) => item.ok).length;
+    return { resultados, sucessos, falhas: resultados.length - sucessos };
   });
 
 function nextiDateIsActive(
