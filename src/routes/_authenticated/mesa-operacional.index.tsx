@@ -23,7 +23,13 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { AREAS_GERENTES } from "@/lib/areas-gerentes";
 import { normalizarNome } from "@/lib/gerentes-area-a";
-import { COORDENADORES, coordenadorDoGerente, rotuloCoordenador } from "@/lib/coordenadores";
+import {
+  COORDENADORES,
+  coordenadorDoGerente,
+  coordenadorVisivelPara,
+  rotuloCoordenador,
+} from "@/lib/coordenadores";
+import { useSessao } from "@/hooks/use-sessao";
 import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 import {
   buscarPostosNexti,
@@ -62,6 +68,8 @@ export const Route = createFileRoute("/_authenticated/mesa-operacional/")({
 
 function MesaOperacionalPage() {
   const queryClient = useQueryClient();
+  const { user } = useSessao();
+  const coordenadorVisivel = coordenadorVisivelPara(user?.email);
   const carregar = useServerFn(listarPostosMesa);
   const cadastrar = useServerFn(cadastrarPostoMesa);
   const remover = useServerFn(removerPostoMesa);
@@ -239,7 +247,15 @@ function MesaOperacionalPage() {
     loteMut.mutate(lista);
   };
 
-  const postos = data?.postos ?? [];
+  const todosPostos = data?.postos ?? [];
+  // Cada usuário da mesa enxerga apenas os gerentes do seu coordenador.
+  const postos = useMemo(
+    () =>
+      coordenadorVisivel
+        ? todosPostos.filter((p) => coordenadorDoGerente(p.gerenteNome) === coordenadorVisivel)
+        : todosPostos,
+    [todosPostos, coordenadorVisivel],
+  );
 
   const grupos = useMemo(() => {
     const termo = normalizarNome(busca);
@@ -254,7 +270,10 @@ function MesaOperacionalPage() {
       : postos;
 
     const mapa = new Map<string, PostoServicoMesa[]>();
-    for (const gerente of AREAS_GERENTES) mapa.set(gerente, []);
+    for (const gerente of AREAS_GERENTES) {
+      if (coordenadorVisivel && coordenadorDoGerente(gerente) !== coordenadorVisivel) continue;
+      mapa.set(gerente, []);
+    }
     for (const p of filtrados) {
       const lista = mapa.get(p.gerenteNome) ?? [];
       lista.push(p);
@@ -269,7 +288,7 @@ function MesaOperacionalPage() {
         pendentes: lista.filter((p) => !folhaLimpa(p)).length,
       }))
       .filter((g) => g.lista.length > 0 || !termo);
-  }, [postos, busca, pendenciaPorPosto]);
+  }, [postos, busca, pendenciaPorPosto, coordenadorVisivel]);
 
   const totalFeitos = postos.filter((p) => postoConcluido(p)).length;
   const totalPostosComPendencia = postos.filter((p) => !folhaLimpa(p)).length;
