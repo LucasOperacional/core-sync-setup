@@ -147,7 +147,24 @@ function GerentePostosPage() {
     );
   }, [data, gerente, busca]);
 
-  const feitos = postosDoGerente.filter((p) => p.checkFeito).length;
+  // Folhas com inconsistência ou pedido de justificativa na NEXTI no dia.
+  const carregarFolhas = useServerFn(listarFolhasPendentesMesa);
+  const folhas = useQuery({
+    queryKey: ["mesa-folhas", dia],
+    queryFn: () => carregarFolhas({ data: { data: dia } }),
+    staleTime: 5 * 60_000,
+  });
+  const pendenciaPorPosto = useMemo(() => {
+    const mapa = new Map<string, { total: number; colaboradores: { nome: string; motivos: string[] }[] }>();
+    for (const p of folhas.data?.pendencias ?? [])
+      mapa.set(p.chave, { total: p.total, colaboradores: p.colaboradores });
+    return mapa;
+  }, [folhas.data]);
+  const pendenciaDoPosto = (nome: string) => pendenciaPorPosto.get(chavePosto(nome)) ?? null;
+
+  const feitos = postosDoGerente.filter(
+    (p) => p.checkFeito && !pendenciaDoPosto(p.nome),
+  ).length;
   const total = postosDoGerente.length;
   const pct = total ? Math.round((feitos / total) * 100) : 0;
 
