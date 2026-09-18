@@ -614,6 +614,9 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
       // Quem tem atestado lançado na NEXTI no dia (para mostrar junto da folha pendente)
       const comAtestado = new Set<number>();
       const nomesComAtestado = new Set<string>();
+      // Quem tem QUALQUER lançamento de ausência no dia (falta, atestado etc.) — esses não contam como "sem marcação"
+      const comAusencia = new Set<number>();
+      const nomesComAusencia = new Set<string>();
       try {
         const situacoesAtestado = new Set<number>();
         for (const endpoint of ["/absencesituations/all", "/api/absencesituations/all"]) {
@@ -666,10 +669,13 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
             (Number.isFinite(idSit) && situacoesAtestado.has(idSit)) ||
             !!cid ||
             /ATESTADO|MEDIC/i.test(chavePosto(nomeSit));
-          if (!ehAtestado) continue;
           const idPessoa = Number(escolher(a, ["personId", "person_id", "idPerson"]));
-          if (Number.isFinite(idPessoa)) comAtestado.add(idPessoa);
           const nomePessoa = texto(escolher(a, ["personName", "person_name", "nome"]));
+          // Qualquer lançamento (falta, atestado...) tira o colaborador da lista de "sem marcação"
+          if (Number.isFinite(idPessoa)) comAusencia.add(idPessoa);
+          if (nomePessoa) nomesComAusencia.add(chavePosto(nomePessoa));
+          if (!ehAtestado) continue;
+          if (Number.isFinite(idPessoa)) comAtestado.add(idPessoa);
           if (nomePessoa) nomesComAtestado.add(chavePosto(nomePessoa));
         }
       } catch {
