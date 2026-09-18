@@ -804,6 +804,11 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
               (Number.isFinite(idPessoa) && comMarcacao.has(idPessoa)) ||
               nomesComMarcacao.has(chavePosto(nome));
             if (temMarcacao) continue;
+            // Tem lançamento de falta/atestado no dia: não conta como pendência
+            const temAusencia =
+              (Number.isFinite(idPessoa) && comAusencia.has(idPessoa)) ||
+              nomesComAusencia.has(chavePosto(nome));
+            if (temAusencia) continue;
             const idLocal = Number(p["workplace_id"] ?? 0);
             const posto =
               (idLocal ? nomePosto.get(idLocal) : undefined) ??
