@@ -323,11 +323,19 @@ function GerentePostosPage() {
                       <div className="mt-1 rounded-md border border-destructive/30 bg-destructive/5 p-2">
                         <p className="text-[11px] font-semibold text-destructive">
                           {pend.colaboradores.length} colaborador(es) com folha pendente
+                          {pend.comAtestado > 0
+                            ? ` · ${pend.comAtestado} com atestado sem marcação`
+                            : ""}
                         </p>
                         <ul className="mt-0.5 space-y-0.5">
                           {pend.colaboradores.map((c) => (
                             <li key={c.nome} className="text-[11px] text-muted-foreground">
                               {c.nome} — {c.motivos.join(", ")}
+                              {c.atestado ? (
+                                <span className="ml-1 font-semibold text-amber-600 dark:text-amber-400">
+                                  (atestado)
+                                </span>
+                              ) : null}
                             </li>
                           ))}
                         </ul>
