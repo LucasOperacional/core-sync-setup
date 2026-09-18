@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   CheckCircle2,
+  CircleAlert,
   FileText,
   Loader2,
   Search,
@@ -307,7 +308,10 @@ function GerentePostosPage() {
                   className="mt-0.5"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{posto.nome}</p>
+                  <div className="flex items-center gap-1.5">
+                    <IconeStatusRelatorio relatorio={posto.relatorio} />
+                    <p className="truncate text-sm font-medium">{posto.nome}</p>
+                  </div>
                   <p className="truncate text-xs text-muted-foreground">
                     {[posto.cliente, posto.localidade].filter(Boolean).join(" · ") ||
                       "Sem localidade"}
