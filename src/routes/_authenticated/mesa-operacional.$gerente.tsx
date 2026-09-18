@@ -220,7 +220,7 @@ function GerentePostosPage() {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="h-9 px-3 text-sm">
-                {feitos} de {total} com check-in
+                {feitos} de {total} com folha conferida
               </Badge>
               <Badge
                 variant={pct === 100 && total > 0 ? "default" : "outline"}
