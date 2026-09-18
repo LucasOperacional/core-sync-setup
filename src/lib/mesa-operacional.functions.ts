@@ -614,6 +614,9 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
       // Quem tem atestado lançado na NEXTI no dia (para mostrar junto da folha pendente)
       const comAtestado = new Set<number>();
       const nomesComAtestado = new Set<string>();
+      // Quem tem QUALQUER lançamento de ausência no dia (falta, atestado etc.) — esses não contam como "sem marcação"
+      const comAusencia = new Set<number>();
+      const nomesComAusencia = new Set<string>();
       try {
         const situacoesAtestado = new Set<number>();
         for (const endpoint of ["/absencesituations/all", "/api/absencesituations/all"]) {
@@ -666,10 +669,13 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
             (Number.isFinite(idSit) && situacoesAtestado.has(idSit)) ||
             !!cid ||
             /ATESTADO|MEDIC/i.test(chavePosto(nomeSit));
-          if (!ehAtestado) continue;
           const idPessoa = Number(escolher(a, ["personId", "person_id", "idPerson"]));
-          if (Number.isFinite(idPessoa)) comAtestado.add(idPessoa);
           const nomePessoa = texto(escolher(a, ["personName", "person_name", "nome"]));
+          // Qualquer lançamento (falta, atestado...) tira o colaborador da lista de "sem marcação"
+          if (Number.isFinite(idPessoa)) comAusencia.add(idPessoa);
+          if (nomePessoa) nomesComAusencia.add(chavePosto(nomePessoa));
+          if (!ehAtestado) continue;
+          if (Number.isFinite(idPessoa)) comAtestado.add(idPessoa);
           if (nomePessoa) nomesComAtestado.add(chavePosto(nomePessoa));
         }
       } catch {
@@ -752,8 +758,37 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
         mapa.set(chave, atual);
       }
 
-      // Colaboradores ativos sem NENHUMA marcação no dia
-      if (comMarcacao.size > 0 || nomesComMarcacao.size > 0) {
+      // Feriados do dia: se for feriado, ninguém entra como "sem marcação"
+      let ehFeriado = false;
+      try {
+        for (const endpoint of ["/api/holidays/all", "/holidays/all"]) {
+          try {
+            const resposta = await requestNexti({ config, endpoint, method: "GET" });
+            const lista = listaDoPayload(resposta.data);
+            for (const h of lista) {
+              const dataBruta = texto(escolher(h, ["date", "dateTime", "day", "data", "holidayDate"]));
+              const diaNum = Number(escolher(h, ["day", "dia"]));
+              const mesNum = Number(escolher(h, ["month", "mes"]));
+              const anoNum = Number(escolher(h, ["year", "ano"]));
+              if (dataBruta && dataBruta.slice(0, 10) === dia) ehFeriado = true;
+              if (!ehFeriado && Number.isFinite(diaNum) && Number.isFinite(mesNum)) {
+                const mesmoDiaMes = diaNum === Number(diaMes) && mesNum === Number(mes);
+                const mesmoAno = !Number.isFinite(anoNum) || anoNum === 0 || anoNum === Number(ano);
+                if (mesmoDiaMes && mesmoAno) ehFeriado = true;
+              }
+              if (ehFeriado) break;
+            }
+            if (lista.length || ehFeriado) break;
+          } catch {
+            // tenta o próximo caminho
+          }
+        }
+      } catch {
+        // sem feriados disponíveis, segue a verificação normal
+      }
+
+      // Colaboradores ativos sem NENHUMA marcação no dia (ignora feriado e quem tem lançamento de falta/atestado)
+      if (!ehFeriado && (comMarcacao.size > 0 || nomesComMarcacao.size > 0)) {
         const tamanho = 1000;
         for (let pagina = 0; pagina < 20; pagina++) {
           const { data: pessoas } = await context.supabase
@@ -769,6 +804,11 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
               (Number.isFinite(idPessoa) && comMarcacao.has(idPessoa)) ||
               nomesComMarcacao.has(chavePosto(nome));
             if (temMarcacao) continue;
+            // Tem lançamento de falta/atestado no dia: não conta como pendência
+            const temAusencia =
+              (Number.isFinite(idPessoa) && comAusencia.has(idPessoa)) ||
+              nomesComAusencia.has(chavePosto(nome));
+            if (temAusencia) continue;
             const idLocal = Number(p["workplace_id"] ?? 0);
             const posto =
               (idLocal ? nomePosto.get(idLocal) : undefined) ??
