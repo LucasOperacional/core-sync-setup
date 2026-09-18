@@ -485,13 +485,20 @@ export const importarPostosMesaLote = createServerFn({ method: "POST" })
 // Conferência das folhas dos colaboradores (inconsistências da NEXTI)
 // ---------------------------------------------------------------------------
 
-export type ColaboradorPendente = { nome: string; motivos: string[] };
+export type ColaboradorPendente = {
+  nome: string;
+  motivos: string[];
+  /** true quando o colaborador tem atestado lançado na NEXTI no dia. */
+  atestado: boolean;
+};
 
 export type PendenciaFolhaPosto = {
   /** Nome do posto normalizado (sem acentos, maiúsculo). */
   chave: string;
   posto: string;
   total: number;
+  /** Quantos colaboradores pendentes estão com atestado no dia. */
+  comAtestado: number;
   colaboradores: ColaboradorPendente[];
 };
 
