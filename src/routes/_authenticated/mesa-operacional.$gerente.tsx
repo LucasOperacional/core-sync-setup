@@ -402,9 +402,11 @@ function GerentePostosPage() {
                     relatorio={posto.relatorio}
                     relatorioEm={posto.relatorioEm}
                     salvando={relatorioMut.isPending}
+                    limpando={limparRelatorioMut.isPending}
                     onSalvar={(texto) =>
                       relatorioMut.mutate({ postoId: posto.id, relatorio: texto })
                     }
+                    onLimpar={() => limparRelatorioMut.mutate(posto.id)}
                   />
                 </div>
                 <button
