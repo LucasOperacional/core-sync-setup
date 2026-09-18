@@ -61,15 +61,6 @@ export function MovimentacaoLoteNexti() {
   );
 
   useEffect(() => {
-    if (!aberto || buscaPessoa.trim().length < 2) {
-      setPessoasBusca([]);
-      return;
-    }
-    const timer = window.setTimeout(() => void buscarPessoas(), 350);
-    return () => window.clearTimeout(timer);
-  }, [aberto, buscaPessoa, buscarPessoas]);
-
-  useEffect(() => {
     const candidatas = pessoas.filter((p) => p.encontrado && p.personId > 0 && p.postoAtualId !== posto?.id);
     if (!posto || !data || candidatas.length === 0) {
       setValidacoes([]);
@@ -106,6 +97,15 @@ export function MovimentacaoLoteNexti() {
       setCarregando(false);
     }
   }, [buscaPessoa, pesquisarPessoas]);
+
+  useEffect(() => {
+    if (!aberto || buscaPessoa.trim().length < 2) {
+      setPessoasBusca([]);
+      return;
+    }
+    const timer = window.setTimeout(() => void buscarPessoas(), 350);
+    return () => window.clearTimeout(timer);
+  }, [aberto, buscaPessoa, buscarPessoas]);
 
   const buscarPostos = useCallback(async () => {
     setCarregando(true);
