@@ -155,7 +155,14 @@ function GerentePostosPage() {
     staleTime: 5 * 60_000,
   });
   const pendenciaPorPosto = useMemo(() => {
-    const mapa = new Map<string, { total: number; colaboradores: { nome: string; motivos: string[] }[] }>();
+    const mapa = new Map<
+      string,
+      {
+        total: number;
+        comAtestado: number;
+        colaboradores: { nome: string; motivos: string[]; atestado: boolean }[];
+      }
+    >();
     for (const p of folhas.data?.pendencias ?? [])
       mapa.set(p.chave, { total: p.total, colaboradores: p.colaboradores });
     return mapa;
