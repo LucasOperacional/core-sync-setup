@@ -676,6 +676,42 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
         // sem atestados disponíveis, segue apenas com as inconsistências
       }
 
+      // Quem tem QUALQUER marcação no dia (para achar quem não tem nenhuma)
+      const comMarcacao = new Set<number>();
+      const nomesComMarcacao = new Set<string>();
+      try {
+        const ini = `${diaMes}${mes}${ano}000000`;
+        const fim = `${diaMes}${mes}${ano}235959`;
+        for (const endpoint of [
+          `/api/clockings/start/${ini}/finish/${fim}`,
+          `/clockings/start/${ini}/finish/${fim}`,
+        ]) {
+          try {
+            for (let page = 0; page < 40; page++) {
+              const resposta = await requestNexti({
+                config,
+                endpoint,
+                method: "GET",
+                query: { page, size: 500 },
+              });
+              const lista = listaDoPayload(resposta.data);
+              for (const m of lista) {
+                const idPessoa = Number(escolher(m, ["personId", "person_id", "idPerson"]));
+                if (Number.isFinite(idPessoa)) comMarcacao.add(idPessoa);
+                const nomePessoa = texto(escolher(m, ["personName", "person_name", "nome"]));
+                if (nomePessoa) nomesComMarcacao.add(chavePosto(nomePessoa));
+              }
+              if (lista.length < 500) break;
+            }
+            break;
+          } catch {
+            // tenta o próximo caminho
+          }
+        }
+      } catch {
+        // sem marcações disponíveis, segue apenas com as inconsistências
+      }
+
       const mapa = new Map<string, PendenciaFolhaPosto>();
       for (const item of itens) {
         const idLocal = Number(item["workplaceId"] ?? 0);
@@ -714,6 +750,53 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
           if (temAtestado) atual.comAtestado += 1;
         }
         mapa.set(chave, atual);
+      }
+
+      // Colaboradores ativos sem NENHUMA marcação no dia
+      if (comMarcacao.size > 0 || nomesComMarcacao.size > 0) {
+        const tamanho = 1000;
+        for (let pagina = 0; pagina < 20; pagina++) {
+          const { data: pessoas } = await context.supabase
+            .from("nexti_persons")
+            .select("nexti_id, nome, demission_date, workplace_id, workplace_name")
+            .is("demission_date", null)
+            .range(pagina * tamanho, pagina * tamanho + tamanho - 1);
+          const linhas = (pessoas ?? []) as Array<Record<string, unknown>>;
+          for (const p of linhas) {
+            const idPessoa = Number(p["nexti_id"]);
+            const nome = texto(p["nome"]) || "Colaborador sem nome";
+            const temMarcacao =
+              (Number.isFinite(idPessoa) && comMarcacao.has(idPessoa)) ||
+              nomesComMarcacao.has(chavePosto(nome));
+            if (temMarcacao) continue;
+            const idLocal = Number(p["workplace_id"] ?? 0);
+            const posto =
+              (idLocal ? nomePosto.get(idLocal) : undefined) ??
+              texto(p["workplace_name"]) ??
+              "Sem posto identificado";
+            const chave = chavePosto(posto || "Sem posto identificado");
+            const atual: PendenciaFolhaPosto = mapa.get(chave) ?? {
+              chave,
+              posto: posto || "Sem posto identificado",
+              total: 0,
+              comAtestado: 0,
+              colaboradores: [],
+            };
+            if (atual.colaboradores.some((c) => chavePosto(c.nome) === chavePosto(nome))) continue;
+            const temAtestado =
+              (Number.isFinite(idPessoa) && comAtestado.has(idPessoa)) ||
+              nomesComAtestado.has(chavePosto(nome));
+            atual.total += 1;
+            atual.colaboradores.push({
+              nome,
+              motivos: ["Sem nenhuma marcação no dia"],
+              atestado: temAtestado,
+            });
+            if (temAtestado) atual.comAtestado += 1;
+            mapa.set(chave, atual);
+          }
+          if (linhas.length < tamanho) break;
+        }
       }
 
       const pendencias = [...mapa.values()].sort((a, b) => b.total - a.total);
