@@ -288,7 +288,7 @@ function MesaOperacionalPage() {
         pendentes: lista.filter((p) => !folhaLimpa(p)).length,
       }))
       .filter((g) => g.lista.length > 0 || !termo);
-  }, [postos, busca, pendenciaPorPosto]);
+  }, [postos, busca, pendenciaPorPosto, coordenadorVisivel]);
 
   const totalFeitos = postos.filter((p) => postoConcluido(p)).length;
   const totalPostosComPendencia = postos.filter((p) => !folhaLimpa(p)).length;
