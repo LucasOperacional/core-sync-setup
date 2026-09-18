@@ -758,8 +758,37 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
         mapa.set(chave, atual);
       }
 
-      // Colaboradores ativos sem NENHUMA marcação no dia
-      if (comMarcacao.size > 0 || nomesComMarcacao.size > 0) {
+      // Feriados do dia: se for feriado, ninguém entra como "sem marcação"
+      let ehFeriado = false;
+      try {
+        for (const endpoint of ["/api/holidays/all", "/holidays/all"]) {
+          try {
+            const resposta = await requestNexti({ config, endpoint, method: "GET" });
+            const lista = listaDoPayload(resposta.data);
+            for (const h of lista) {
+              const dataBruta = texto(escolher(h, ["date", "dateTime", "day", "data", "holidayDate"]));
+              const diaNum = Number(escolher(h, ["day", "dia"]));
+              const mesNum = Number(escolher(h, ["month", "mes"]));
+              const anoNum = Number(escolher(h, ["year", "ano"]));
+              if (dataBruta && dataBruta.slice(0, 10) === dia) ehFeriado = true;
+              if (!ehFeriado && Number.isFinite(diaNum) && Number.isFinite(mesNum)) {
+                const mesmoDiaMes = diaNum === Number(diaMes) && mesNum === Number(mes);
+                const mesmoAno = !Number.isFinite(anoNum) || anoNum === 0 || anoNum === Number(ano);
+                if (mesmoDiaMes && mesmoAno) ehFeriado = true;
+              }
+              if (ehFeriado) break;
+            }
+            if (lista.length || ehFeriado) break;
+          } catch {
+            // tenta o próximo caminho
+          }
+        }
+      } catch {
+        // sem feriados disponíveis, segue a verificação normal
+      }
+
+      // Colaboradores ativos sem NENHUMA marcação no dia (ignora feriado e quem tem lançamento de falta/atestado)
+      if (!ehFeriado && (comMarcacao.size > 0 || nomesComMarcacao.size > 0)) {
         const tamanho = 1000;
         for (let pagina = 0; pagina < 20; pagina++) {
           const { data: pessoas } = await context.supabase
