@@ -327,11 +327,23 @@ function MesaOperacionalPage() {
   return (
     <main className="min-h-screen px-4 py-8 pb-32">
       <div className="mx-auto w-full max-w-6xl space-y-6">
-        <header className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight">Mesa Operacional</h1>
-          <p className="text-sm text-muted-foreground">
-            Check-in diário de cada posto de serviço, organizado por gerente de área.
-          </p>
+        <header className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight">Mesa Operacional</h1>
+            <p className="text-sm text-muted-foreground">
+              Check-in diário de cada posto de serviço, organizado por gerente de área.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => folhas.refetch()}
+            disabled={folhas.isFetching}
+            title="Sincronização automática a cada 2 minutos"
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs font-medium text-primary transition hover:bg-primary/10 disabled:opacity-60"
+          >
+            <RefreshCw className={`size-4 ${folhas.isFetching ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">a cada 2 min</span>
+          </button>
         </header>
 
         <Card>
