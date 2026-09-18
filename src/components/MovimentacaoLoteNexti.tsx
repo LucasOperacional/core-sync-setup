@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRightLeft, CheckCircle2, Loader2, Search, Upload, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -21,7 +21,9 @@ import { lerPlanilhaUsuarios } from "@/lib/nexti-usuarios-planilha";
 import {
   executarMovimentacaoPostoLote,
   resolverPessoasMovimentacaoLote,
+  validarDestinoMovimentacaoLote,
   type PessoaMovimentacaoLote,
+  type ValidacaoDestinoLote,
 } from "@/lib/movimentacao-posto.functions";
 import {
   pesquisarNomeColaboradorNexti,
@@ -37,6 +39,7 @@ export function MovimentacaoLoteNexti() {
   const pesquisarPostos = useServerFn(pesquisarPostosNexti);
   const resolverPessoas = useServerFn(resolverPessoasMovimentacaoLote);
   const executarLote = useServerFn(executarMovimentacaoPostoLote);
+  const validarDestino = useServerFn(validarDestinoMovimentacaoLote);
   const [aberto, setAberto] = useState(false);
   const [pessoas, setPessoas] = useState<PessoaMovimentacaoLote[]>([]);
   const [posto, setPosto] = useState<PostoNexti | null>(null);
@@ -49,11 +52,38 @@ export function MovimentacaoLoteNexti() {
   const [carregando, setCarregando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [resultados, setResultados] = useState<Resultado[]>([]);
+  const [validacoes, setValidacoes] = useState<ValidacaoDestinoLote[]>([]);
+  const [validandoDestino, setValidandoDestino] = useState(false);
 
   const validas = useMemo(
-    () => pessoas.filter((p) => p.encontrado && p.personId > 0 && p.postoAtualId !== posto?.id),
-    [pessoas, posto?.id],
+    () => pessoas.filter((p) => p.encontrado && p.personId > 0 && p.postoAtualId !== posto?.id && validacoes.some((v) => v.personId === p.personId && v.ok)),
+    [pessoas, posto?.id, validacoes],
   );
+
+  useEffect(() => {
+    const candidatas = pessoas.filter((p) => p.encontrado && p.personId > 0 && p.postoAtualId !== posto?.id);
+    if (!posto || !data || candidatas.length === 0) {
+      setValidacoes([]);
+      return;
+    }
+    let ativo = true;
+    setValidandoDestino(true);
+    void validarDestino({
+      data: {
+        pessoas: candidatas.map((p) => ({ personId: p.personId, colaborador: p.colaborador })),
+        novoPostoId: posto.id,
+        novoPostoExternalId: posto.externalId,
+        dataMovimentacao: data,
+      },
+    }).then((res) => {
+      if (ativo) setValidacoes(res.resultados);
+    }).catch((error) => {
+      if (ativo) toast.error(error instanceof Error ? error.message : "Falha ao validar o posto na NEXTI.");
+    }).finally(() => {
+      if (ativo) setValidandoDestino(false);
+    });
+    return () => { ativo = false; };
+  }, [data, pessoas, posto, validarDestino]);
 
   const buscarPessoas = useCallback(async () => {
     setCarregando(true);
@@ -67,6 +97,15 @@ export function MovimentacaoLoteNexti() {
       setCarregando(false);
     }
   }, [buscaPessoa, pesquisarPessoas]);
+
+  useEffect(() => {
+    if (!aberto || buscaPessoa.trim().length < 2) {
+      setPessoasBusca([]);
+      return;
+    }
+    const timer = window.setTimeout(() => void buscarPessoas(), 350);
+    return () => window.clearTimeout(timer);
+  }, [aberto, buscaPessoa, buscarPessoas]);
 
   const buscarPostos = useCallback(async () => {
     setCarregando(true);
@@ -184,7 +223,7 @@ export function MovimentacaoLoteNexti() {
             <div className="space-y-2">
               <Label>Adicionar colaborador da NEXTI</Label>
               <div className="flex gap-2">
-                <Input value={buscaPessoa} onChange={(e) => setBuscaPessoa(e.target.value)} placeholder="Nome ou matrícula" />
+                <Input value={buscaPessoa} onChange={(e) => setBuscaPessoa(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void buscarPessoas(); }} placeholder="Nome ou matrícula" />
                 <Button type="button" size="icon" variant="outline" onClick={() => void buscarPessoas()} aria-label="Buscar colaborador" title="Buscar colaborador">
                   {carregando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 </Button>
@@ -213,7 +252,7 @@ export function MovimentacaoLoteNexti() {
               <Label>Posto de destino</Label>
               {posto ? (
                 <div className="flex items-center justify-between rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm font-medium">
-                  <span>{posto.nome}</span>
+                  <span>{posto.nome}{validandoDestino ? " · validando vaga e efetivo..." : ""}</span>
                   <Button type="button" variant="ghost" size="sm" onClick={() => setPosto(null)}>Trocar</Button>
                 </div>
               ) : (
@@ -253,10 +292,12 @@ export function MovimentacaoLoteNexti() {
               {pessoas.length === 0 && <p className="p-4 text-sm text-muted-foreground">Nenhum colaborador adicionado.</p>}
               {pessoas.map((p, index) => {
                 const mesmoPosto = posto?.id === p.postoAtualId;
+                const validacao = validacoes.find((item) => item.personId === p.personId);
+                const pronto = p.encontrado && !mesmoPosto && validacao?.ok === true;
                 return (
                   <div key={`${p.personId}-${p.colaborador}-${index}`} className="flex items-start gap-3 p-3 text-sm">
-                    {p.encontrado && !mesmoPosto ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" /> : <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />}
-                    <div className="min-w-0 flex-1"><p className="font-medium">{p.colaborador}</p><p className="text-xs text-muted-foreground">Atual: {p.postoAtual || "não informado"}</p>{(p.erro || mesmoPosto) && <p className="text-xs text-destructive">{p.erro || "Já está no posto de destino."}</p>}</div>
+                    {pronto ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" /> : <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />}
+                    <div className="min-w-0 flex-1"><p className="font-medium">{p.colaborador}</p><p className="text-xs text-muted-foreground">Atual: {p.postoAtual || "não informado"}</p>{(p.erro || mesmoPosto || validacao) && <p className={validacao?.ok ? "text-xs text-success" : "text-xs text-destructive"}>{p.erro || (mesmoPosto ? "Já está no posto de destino." : validacao?.mensagem)}</p>}{posto && !mesmoPosto && !validacao && <p className="text-xs text-muted-foreground">Validando cargo, vaga e efetivo na NEXTI...</p>}</div>
                     <Button type="button" variant="ghost" size="sm" onClick={() => setPessoas((atual) => atual.filter((_, i) => i !== index))}>Remover</Button>
                   </div>
                 );
@@ -275,7 +316,7 @@ export function MovimentacaoLoteNexti() {
 
         <div className="flex flex-wrap justify-end gap-2">
           <Button type="button" variant="ghost" onClick={() => { setPessoas([]); setResultados([]); }}>Limpar lista</Button>
-          <Button type="button" className="gap-2" disabled={enviando || carregando || validas.length === 0 || !posto || motivo.trim().length < 3} onClick={() => void enviar()}>
+          <Button type="button" className="gap-2" disabled={enviando || carregando || validandoDestino || validas.length === 0 || !posto || motivo.trim().length < 3} onClick={() => void enviar()}>
             {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Enviar {validas.length} para a NEXTI
           </Button>
         </div>
