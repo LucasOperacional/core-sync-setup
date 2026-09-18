@@ -27,9 +27,11 @@ import { COORDENADORES, coordenadorDoGerente, rotuloCoordenador } from "@/lib/co
 import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 import {
   buscarPostosNexti,
+  chavePosto,
   importarPostosMesaLote,
   cadastrarPostoMesa,
   hojeBrasilia,
+  listarFolhasPendentesMesa,
   listarPostosMesa,
   registrarCheckinMesa,
   removerPostoMesa,
@@ -96,6 +98,23 @@ function MesaOperacionalPage() {
     queryFn: () => carregar({ data: { data: dia } }),
     staleTime: 30_000,
   });
+
+  // Folhas com inconsistência ou pedido de justificativa na NEXTI (no dia).
+  const carregarFolhas = useServerFn(listarFolhasPendentesMesa);
+  const folhas = useQuery({
+    queryKey: ["mesa-folhas", dia],
+    queryFn: () => carregarFolhas({ data: { data: dia } }),
+    staleTime: 5 * 60_000,
+    enabled: nextiPronto,
+  });
+  const pendenciaPorPosto = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const p of folhas.data?.pendencias ?? []) mapa.set(p.chave, p.total);
+    return mapa;
+  }, [folhas.data]);
+  const folhaLimpa = (posto: PostoServicoMesa) =>
+    (pendenciaPorPosto.get(chavePosto(posto.nome)) ?? 0) === 0;
+  const postoConcluido = (posto: PostoServicoMesa) => posto.checkFeito && folhaLimpa(posto);
 
   const atualizar = () => queryClient.invalidateQueries({ queryKey: ["mesa-operacional"] });
 
@@ -245,12 +264,15 @@ function MesaOperacionalPage() {
       .map(([gerente, lista]) => ({
         gerente,
         lista,
-        feitos: lista.filter((p) => p.checkFeito).length,
+        // Só conta quando a folha está sem inconsistência e sem pedido de justificativa.
+        feitos: lista.filter((p) => postoConcluido(p)).length,
+        pendentes: lista.filter((p) => !folhaLimpa(p)).length,
       }))
       .filter((g) => g.lista.length > 0 || !termo);
-  }, [postos, busca]);
+  }, [postos, busca, pendenciaPorPosto]);
 
-  const totalFeitos = postos.filter((p) => p.checkFeito).length;
+  const totalFeitos = postos.filter((p) => postoConcluido(p)).length;
+  const totalPostosComPendencia = postos.filter((p) => !folhaLimpa(p)).length;
   const pctGeral = postos.length ? Math.round((totalFeitos / postos.length) * 100) : 0;
 
   return (
@@ -296,7 +318,7 @@ function MesaOperacionalPage() {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="h-9 px-3 text-sm">
-                {totalFeitos} de {postos.length} com check-in
+                {totalFeitos} de {postos.length} com folha conferida
               </Badge>
               <Badge
                 variant={pctGeral === 100 && postos.length > 0 ? "default" : "outline"}
@@ -304,7 +326,21 @@ function MesaOperacionalPage() {
               >
                 {pctGeral}%
               </Badge>
+              {totalPostosComPendencia > 0 ? (
+                <Badge variant="destructive" className="h-9 px-3 text-sm">
+                  {totalPostosComPendencia} posto(s) com folha pendente
+                </Badge>
+              ) : null}
+              {folhas.isFetching ? (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Loader2 className="size-3 animate-spin" /> conferindo folhas...
+                </span>
+              ) : null}
             </div>
+            <p className="w-full text-xs text-muted-foreground">
+              A porcentagem só sobe quando o posto tem check-in e nenhuma folha com inconsistência
+              ou pedido de justificativa na NEXTI.
+            </p>
             <Progress value={pctGeral} className="h-2 w-full" />
           </CardContent>
         </Card>

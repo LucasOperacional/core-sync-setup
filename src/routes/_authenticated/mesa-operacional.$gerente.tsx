@@ -35,7 +35,9 @@ import { normalizarNome } from "@/lib/gerentes-area-a";
 import { Textarea } from "@/components/ui/textarea";
 import {
   buscarRelatorioGeralMesa,
+  chavePosto,
   hojeBrasilia,
+  listarFolhasPendentesMesa,
   listarPostosMesa,
   registrarCheckinMesa,
   removerPostoMesa,
@@ -145,7 +147,24 @@ function GerentePostosPage() {
     );
   }, [data, gerente, busca]);
 
-  const feitos = postosDoGerente.filter((p) => p.checkFeito).length;
+  // Folhas com inconsistência ou pedido de justificativa na NEXTI no dia.
+  const carregarFolhas = useServerFn(listarFolhasPendentesMesa);
+  const folhas = useQuery({
+    queryKey: ["mesa-folhas", dia],
+    queryFn: () => carregarFolhas({ data: { data: dia } }),
+    staleTime: 5 * 60_000,
+  });
+  const pendenciaPorPosto = useMemo(() => {
+    const mapa = new Map<string, { total: number; colaboradores: { nome: string; motivos: string[] }[] }>();
+    for (const p of folhas.data?.pendencias ?? [])
+      mapa.set(p.chave, { total: p.total, colaboradores: p.colaboradores });
+    return mapa;
+  }, [folhas.data]);
+  const pendenciaDoPosto = (nome: string) => pendenciaPorPosto.get(chavePosto(nome)) ?? null;
+
+  const feitos = postosDoGerente.filter(
+    (p) => p.checkFeito && !pendenciaDoPosto(p.nome),
+  ).length;
   const total = postosDoGerente.length;
   const pct = total ? Math.round((feitos / total) * 100) : 0;
 
@@ -201,7 +220,7 @@ function GerentePostosPage() {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="h-9 px-3 text-sm">
-                {feitos} de {total} com check-in
+                {feitos} de {total} com folha conferida
               </Badge>
               <Badge
                 variant={pct === 100 && total > 0 ? "default" : "outline"}
@@ -291,6 +310,30 @@ function GerentePostosPage() {
                       })}
                     </p>
                   ) : null}
+                  {(() => {
+                    const pend = pendenciaDoPosto(posto.nome);
+                    if (!pend) {
+                      return posto.checkFeito ? (
+                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                          Folhas sem inconsistência e sem pedido de justificativa.
+                        </p>
+                      ) : null;
+                    }
+                    return (
+                      <div className="mt-1 rounded-md border border-destructive/30 bg-destructive/5 p-2">
+                        <p className="text-[11px] font-semibold text-destructive">
+                          {pend.colaboradores.length} colaborador(es) com folha pendente
+                        </p>
+                        <ul className="mt-0.5 space-y-0.5">
+                          {pend.colaboradores.map((c) => (
+                            <li key={c.nome} className="text-[11px] text-muted-foreground">
+                              {c.nome} — {c.motivos.join(", ")}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })()}
                   <RelatorioPosto
                     postoId={posto.id}
                     relatorio={posto.relatorio}
