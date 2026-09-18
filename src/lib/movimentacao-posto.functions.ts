@@ -57,6 +57,13 @@ const movimentacaoLoteSchema = z.object({
   motivo: z.string().trim().min(3).max(2000),
 });
 
+const validarDestinoLoteSchema = z.object({
+  pessoas: z.array(z.object({ personId: z.number().int().positive(), colaborador: z.string().trim().min(1).max(200) })).min(1).max(500),
+  novoPostoId: z.number().int().positive(),
+  novoPostoExternalId: z.string().trim().optional().default(""),
+  dataMovimentacao: z.string().date(),
+});
+
 type NextiResponse = {
   id?: string | number;
   message?: string;
@@ -234,6 +241,59 @@ export type ResultadoMovimentacaoLote = {
   mensagem: string;
   nextiTransferId?: string;
 };
+
+export type ValidacaoDestinoLote = {
+  personId: number;
+  colaborador: string;
+  ok: boolean;
+  mensagem: string;
+};
+
+/** Confere na NEXTI se o destino possui vaga e efetivo disponível para o cargo de cada pessoa. */
+export const validarDestinoMovimentacaoLote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => validarDestinoLoteSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const resultados: ValidacaoDestinoLote[] = [];
+    try {
+      const config = await loadConfig(context.supabase);
+      config.baseUrl = normalizeBaseUrl(config.baseUrl);
+      for (const pessoa of data.pessoas) {
+        try {
+          const validacao = await validarVagaCompativel(
+            config,
+            pessoa.personId,
+            data.novoPostoId,
+            data.dataMovimentacao,
+            data.novoPostoExternalId,
+          );
+          resultados.push({
+            personId: pessoa.personId,
+            colaborador: pessoa.colaborador,
+            ok: validacao.ok,
+            mensagem: validacao.ok ? validacao.detalhe : validacao.erro,
+          });
+        } catch (error) {
+          resultados.push({
+            personId: pessoa.personId,
+            colaborador: pessoa.colaborador,
+            ok: false,
+            mensagem: mensagemErroNexti(error),
+          });
+        }
+      }
+    } catch (error) {
+      for (const pessoa of data.pessoas) {
+        resultados.push({
+          personId: pessoa.personId,
+          colaborador: pessoa.colaborador,
+          ok: false,
+          mensagem: mensagemErroNexti(error),
+        });
+      }
+    }
+    return { resultados, todosCompativeis: resultados.every((item) => item.ok) };
+  });
 
 /** Valida e movimenta diretamente na NEXTI cada colaborador válido do lote. */
 export const executarMovimentacaoPostoLote = createServerFn({ method: "POST" })
