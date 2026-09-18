@@ -113,7 +113,11 @@ function MesaOperacionalPage() {
   const folhas = useQuery({
     queryKey: ["mesa-folhas", dia],
     queryFn: () => carregarFolhas({ data: { data: dia } }),
-    staleTime: 5 * 60_000,
+    staleTime: 60_000,
+    // Sincroniza sozinho com a NEXTI: atualiza a cada 2 min e ao voltar para a tela.
+    refetchInterval: 2 * 60_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
     enabled: nextiPronto,
   });
   const pendenciaPorPosto = useMemo(() => {
