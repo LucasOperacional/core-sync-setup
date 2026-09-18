@@ -534,16 +534,31 @@ function RelatorioGeralCard({ gerente, dia }: { gerente: string; dia: string }) 
             </div>
           </div>
         ) : (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setTexto(data?.relatorio ?? "");
-              setEditando(true);
-            }}
-          >
-            Editar relatório
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setTexto(data?.relatorio ?? "");
+                setEditando(true);
+              }}
+            >
+              Editar relatório
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={limparMut.isPending}
+              onClick={() => {
+                if (confirm("Deseja limpar o relatório geral deste gerente?")) {
+                  limparMut.mutate();
+                }
+              }}
+            >
+              {limparMut.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              Limpar relatório
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
