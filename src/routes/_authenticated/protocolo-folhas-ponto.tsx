@@ -30,6 +30,7 @@ import { ContagemDemitidosCard } from "@/components/ContagemDemitidosCard";
 import { AbaUsuariosNexti } from "@/components/AbaUsuariosNexti";
 import { FlagsUsuarioNexti } from "@/components/FlagsUsuarioNexti";
 import { SincronizarColaboradoresNexti } from "@/components/SincronizarColaboradoresNexti";
+import { MovimentacaoLoteNexti } from "@/components/MovimentacaoLoteNexti";
 
 
 import { OutrasLotacoesCards } from "@/components/OutrasLotacoesCards";
@@ -196,6 +197,9 @@ function ProtocoloFolhasPonto() {
             </TabsContent>
             <TabsContent value="usuarios">
               <div className="space-y-4">
+                <div className="flex justify-end">
+                  <MovimentacaoLoteNexti />
+                </div>
                 <OperationalErrorBoundary componentName="Cadastro de usuários NEXTI">
                   <AbaUsuariosNexti />
                 </OperationalErrorBoundary>
