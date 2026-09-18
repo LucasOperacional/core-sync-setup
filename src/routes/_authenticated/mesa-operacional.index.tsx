@@ -62,6 +62,8 @@ export const Route = createFileRoute("/_authenticated/mesa-operacional/")({
 
 function MesaOperacionalPage() {
   const queryClient = useQueryClient();
+  const { user } = useSessao();
+  const coordenadorVisivel = coordenadorVisivelPara(user?.email);
   const carregar = useServerFn(listarPostosMesa);
   const cadastrar = useServerFn(cadastrarPostoMesa);
   const remover = useServerFn(removerPostoMesa);
