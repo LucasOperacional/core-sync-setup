@@ -566,13 +566,17 @@ function RelatorioPosto({
   relatorio,
   relatorioEm,
   salvando,
+  limpando,
   onSalvar,
+  onLimpar,
 }: {
   postoId: string;
   relatorio: string | null;
   relatorioEm: string | null;
   salvando: boolean;
+  limpando: boolean;
   onSalvar: (texto: string) => void;
+  onLimpar: () => void;
 }) {
   const [aberto, setAberto] = useState(false);
   const [texto, setTexto] = useState(relatorio ?? "");
@@ -610,14 +614,31 @@ function RelatorioPosto({
             rows={3}
             className="text-sm"
           />
-          <Button
-            size="sm"
-            disabled={salvando || texto.trim().length === 0}
-            onClick={() => onSalvar(texto)}
-          >
-            {salvando ? <Loader2 className="size-4 animate-spin" /> : null}
-            Salvar relatório
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              disabled={salvando || limpando || texto.trim().length === 0}
+              onClick={() => onSalvar(texto)}
+            >
+              {salvando ? <Loader2 className="size-4 animate-spin" /> : null}
+              Salvar relatório
+            </Button>
+            {relatorio ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={salvando || limpando}
+                onClick={() => {
+                  if (confirm("Deseja limpar o relatório deste posto?")) {
+                    onLimpar();
+                  }
+                }}
+              >
+                {limpando ? <Loader2 className="size-4 animate-spin" /> : null}
+                Limpar relatório
+              </Button>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>
