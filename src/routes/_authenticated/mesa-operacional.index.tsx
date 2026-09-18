@@ -99,6 +99,23 @@ function MesaOperacionalPage() {
     staleTime: 30_000,
   });
 
+  // Folhas com inconsistência ou pedido de justificativa na NEXTI (no dia).
+  const carregarFolhas = useServerFn(listarFolhasPendentesMesa);
+  const folhas = useQuery({
+    queryKey: ["mesa-folhas", dia],
+    queryFn: () => carregarFolhas({ data: { data: dia } }),
+    staleTime: 5 * 60_000,
+    enabled: nextiPronto,
+  });
+  const pendenciaPorPosto = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const p of folhas.data?.pendencias ?? []) mapa.set(p.chave, p.total);
+    return mapa;
+  }, [folhas.data]);
+  const folhaLimpa = (posto: PostoServicoMesa) =>
+    (pendenciaPorPosto.get(chavePosto(posto.nome)) ?? 0) === 0;
+  const postoConcluido = (posto: PostoServicoMesa) => posto.checkFeito && folhaLimpa(posto);
+
   const atualizar = () => queryClient.invalidateQueries({ queryKey: ["mesa-operacional"] });
 
   const cadastrarMut = useMutation({
