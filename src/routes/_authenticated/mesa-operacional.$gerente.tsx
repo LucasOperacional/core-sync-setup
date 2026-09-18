@@ -159,6 +159,20 @@ function GerentePostosPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar o relatório"),
   });
 
+  const limparRelatorio = useServerFn(limparRelatorioMesa);
+  const limparRelatorioMut = useMutation({
+    mutationFn: (postoId: string) => limparRelatorio({ data: { postoId, data: dia } }),
+    onSuccess: (r) => {
+      if (!r.ok) {
+        toast.error(r.erro || "Não foi possível limpar o relatório");
+        return;
+      }
+      toast.success("Relatório removido");
+      atualizar();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao limpar o relatório"),
+  });
+
   const postosDoGerente = useMemo(() => {
     const base = data?.postos ?? [];
     const doGerente = base.filter(
