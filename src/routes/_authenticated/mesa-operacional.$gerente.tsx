@@ -38,6 +38,8 @@ import {
   buscarRelatorioGeralMesa,
   chavePosto,
   hojeBrasilia,
+  limparRelatorioGeralMesa,
+  limparRelatorioMesa,
   listarFolhasPendentesMesa,
   listarPostosMesa,
   registrarCheckinMesa,
