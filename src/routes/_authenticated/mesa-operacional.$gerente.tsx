@@ -35,7 +35,9 @@ import { normalizarNome } from "@/lib/gerentes-area-a";
 import { Textarea } from "@/components/ui/textarea";
 import {
   buscarRelatorioGeralMesa,
+  chavePosto,
   hojeBrasilia,
+  listarFolhasPendentesMesa,
   listarPostosMesa,
   registrarCheckinMesa,
   removerPostoMesa,
