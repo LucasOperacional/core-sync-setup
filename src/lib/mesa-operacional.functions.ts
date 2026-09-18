@@ -752,6 +752,53 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
         mapa.set(chave, atual);
       }
 
+      // Colaboradores ativos sem NENHUMA marcação no dia
+      if (comMarcacao.size > 0 || nomesComMarcacao.size > 0) {
+        const tamanho = 1000;
+        for (let pagina = 0; pagina < 20; pagina++) {
+          const { data: pessoas } = await context.supabase
+            .from("nexti_persons")
+            .select("nexti_id, nome, demission_date, workplace_id, workplace_name")
+            .is("demission_date", null)
+            .range(pagina * tamanho, pagina * tamanho + tamanho - 1);
+          const linhas = (pessoas ?? []) as Array<Record<string, unknown>>;
+          for (const p of linhas) {
+            const idPessoa = Number(p["nexti_id"]);
+            const nome = texto(p["nome"]) || "Colaborador sem nome";
+            const temMarcacao =
+              (Number.isFinite(idPessoa) && comMarcacao.has(idPessoa)) ||
+              nomesComMarcacao.has(chavePosto(nome));
+            if (temMarcacao) continue;
+            const idLocal = Number(p["workplace_id"] ?? 0);
+            const posto =
+              (idLocal ? nomePosto.get(idLocal) : undefined) ??
+              texto(p["workplace_name"]) ??
+              "Sem posto identificado";
+            const chave = chavePosto(posto || "Sem posto identificado");
+            const atual: PendenciaFolhaPosto = mapa.get(chave) ?? {
+              chave,
+              posto: posto || "Sem posto identificado",
+              total: 0,
+              comAtestado: 0,
+              colaboradores: [],
+            };
+            if (atual.colaboradores.some((c) => chavePosto(c.nome) === chavePosto(nome))) continue;
+            const temAtestado =
+              (Number.isFinite(idPessoa) && comAtestado.has(idPessoa)) ||
+              nomesComAtestado.has(chavePosto(nome));
+            atual.total += 1;
+            atual.colaboradores.push({
+              nome,
+              motivos: ["Sem nenhuma marcação no dia"],
+              atestado: temAtestado,
+            });
+            if (temAtestado) atual.comAtestado += 1;
+            mapa.set(chave, atual);
+          }
+          if (linhas.length < tamanho) break;
+        }
+      }
+
       const pendencias = [...mapa.values()].sort((a, b) => b.total - a.total);
       return { ok: true, data: dia, pendencias, total: itens.length };
     } catch (error) {
