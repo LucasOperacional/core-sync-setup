@@ -485,13 +485,20 @@ export const importarPostosMesaLote = createServerFn({ method: "POST" })
 // Conferência das folhas dos colaboradores (inconsistências da NEXTI)
 // ---------------------------------------------------------------------------
 
-export type ColaboradorPendente = { nome: string; motivos: string[] };
+export type ColaboradorPendente = {
+  nome: string;
+  motivos: string[];
+  /** true quando o colaborador tem atestado lançado na NEXTI no dia. */
+  atestado: boolean;
+};
 
 export type PendenciaFolhaPosto = {
   /** Nome do posto normalizado (sem acentos, maiúsculo). */
   chave: string;
   posto: string;
   total: number;
+  /** Quantos colaboradores pendentes estão com atestado no dia. */
+  comAtestado: number;
   colaboradores: ColaboradorPendente[];
 };
 
@@ -565,6 +572,71 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
         if (lista.length < 200 || payload?.["last"] === true) break;
       }
 
+      // Quem tem atestado lançado na NEXTI no dia (para mostrar junto da folha pendente)
+      const comAtestado = new Set<number>();
+      const nomesComAtestado = new Set<string>();
+      try {
+        const situacoesAtestado = new Set<number>();
+        for (const endpoint of ["/absencesituations/all", "/api/absencesituations/all"]) {
+          try {
+            const resposta = await requestNexti({ config, endpoint, method: "GET" });
+            const lista = listaDoPayload(resposta.data);
+            for (const s of lista) {
+              const nomeSit = String(escolher(s, ["name", "description", "nome"]) ?? "");
+              const idSit = Number(escolher(s, ["id", "nextiId"]));
+              if (!Number.isFinite(idSit)) continue;
+              if (/ATESTADO|MEDIC/i.test(chavePosto(nomeSit))) situacoesAtestado.add(idSit);
+            }
+            if (lista.length) break;
+          } catch {
+            // tenta o próximo caminho
+          }
+        }
+
+        const ini = `${diaMes}${mes}${ano}000000`;
+        const fim = `${diaMes}${mes}${ano}235959`;
+        let ausencias: RecNexti[] = [];
+        for (const endpoint of [
+          `/api/absences/start/${ini}/finish/${fim}`,
+          `/absences/start/${ini}/finish/${fim}`,
+        ]) {
+          try {
+            const resposta = await requestNexti({ config, endpoint, method: "GET" });
+            ausencias = listaDoPayload(resposta.data);
+            if (ausencias.length) break;
+          } catch {
+            // tenta o próximo caminho
+          }
+        }
+
+        if (ausencias.length === 0) {
+          const { data: base } = await context.supabase
+            .from("nexti_absences")
+            .select("person_id, absence_situation_id, start_date_time, finish_date_time, cid_code, removed")
+            .lte("start_date_time", `${dia}T23:59:59Z`)
+            .gte("finish_date_time", `${dia}T00:00:00Z`)
+            .limit(5000);
+          ausencias = ((base ?? []) as RecNexti[]).filter((a) => a["removed"] !== true);
+        }
+
+        for (const a of ausencias) {
+          const idSit = Number(escolher(a, ["absenceSituationId", "absence_situation_id", "situationId"]));
+          const cid = texto(escolher(a, ["cidCode", "cid_code"]));
+          const nomeSit = String(escolher(a, ["absenceSituationName", "situationName", "name"]) ?? "");
+          const ehAtestado =
+            (Number.isFinite(idSit) && situacoesAtestado.has(idSit)) ||
+            !!cid ||
+            /ATESTADO|MEDIC/i.test(chavePosto(nomeSit));
+          if (!ehAtestado) continue;
+          const idPessoa = Number(escolher(a, ["personId", "person_id", "idPerson"]));
+          if (Number.isFinite(idPessoa)) comAtestado.add(idPessoa);
+          const nomePessoa = texto(escolher(a, ["personName", "person_name", "nome"]));
+          if (nomePessoa) nomesComAtestado.add(chavePosto(nomePessoa));
+        }
+      } catch {
+        // sem atestados disponíveis, segue apenas com as inconsistências
+      }
+
       const mapa = new Map<string, PendenciaFolhaPosto>();
       for (const item of itens) {
         const idLocal = Number(item["workplaceId"] ?? 0);
@@ -578,13 +650,29 @@ export const listarFolhasPendentesMesa = createServerFn({ method: "POST" })
         const motivo = MOTIVOS[tipo] ?? tipo ?? "Inconsistência";
         const pessoa = String(item["personName"] ?? "Colaborador sem nome").trim();
 
-        const atual = mapa.get(chave) ?? { chave, posto, total: 0, colaboradores: [] };
+        const idPessoa = Number(item["personId"]);
+        const temAtestado =
+          (Number.isFinite(idPessoa) && comAtestado.has(idPessoa)) ||
+          nomesComAtestado.has(chavePosto(pessoa));
+
+        const atual: PendenciaFolhaPosto = mapa.get(chave) ?? {
+          chave,
+          posto,
+          total: 0,
+          comAtestado: 0,
+          colaboradores: [],
+        };
         atual.total += 1;
         const existente = atual.colaboradores.find((c) => c.nome === pessoa);
         if (existente) {
           if (!existente.motivos.includes(motivo)) existente.motivos.push(motivo);
+          if (temAtestado && !existente.atestado) {
+            existente.atestado = true;
+            atual.comAtestado += 1;
+          }
         } else {
-          atual.colaboradores.push({ nome: pessoa, motivos: [motivo] });
+          atual.colaboradores.push({ nome: pessoa, motivos: [motivo], atestado: temAtestado });
+          if (temAtestado) atual.comAtestado += 1;
         }
         mapa.set(chave, atual);
       }

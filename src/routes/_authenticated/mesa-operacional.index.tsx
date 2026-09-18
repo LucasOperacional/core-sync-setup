@@ -331,6 +331,12 @@ function MesaOperacionalPage() {
                   {totalPostosComPendencia} posto(s) com folha pendente
                 </Badge>
               ) : null}
+              {(folhas.data?.pendencias ?? []).reduce((s, p) => s + p.comAtestado, 0) > 0 ? (
+                <Badge variant="outline" className="h-9 px-3 text-sm">
+                  {(folhas.data?.pendencias ?? []).reduce((s, p) => s + p.comAtestado, 0)}{" "}
+                  colaborador(es) com atestado sem marcação
+                </Badge>
+              ) : null}
               {folhas.isFetching ? (
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Loader2 className="size-3 animate-spin" /> conferindo folhas...
