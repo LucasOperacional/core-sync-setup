@@ -49,7 +49,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     });
   };
 
-  const itensOperacional = operacionalNavItems.filter((item) => item.to === "/" || podeVer(item.to));
+  const inicioItem = operacionalNavItems.find((item) => item.to === "/");
+  const itensOperacional = operacionalNavItems.filter((item) => item.to !== "/" && podeVer(item.to));
   const itensRh = rhNavItems.filter((item) => podeVer(item.to));
   const ativo = (to: string) => (to === "/" ? caminho === "/" : caminho.startsWith(to));
 
@@ -67,6 +68,24 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-3" aria-label="Navegação principal">
+        {inicioItem && (
+          <Link
+            to="/"
+            title={recolhida ? inicioItem.label : undefined}
+            aria-current={ativo("/") ? "page" : undefined}
+            className={cn(
+              "group flex h-9 min-w-0 items-center gap-3 rounded-md px-2.5 text-sm font-medium transition-colors duration-150",
+              ativo("/")
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+            )}
+          >
+            <inicioItem.icon className={cn("size-4 shrink-0", ativo("/") && "text-primary")} />
+            {!recolhida && <span className="truncate">{inicioItem.label}</span>}
+            {ativo("/") && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
+          </Link>
+        )}
+
         <button
           type="button"
           onClick={() => setComercialAberta((v) => !v)}
