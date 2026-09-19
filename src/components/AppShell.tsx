@@ -21,6 +21,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [recolhida, setRecolhida] = useState(false);
   const [operacionalAberta, setOperacionalAberta] = useState(true);
   const [rhAberta, setRhAberta] = useState(true);
+  const [dpAberta, setDpAberta] = useState(true);
+  const [comercialAberta, setComercialAberta] = useState(true);
+  const [financeiroAberta, setFinanceiroAberta] = useState(true);
+
 
 
   useEffect(() => {
@@ -140,7 +144,41 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
           </>
         )}
+
+        <button
+          type="button"
+          onClick={() => setDpAberta((v) => !v)}
+          aria-expanded={dpAberta}
+          className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+          title={recolhida ? "DP" : undefined}
+        >
+          <span className="truncate">{recolhida ? "DP" : "Departamento pessoal"}</span>
+          <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", dpAberta && "rotate-180")} />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setComercialAberta((v) => !v)}
+          aria-expanded={comercialAberta}
+          className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+          title={recolhida ? "COM" : undefined}
+        >
+          <span className="truncate">{recolhida ? "COM" : "Comercial"}</span>
+          <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", comercialAberta && "rotate-180")} />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setFinanceiroAberta((v) => !v)}
+          aria-expanded={financeiroAberta}
+          className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+          title={recolhida ? "FIN" : undefined}
+        >
+          <span className="truncate">{recolhida ? "FIN" : "Financeiro"}</span>
+          <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", financeiroAberta && "rotate-180")} />
+        </button>
       </nav>
+
       <div className="space-y-1 border-t border-sidebar-border p-2">
         <Button asChild variant="ghost" size={recolhida ? "icon" : "sm"} className={cn("w-full", !recolhida && "justify-start")}>
           <Link to="/instalar" title="Instalar aplicativo"><Download />{!recolhida && "Instalar aplicativo"}</Link>
