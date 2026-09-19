@@ -52,9 +52,10 @@ export const operacionalNavItems: NavItem[] = allNavItems.filter(
   (item) => item.to !== "/rh",
 );
 
-export const rhNavItems: NavItem[] = allNavItems.filter(
-  (item) => item.to === "/rh",
-);
+export const rhNavItems: NavItem[] = [
+  ...allNavItems.filter((item) => item.to === "/rh"),
+  { to: "/vagas-aprovadas", icon: BarChart3, label: "Vagas aprovadas", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
+];
 
 /** A navegação passou a ser fornecida pelo AppShell autenticado. */
 export function FloatingNav() {

@@ -56,6 +56,7 @@ import { Route as AuthenticatedSupervisorCrtRouteImport } from './routes/_authen
 import { Route as AuthenticatedSupervisorFaltasRouteImport } from './routes/_authenticated/supervisor-faltas'
 import { Route as AuthenticatedSupervisorVagasRouteImport } from './routes/_authenticated/supervisor-vagas'
 import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
+import { Route as AuthenticatedVagasAprovadasRouteImport } from './routes/_authenticated/vagas-aprovadas'
 import { Route as AuthenticatedVerificadorAtestadosRouteImport } from './routes/_authenticated/verificador-atestados'
 import { Route as AssinarCrtTokenRouteImport } from './routes/assinar-crt.$token'
 import { Route as AssinarMovimentacaoTokenRouteImport } from './routes/assinar-movimentacao.$token'
@@ -347,6 +348,12 @@ const AuthenticatedUsuariosRoute = AuthenticatedUsuariosRouteImport.update({
   path: '/usuarios',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedVagasAprovadasRoute =
+  AuthenticatedVagasAprovadasRouteImport.update({
+    id: '/vagas-aprovadas',
+    path: '/vagas-aprovadas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedVerificadorAtestadosRoute =
   AuthenticatedVerificadorAtestadosRouteImport.update({
     id: '/verificador-atestados',
@@ -566,6 +573,7 @@ export interface FileRoutesByFullPath {
   '/supervisor-faltas': typeof AuthenticatedSupervisorFaltasRoute
   '/supervisor-vagas': typeof AuthenticatedSupervisorVagasRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
+  '/vagas-aprovadas': typeof AuthenticatedVagasAprovadasRoute
   '/verificador-atestados': typeof AuthenticatedVerificadorAtestadosRoute
   '/assinar-crt/$token': typeof AssinarCrtTokenRoute
   '/assinar-movimentacao/$token': typeof AssinarMovimentacaoTokenRoute
@@ -643,6 +651,7 @@ export interface FileRoutesByTo {
   '/supervisor-faltas': typeof AuthenticatedSupervisorFaltasRoute
   '/supervisor-vagas': typeof AuthenticatedSupervisorVagasRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
+  '/vagas-aprovadas': typeof AuthenticatedVagasAprovadasRoute
   '/verificador-atestados': typeof AuthenticatedVerificadorAtestadosRoute
   '/assinar-crt/$token': typeof AssinarCrtTokenRoute
   '/assinar-movimentacao/$token': typeof AssinarMovimentacaoTokenRoute
@@ -723,6 +732,7 @@ export interface FileRoutesById {
   '/_authenticated/supervisor-faltas': typeof AuthenticatedSupervisorFaltasRoute
   '/_authenticated/supervisor-vagas': typeof AuthenticatedSupervisorVagasRoute
   '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
+  '/_authenticated/vagas-aprovadas': typeof AuthenticatedVagasAprovadasRoute
   '/_authenticated/verificador-atestados': typeof AuthenticatedVerificadorAtestadosRoute
   '/assinar-crt/$token': typeof AssinarCrtTokenRoute
   '/assinar-movimentacao/$token': typeof AssinarMovimentacaoTokenRoute
@@ -804,6 +814,7 @@ export interface FileRouteTypes {
     | '/supervisor-faltas'
     | '/supervisor-vagas'
     | '/usuarios'
+    | '/vagas-aprovadas'
     | '/verificador-atestados'
     | '/assinar-crt/$token'
     | '/assinar-movimentacao/$token'
@@ -881,6 +892,7 @@ export interface FileRouteTypes {
     | '/supervisor-faltas'
     | '/supervisor-vagas'
     | '/usuarios'
+    | '/vagas-aprovadas'
     | '/verificador-atestados'
     | '/assinar-crt/$token'
     | '/assinar-movimentacao/$token'
@@ -960,6 +972,7 @@ export interface FileRouteTypes {
     | '/_authenticated/supervisor-faltas'
     | '/_authenticated/supervisor-vagas'
     | '/_authenticated/usuarios'
+    | '/_authenticated/vagas-aprovadas'
     | '/_authenticated/verificador-atestados'
     | '/assinar-crt/$token'
     | '/assinar-movimentacao/$token'
@@ -1356,6 +1369,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsuariosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/vagas-aprovadas': {
+      id: '/_authenticated/vagas-aprovadas'
+      path: '/vagas-aprovadas'
+      fullPath: '/vagas-aprovadas'
+      preLoaderRoute: typeof AuthenticatedVagasAprovadasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/verificador-atestados': {
       id: '/_authenticated/verificador-atestados'
       path: '/verificador-atestados'
@@ -1610,6 +1630,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSupervisorFaltasRoute: typeof AuthenticatedSupervisorFaltasRoute
   AuthenticatedSupervisorVagasRoute: typeof AuthenticatedSupervisorVagasRoute
   AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
+  AuthenticatedVagasAprovadasRoute: typeof AuthenticatedVagasAprovadasRoute
   AuthenticatedVerificadorAtestadosRoute: typeof AuthenticatedVerificadorAtestadosRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedGerentesSlugRoute: typeof AuthenticatedGerentesSlugRoute
@@ -1666,6 +1687,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSupervisorFaltasRoute: AuthenticatedSupervisorFaltasRoute,
   AuthenticatedSupervisorVagasRoute: AuthenticatedSupervisorVagasRoute,
   AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
+  AuthenticatedVagasAprovadasRoute: AuthenticatedVagasAprovadasRoute,
   AuthenticatedVerificadorAtestadosRoute:
     AuthenticatedVerificadorAtestadosRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
