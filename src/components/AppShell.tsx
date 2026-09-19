@@ -49,7 +49,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     });
   };
 
-  const itensOperacional = operacionalNavItems.filter((item) => item.to === "/" || podeVer(item.to));
+  const inicioItem = operacionalNavItems.find((item) => item.to === "/");
+  const itensOperacional = operacionalNavItems.filter((item) => item.to !== "/" && podeVer(item.to));
   const itensRh = rhNavItems.filter((item) => podeVer(item.to));
   const ativo = (to: string) => (to === "/" ? caminho === "/" : caminho.startsWith(to));
 
