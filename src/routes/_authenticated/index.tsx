@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Activity, ArrowRight, Clock3, LayoutGrid } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { allNavItems } from "@/components/FloatingNav";
+import { operacionalNavItems } from "@/components/FloatingNav";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
 import { supabase } from "@/integrations/supabase/client";
 
