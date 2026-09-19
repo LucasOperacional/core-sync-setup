@@ -1,9 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Activity, ArrowRight, Clock3, LayoutGrid } from "lucide-react";
-import { Link } from "@tanstack/react-router";
-import { operacionalNavItems } from "@/components/FloatingNav";
-import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
+import { Clock3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -20,7 +17,6 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 function HomePage() {
-  const { podeVer } = useMinhasPermissoes();
   const [userName, setUserName] = useState<string>("Usuário");
   const [currentDate, setCurrentDate] = useState<string>("");
   const [currentWeekday, setCurrentWeekday] = useState<string>("");
@@ -79,23 +75,6 @@ function HomePage() {
           </div>
         </div>
       </header>
-      <section className="mx-auto max-w-[88rem] px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
-          <div><h2 className="font-display text-base font-semibold">Áreas de trabalho</h2><p className="text-sm text-muted-foreground">Acesse os módulos disponíveis para o seu perfil.</p></div>
-          <Activity className="size-4 text-primary" />
-        </div>
-        <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 xl:grid-cols-4">
-          {operacionalNavItems.filter((item) => item.to !== "/" && podeVer(item.to)).map((item) => (
-            <Link key={item.to} to={item.to} className="group flex min-w-0 items-center gap-3 bg-card p-4 transition-colors duration-150 hover:bg-accent/60">
-
-              <span className="grid size-9 shrink-0 place-items-center rounded-md border border-border bg-muted/50 text-muted-foreground group-hover:border-primary/25 group-hover:text-primary"><item.icon className="size-4" /></span>
-              <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.label}</span>
-              <ArrowRight className="size-4 shrink-0 text-muted-foreground/60 group-hover:text-primary" />
-            </Link>
-          ))}
-        </div>
-        <div className="mt-5 flex items-center gap-2 text-xs text-muted-foreground"><LayoutGrid className="size-3.5" />Os módulos exibidos respeitam suas permissões de acesso.</div>
-      </section>
     </main>
   );
 }
