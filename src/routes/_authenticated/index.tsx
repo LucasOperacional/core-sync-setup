@@ -85,8 +85,9 @@ function HomePage() {
           <Activity className="size-4 text-primary" />
         </div>
         <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 xl:grid-cols-4">
-          {allNavItems.filter((item) => item.to !== "/" && podeVer(item.to)).map((item) => (
+          {operacionalNavItems.filter((item) => item.to !== "/" && podeVer(item.to)).map((item) => (
             <Link key={item.to} to={item.to} className="group flex min-w-0 items-center gap-3 bg-card p-4 transition-colors duration-150 hover:bg-accent/60">
+
               <span className="grid size-9 shrink-0 place-items-center rounded-md border border-border bg-muted/50 text-muted-foreground group-hover:border-primary/25 group-hover:text-primary"><item.icon className="size-4" /></span>
               <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.label}</span>
               <ArrowRight className="size-4 shrink-0 text-muted-foreground/60 group-hover:text-primary" />
