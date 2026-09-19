@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  BarChart3,
   Building2,
   Download,
   FileSpreadsheet,
@@ -137,18 +136,6 @@ function RhPage() {
     URL.revokeObjectURL(url);
     toast.success("Relatório Excel (XLS) gerado.");
   }
-
-  const aprovadasPorPosto = useMemo(() => {
-    const mapa = new Map<string, number>();
-    for (const v of vagas) {
-      if (v.status !== "aprovada") continue;
-      const posto = (v.posto || v.localidade || "SEM POSTO").trim().toUpperCase();
-      mapa.set(posto, (mapa.get(posto) ?? 0) + 1);
-    }
-    return [...mapa.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  }, [vagas]);
-
-  const totalAprovadas = aprovadasPorPosto.reduce((s, [, q]) => s + q, 0);
 
   const abertasPorPosto = useMemo(() => {
     const mapa = new Map<

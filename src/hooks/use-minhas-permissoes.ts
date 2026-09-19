@@ -45,6 +45,7 @@ export function useMinhasPermissoes() {
 const ALIASES: Record<string, string> = {
   coordenacao: "vagas",
   "aprovacao-de-vagas": "vagas",
+  "vagas-aprovadas": "vagas",
   "movimentacao-posto": "supervisor",
   "coordenacao-movimentacoes": "vagas",
   "coordenacao-crt": "vagas",
