@@ -24,6 +24,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [dpAberta, setDpAberta] = useState(true);
   const [comercialAberta, setComercialAberta] = useState(true);
   const [financeiroAberta, setFinanceiroAberta] = useState(true);
+  const [suprimentosAberta, setSuprimentosAberta] = useState(true);
 
 
 
