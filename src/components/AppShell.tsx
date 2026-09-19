@@ -45,8 +45,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     });
   };
 
-  const itens = allNavItems.filter((item) => item.to === "/" || podeVer(item.to));
+  const itensOperacional = operacionalNavItems.filter((item) => item.to === "/" || podeVer(item.to));
+  const itensRh = rhNavItems.filter((item) => podeVer(item.to));
   const ativo = (to: string) => (to === "/" ? caminho === "/" : caminho.startsWith(to));
+
   const sair = async () => {
     await supabase.auth.signOut();
     await navigate({ to: "/auth" });
