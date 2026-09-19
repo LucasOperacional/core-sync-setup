@@ -48,6 +48,14 @@ export const allNavItems: NavItem[] = [
   { to: "/indicadores", icon: Gauge, label: "Indicadores", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
 ];
 
+export const operacionalNavItems: NavItem[] = allNavItems.filter(
+  (item) => item.to !== "/rh",
+);
+
+export const rhNavItems: NavItem[] = allNavItems.filter(
+  (item) => item.to === "/rh",
+);
+
 /** A navegação passou a ser fornecida pelo AppShell autenticado. */
 export function FloatingNav() {
   return null;
