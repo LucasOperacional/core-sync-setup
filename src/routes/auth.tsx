@@ -112,7 +112,7 @@ function AuthPage() {
   return (
     <main className="grid min-h-screen bg-background lg:grid-cols-[minmax(20rem,0.85fr)_minmax(28rem,1.15fr)]">
         <ClientOnly fallback={<div className="fixed right-4 top-4 z-50 size-9" />}>
-          {() => <ThemeToggle className="fixed right-4 top-4 z-50 shadow-xs" />}
+          <ThemeToggle className="fixed right-4 top-4 z-50 shadow-xs" />
         </ClientOnly>
         <div className="hidden flex-col justify-between border-r border-border bg-card p-10 lg:flex">
           <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-md bg-primary font-display text-sm font-bold text-primary-foreground">NX</span><div><p className="font-display text-sm font-semibold">NXS GESTÃO</p><p className="text-xs text-muted-foreground">Central integrada de operações</p></div></div>
