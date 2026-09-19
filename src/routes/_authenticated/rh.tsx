@@ -263,53 +263,6 @@ function RhPage() {
           )}
         </section>
 
-        <section className="panel p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="flex items-center gap-2 text-base font-semibold uppercase">
-                <BarChart3 className="size-5 text-primary" />
-                Indicadores de vagas aprovadas
-              </h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Quantidade de vagas aprovadas por posto.
-              </p>
-            </div>
-            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600">
-              {totalAprovadas} aprovada(s) · {aprovadasPorPosto.length} posto(s)
-            </span>
-          </div>
-
-          {carregando ? (
-            <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" />
-              Carregando indicadores...
-            </div>
-          ) : aprovadasPorPosto.length === 0 ? (
-            <p className="mt-4 text-sm text-muted-foreground">Nenhuma vaga aprovada até agora.</p>
-          ) : (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {aprovadasPorPosto.map(([posto, quantidade]) => (
-                <div key={posto} className="rounded-xl border border-border bg-card p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    {posto}
-                  </p>
-                  <p className="mt-1 font-display text-2xl font-bold">{quantidade}</p>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-emerald-500"
-                      style={{
-                        width: `${Math.max(
-                          8,
-                          (quantidade / (aprovadasPorPosto[0]?.[1] || 1)) * 100,
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
 
         <section className="panel p-5">
           <div className="mb-4">
