@@ -302,7 +302,7 @@ function AuthPage() {
             </div>
 
             <p className="mt-6 text-center text-xs text-muted-foreground/60">
-              NXS GESTÃO &middot; Departamento NXS
+              NXS GESTÃO PARA SUA EMPRESA
             </p>
           </div>
         </div>
