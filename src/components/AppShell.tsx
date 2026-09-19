@@ -2,7 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ChevronDown, Download, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { allNavItems } from "@/components/FloatingNav";
+import { operacionalNavItems, rhNavItems } from "@/components/FloatingNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
