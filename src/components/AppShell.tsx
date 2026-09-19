@@ -197,6 +197,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
           </>
         )}
+
+        <button
+          type="button"
+          onClick={() => setSuprimentosAberta((v) => !v)}
+          aria-expanded={suprimentosAberta}
+          className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+          title={recolhida ? "SUP" : undefined}
+        >
+          <span className="truncate">{recolhida ? "SUP" : "Suprimentos"}</span>
+          <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", suprimentosAberta && "rotate-180")} />
+        </button>
       </nav>
 
 
