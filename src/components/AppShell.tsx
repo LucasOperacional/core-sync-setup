@@ -20,6 +20,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [menuMobile, setMenuMobile] = useState(false);
   const [recolhida, setRecolhida] = useState(false);
   const [operacionalAberta, setOperacionalAberta] = useState(true);
+  const [rhAberta, setRhAberta] = useState(true);
+
 
   useEffect(() => {
     try {
