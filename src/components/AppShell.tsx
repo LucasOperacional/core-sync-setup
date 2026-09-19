@@ -62,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {!recolhida && <span className="truncate font-display text-sm font-semibold text-sidebar-foreground">CIOP Operacional</span>}
         </Link>
       </div>
-      <nav className="flex-1 overflow-y-auto px-2 py-3" aria-label="Navegação principal">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-3" aria-label="Navegação principal">
         <button
           type="button"
           onClick={() => setOperacionalAberta((v) => !v)}
@@ -74,30 +74,71 @@ export function AppShell({ children }: { children: ReactNode }) {
           <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", operacionalAberta && "rotate-180")} />
         </button>
         {operacionalAberta && (
-        <ul className="mt-1 space-y-0.5">
-          {itens.map((item) => {
-            const selecionado = ativo(item.to);
-            return (
-              <li key={item.to}>
-                <Link
-                  to={item.to}
-                  title={recolhida ? item.label : undefined}
-                  aria-current={selecionado ? "page" : undefined}
-                  className={cn(
-                    "group flex h-9 min-w-0 items-center gap-3 rounded-md px-2.5 text-sm font-medium transition-colors duration-150",
-                    selecionado
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                  )}
-                >
-                  <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
-                  {!recolhida && <span className="truncate">{item.label}</span>}
-                  {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+          <ul className="mt-1 space-y-0.5">
+            {itensOperacional.map((item) => {
+              const selecionado = ativo(item.to);
+              return (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    title={recolhida ? item.label : undefined}
+                    aria-current={selecionado ? "page" : undefined}
+                    className={cn(
+                      "group flex h-9 min-w-0 items-center gap-3 rounded-md px-2.5 text-sm font-medium transition-colors duration-150",
+                      selecionado
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                    )}
+                  >
+                    <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
+                    {!recolhida && <span className="truncate">{item.label}</span>}
+                    {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {itensRh.length > 0 && (
+          <>
+            <button
+              type="button"
+              onClick={() => setRhAberta((v) => !v)}
+              aria-expanded={rhAberta}
+              className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+              title={recolhida ? "RH" : undefined}
+            >
+              <span className="truncate">{recolhida ? "RH" : "Recursos humanos"}</span>
+              <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", rhAberta && "rotate-180")} />
+            </button>
+            {rhAberta && (
+              <ul className="mt-1 space-y-0.5">
+                {itensRh.map((item) => {
+                  const selecionado = ativo(item.to);
+                  return (
+                    <li key={item.to}>
+                      <Link
+                        to={item.to}
+                        title={recolhida ? item.label : undefined}
+                        aria-current={selecionado ? "page" : undefined}
+                        className={cn(
+                          "group flex h-9 min-w-0 items-center gap-3 rounded-md px-2.5 text-sm font-medium transition-colors duration-150",
+                          selecionado
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                        )}
+                      >
+                        <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
+                        {!recolhida && <span className="truncate">{item.label}</span>}
+                        {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
         )}
       </nav>
       <div className="space-y-1 border-t border-sidebar-border p-2">
