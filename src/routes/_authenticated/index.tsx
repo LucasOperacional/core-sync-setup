@@ -66,7 +66,7 @@ function HomePage() {
         <div className="mx-auto grid max-w-[88rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-5 sm:px-6 lg:px-8">
           <div className="min-w-0">
             <p className="text-sm text-muted-foreground">Bem-vindo, {userName}</p>
-            <h1 className="mt-1 truncate font-display text-2xl font-semibold">Central operacional</h1>
+            <h1 className="mt-1 truncate font-display text-2xl font-semibold">NXS GESTÃO EMPRESARIAL</h1>
           </div>
           <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
             <Clock3 className="size-4" />
