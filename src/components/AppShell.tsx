@@ -63,7 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex h-14 shrink-0 items-center border-b border-sidebar-border px-3">
         <Link to="/" className="flex min-w-0 items-center gap-2.5" aria-label="CIOP — página inicial">
           <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary font-display text-xs font-bold text-primary-foreground">CP</span>
-          {!recolhida && <span className="truncate font-display text-sm font-semibold text-sidebar-foreground">NXS GESTÃO</span>}
+          {!recolhida && <span className="truncate font-display text-sm font-semibold text-sidebar-foreground">Operacional</span>}
         </Link>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-3" aria-label="Navegação principal">
@@ -105,9 +105,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           onClick={() => setOperacionalAberta((v) => !v)}
           aria-expanded={operacionalAberta}
           className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-          title={recolhida ? "NXS" : undefined}
+          title={recolhida ? "OP" : undefined}
         >
-          <span className="truncate">{recolhida ? "NXS" : "NXS GESTÃO"}</span>
+          <span className="truncate">{recolhida ? "OP" : "Operacional"}</span>
           <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", operacionalAberta && "rotate-180")} />
         </button>
         {operacionalAberta && (
@@ -220,7 +220,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="min-w-0">
         <div className="sticky top-0 z-30 flex h-14 items-center border-b border-border bg-background/95 px-4 lg:hidden">
           <Button variant="ghost" size="icon" onClick={() => setMenuMobile(true)} aria-label="Abrir menu"><Menu /></Button>
-          <span className="ml-3 truncate font-display text-sm font-semibold">NXS GESTÃO</span>
+          <span className="ml-3 truncate font-display text-sm font-semibold">Operacional</span>
         </div>
         <div className="app-workspace min-w-0">{children}</div>
       </div>
