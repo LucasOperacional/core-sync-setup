@@ -12,16 +12,16 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Acesso | PORTAL OPERACIONAL" },
+      { title: "Acesso | NXS GESTÃO" },
       {
         name: "description",
         content:
-          "Entre para acessar o PORTAL OPERACIONAL — Portal de Indicadores Operacionais: gestão inteligente e controle em tempo real.",
+          "Entre para acessar o NXS GESTÃO — Portal de Indicadores: gestão inteligente e controle em tempo real.",
       },
-      { property: "og:title", content: "Acesso | PORTAL OPERACIONAL" },
+      { property: "og:title", content: "Acesso | NXS GESTÃO" },
       {
         property: "og:description",
-        content: "Login para acessar o PORTAL OPERACIONAL de indicadores de supervisão de postos.",
+        content: "Login para acessar o NXS GESTÃO de indicadores de supervisão de postos.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -113,8 +113,8 @@ function AuthPage() {
     <main className="grid min-h-screen bg-background lg:grid-cols-[minmax(20rem,0.85fr)_minmax(28rem,1.15fr)]">
         <ThemeToggle className="fixed right-4 top-4 z-50 shadow-xs" />
         <div className="hidden flex-col justify-between border-r border-border bg-card p-10 lg:flex">
-          <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-md bg-primary font-display text-sm font-bold text-primary-foreground">CP</span><div><p className="font-display text-sm font-semibold">Operacional</p><p className="text-xs text-muted-foreground">Central integrada de operações</p></div></div>
-          <div className="max-w-sm"><p className="text-xs font-semibold text-primary">AMBIENTE CORPORATIVO</p><h1 className="mt-3 font-display text-3xl font-semibold leading-tight">Controle operacional com segurança e precisão.</h1><p className="mt-4 text-sm leading-6 text-muted-foreground">Acesse relatórios, protocolos, indicadores e fluxos autorizados para o seu perfil.</p></div>
+          <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-md bg-primary font-display text-sm font-bold text-primary-foreground">NX</span><div><p className="font-display text-sm font-semibold">NXS GESTÃO</p><p className="text-xs text-muted-foreground">Central integrada de operações</p></div></div>
+          <div className="max-w-sm"><p className="text-xs font-semibold text-primary">AMBIENTE CORPORATIVO</p><h1 className="mt-3 font-display text-3xl font-semibold leading-tight">Controle com segurança e precisão.</h1><p className="mt-4 text-sm leading-6 text-muted-foreground">Acesse relatórios, protocolos, indicadores e fluxos autorizados para o seu perfil.</p></div>
           <p className="text-xs text-muted-foreground">Acesso protegido e monitorado.</p>
         </div>
 
@@ -252,7 +252,7 @@ function AuthPage() {
                           value={departamento}
                           onChange={(e) => setDepartamento(e.target.value)}
                           required
-                          placeholder="Ex.: Operacional"
+                          placeholder="Ex.: NXS GESTÃO"
                           className="h-11 border-border/60 bg-background/50 pl-10 text-sm transition-all focus-visible:border-primary/50 focus-visible:ring-primary/30"
                         />
                       </div>
@@ -300,7 +300,7 @@ function AuthPage() {
             </div>
 
             <p className="mt-6 text-center text-xs text-muted-foreground/60">
-              PORTAL OPERACIONAL &middot; Departamento Operacional
+              NXS GESTÃO &middot; Departamento NXS
             </p>
           </div>
         </div>
