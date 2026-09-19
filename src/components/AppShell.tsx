@@ -19,12 +19,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useSessao();
   const [menuMobile, setMenuMobile] = useState(false);
   const [recolhida, setRecolhida] = useState(false);
-  const [operacionalAberta, setOperacionalAberta] = useState(true);
-  const [rhAberta, setRhAberta] = useState(true);
-  const [dpAberta, setDpAberta] = useState(true);
-  const [comercialAberta, setComercialAberta] = useState(true);
-  const [financeiroAberta, setFinanceiroAberta] = useState(true);
-  const [suprimentosAberta, setSuprimentosAberta] = useState(true);
+  const [operacionalAberta, setOperacionalAberta] = useState(false);
+  const [rhAberta, setRhAberta] = useState(false);
+  const [dpAberta, setDpAberta] = useState(false);
+  const [comercialAberta, setComercialAberta] = useState(false);
+  const [financeiroAberta, setFinanceiroAberta] = useState(false);
+  const [suprimentosAberta, setSuprimentosAberta] = useState(false);
 
 
 
