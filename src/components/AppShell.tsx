@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Download, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { ChevronDown, Download, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { allNavItems } from "@/components/FloatingNav";
@@ -19,6 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useSessao();
   const [menuMobile, setMenuMobile] = useState(false);
   const [recolhida, setRecolhida] = useState(false);
+  const [operacionalAberta, setOperacionalAberta] = useState(true);
 
   useEffect(() => {
     try {
@@ -58,7 +59,18 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
       </div>
       <nav className="flex-1 overflow-y-auto px-2 py-3" aria-label="Navegação principal">
-        <ul className="space-y-0.5">
+        <button
+          type="button"
+          onClick={() => setOperacionalAberta((v) => !v)}
+          aria-expanded={operacionalAberta}
+          className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+          title={recolhida ? "Operacional" : undefined}
+        >
+          <span className="truncate">{recolhida ? "OP" : "Operacional"}</span>
+          <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", operacionalAberta && "rotate-180")} />
+        </button>
+        {operacionalAberta && (
+        <ul className="mt-1 space-y-0.5">
           {itens.map((item) => {
             const selecionado = ativo(item.to);
             return (
@@ -82,6 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </ul>
+        )}
       </nav>
       <div className="space-y-1 border-t border-sidebar-border p-2">
         <Button asChild variant="ghost" size={recolhida ? "icon" : "sm"} className={cn("w-full", !recolhida && "justify-start")}>
