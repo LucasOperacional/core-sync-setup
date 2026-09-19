@@ -94,6 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </ul>
+        )}
       </nav>
       <div className="space-y-1 border-t border-sidebar-border p-2">
         <Button asChild variant="ghost" size={recolhida ? "icon" : "sm"} className={cn("w-full", !recolhida && "justify-start")}>
