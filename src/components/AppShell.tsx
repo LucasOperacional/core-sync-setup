@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Download, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { ChevronDown, Download, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { allNavItems } from "@/components/FloatingNav";
@@ -19,6 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useSessao();
   const [menuMobile, setMenuMobile] = useState(false);
   const [recolhida, setRecolhida] = useState(false);
+  const [operacionalAberta, setOperacionalAberta] = useState(true);
 
   useEffect(() => {
     try {
