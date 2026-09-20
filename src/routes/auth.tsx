@@ -33,6 +33,25 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+function ThemedBackgroundVideo() {
+  const { tema } = useTema();
+  const asset = tema === "claro" ? loginBgLightAsset : loginBgDarkAsset;
+
+  return (
+    <video
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+      className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover"
+      src={asset.url}
+      aria-hidden="true"
+      suppressHydrationWarning
+    />
+  );
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const [modo, setModo] = useState<"login" | "cadastro">("login");
