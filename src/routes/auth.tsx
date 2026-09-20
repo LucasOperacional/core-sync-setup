@@ -126,7 +126,7 @@ function AuthPage() {
         <ClientOnly fallback={<div className="fixed right-4 top-4 z-50 size-9" />}>
           <ThemeToggle className="fixed right-4 top-4 z-50 shadow-xs" />
         </ClientOnly>
-        <div className="relative z-10 hidden flex-col justify-between border-r border-border/40 p-10 lg:flex">
+        <div className="relative z-10 hidden flex-col justify-between p-10 lg:flex">
           <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-md bg-primary font-display text-sm font-bold text-primary-foreground">NX</span><div><p className="font-display text-sm font-semibold">NXS GESTÃO</p><p className="text-xs text-muted-foreground">Central integrada com a sua Empresa</p></div></div>
           <div className="max-w-sm"><p className="text-xs font-semibold text-primary">AMBIENTE CORPORATIVO</p><h1 className="mt-3 font-display text-3xl font-semibold leading-tight">Controle com segurança e precisão.</h1><p className="mt-4 text-sm leading-6 text-muted-foreground">Acesse relatórios, protocolos, indicadores e fluxos autorizados para o seu perfil.</p></div>
           <p className="text-xs text-muted-foreground">Acesso protegido e monitorado.</p>
