@@ -114,16 +114,13 @@ function AuthPage() {
 
   return (
     <main className="relative grid min-h-screen bg-background lg:grid-cols-[minmax(20rem,0.85fr)_minmax(28rem,1.15fr)]">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover"
-          src={loginBgAsset.url}
-          aria-hidden="true"
-        />
+        <ClientOnly
+          fallback={
+            <div className="pointer-events-none absolute inset-0 z-0 bg-background" aria-hidden="true" />
+          }
+        >
+          <ThemedBackgroundVideo />
+        </ClientOnly>
         <div className="absolute inset-0 z-[1] bg-black/50" aria-hidden="true" />
         <ClientOnly fallback={<div className="fixed right-4 top-4 z-50 size-9" />}>
           <ThemeToggle className="fixed right-4 top-4 z-50 shadow-xs" />
