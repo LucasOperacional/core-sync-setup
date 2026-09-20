@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { cadastrarConta, type CadastroRole } from "@/lib/cadastro.functions";
 import { entrarComUsuario } from "@/lib/auth.functions";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import loginBgAsset from "@/assets/login-bg.mp4.asset.json";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
