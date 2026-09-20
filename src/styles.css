@@ -122,20 +122,20 @@
   --shadow-glow: 0 8px 24px oklch(0.3034 0.0409 213.31 / 0.1);
 }
 
-/* ─── Tema escuro: petróleo profundo + coral ─── */
+/* ─── Tema escuro: preto + coral ─── */
 .dark {
-  --background: oklch(0.205 0.025 213);
-  --foreground: oklch(0.94 0.006 190);
-  --card: oklch(0.255 0.03 213);
-  --card-foreground: oklch(0.94 0.006 190);
-  --popover: oklch(0.27 0.032 213);
-  --popover-foreground: oklch(0.94 0.006 190);
+  --background: oklch(0.08 0 0);
+  --foreground: oklch(0.94 0 0);
+  --card: oklch(0.12 0 0);
+  --card-foreground: oklch(0.94 0 0);
+  --popover: oklch(0.14 0 0);
+  --popover-foreground: oklch(0.94 0 0);
   --primary: oklch(0.68 0.17 30.28);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.3 0.034 213);
-  --secondary-foreground: oklch(0.92 0.006 190);
-  --muted: oklch(0.29 0.03 213);
-  --muted-foreground: oklch(0.72 0.018 197);
+  --secondary: oklch(0.18 0 0);
+  --secondary-foreground: oklch(0.92 0 0);
+  --muted: oklch(0.16 0 0);
+  --muted-foreground: oklch(0.72 0 0);
   --accent: oklch(0.34 0.05 30);
   --accent-foreground: oklch(0.96 0.008 30);
   --destructive: oklch(0.61 0.21 24);
@@ -146,26 +146,26 @@
   --warning-foreground: oklch(0.16 0.02 75);
   --info: oklch(0.7 0.11 245);
   --info-foreground: oklch(0.14 0.01 245);
-  --border: oklch(0.37 0.033 213);
-  --input: oklch(0.41 0.035 213);
+  --border: oklch(0.25 0 0);
+  --input: oklch(0.22 0 0);
   --ring: oklch(0.68 0.17 30.28);
   --chart-1: oklch(0.6 0.22 27);
   --chart-2: oklch(0.72 0.18 27);
   --chart-3: oklch(0.48 0.18 27);
   --chart-4: oklch(0.68 0.14 27);
   --chart-5: oklch(0.82 0.1 27);
-  --sidebar: oklch(0.17 0.024 213);
-  --sidebar-foreground: oklch(0.94 0.006 190);
+  --sidebar: oklch(0.08 0 0);
+  --sidebar-foreground: oklch(0.94 0 0);
   --sidebar-primary: oklch(0.68 0.17 30.28);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.27 0.034 213);
+  --sidebar-accent: oklch(0.15 0 0);
   --sidebar-accent-foreground: oklch(0.97 0 0);
-  --sidebar-border: oklch(0.31 0.032 213);
+  --sidebar-border: oklch(0.25 0 0);
   --sidebar-ring: oklch(0.68 0.17 30.28);
 
   --gradient-hero: var(--card);
-  --shadow-panel: 0 1px 2px oklch(0 0 0 / 0.3);
-  --shadow-glow: 0 1px 2px oklch(0 0 0 / 0.35);
+  --shadow-panel: 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-glow: 0 1px 2px oklch(0 0 0 / 0.45);
 }
 
 @layer base {
