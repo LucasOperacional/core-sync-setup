@@ -34,11 +34,24 @@ export const Route = createFileRoute("/auth")({
 });
 
 function ThemedBackgroundVideo() {
-  const { tema } = useTema();
+  const [tema, setTema] = useState<Tema>(() =>
+    document.documentElement.classList.contains("dark") ? "escuro" : "claro",
+  );
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      setTema(root.classList.contains("dark") ? "escuro" : "claro");
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
   const asset = tema === "claro" ? loginBgLightAsset : loginBgDarkAsset;
 
   return (
     <video
+      key={asset.url}
       autoPlay
       muted
       loop
@@ -47,7 +60,6 @@ function ThemedBackgroundVideo() {
       className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover"
       src={asset.url}
       aria-hidden="true"
-      suppressHydrationWarning
     />
   );
 }
