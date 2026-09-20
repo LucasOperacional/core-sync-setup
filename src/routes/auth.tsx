@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { cadastrarConta, type CadastroRole } from "@/lib/cadastro.functions";
 import { entrarComUsuario } from "@/lib/auth.functions";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import loginBgAsset from "@/assets/login-bg.mp4.asset.json";
+import type { Tema } from "@/hooks/use-tema";
+import loginBgDarkAsset from "@/assets/login-bg.mp4.asset.json";
+import loginBgLightAsset from "@/assets/login-bg-light.mp4.asset.json";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -30,6 +32,37 @@ export const Route = createFileRoute("/auth")({
   }),
   component: AuthPage,
 });
+
+function ThemedBackgroundVideo() {
+  const [tema, setTema] = useState<Tema>(() =>
+    document.documentElement.classList.contains("dark") ? "escuro" : "claro",
+  );
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      setTema(root.classList.contains("dark") ? "escuro" : "claro");
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  const asset = tema === "claro" ? loginBgLightAsset : loginBgDarkAsset;
+
+  return (
+    <video
+      key={asset.url}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+      className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover"
+      src={asset.url}
+      aria-hidden="true"
+    />
+  );
+}
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -112,16 +145,13 @@ function AuthPage() {
 
   return (
     <main className="relative grid min-h-screen bg-background lg:grid-cols-[minmax(20rem,0.85fr)_minmax(28rem,1.15fr)]">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover"
-          src={loginBgAsset.url}
-          aria-hidden="true"
-        />
+        <ClientOnly
+          fallback={
+            <div className="pointer-events-none absolute inset-0 z-0 bg-background" aria-hidden="true" />
+          }
+        >
+          <ThemedBackgroundVideo />
+        </ClientOnly>
         <div className="absolute inset-0 z-[1] bg-black/50" aria-hidden="true" />
         <ClientOnly fallback={<div className="fixed right-4 top-4 z-50 size-9" />}>
           <ThemeToggle className="fixed right-4 top-4 z-50 shadow-xs" />
