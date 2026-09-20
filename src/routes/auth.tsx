@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { cadastrarConta, type CadastroRole } from "@/lib/cadastro.functions";
 import { entrarComUsuario } from "@/lib/auth.functions";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useTema } from "@/hooks/use-tema";
+import type { Tema } from "@/hooks/use-tema";
 import loginBgDarkAsset from "@/assets/login-bg.mp4.asset.json";
 import loginBgLightAsset from "@/assets/login-bg-light.mp4.asset.json";
 
