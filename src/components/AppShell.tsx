@@ -62,23 +62,24 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const navigation = (
     <>
-      <div className="flex h-14 shrink-0 items-center border-b border-sidebar-border px-3">
-        <Link to="/" className="flex min-w-0 items-center gap-2.5" aria-label="NXS — página inicial">
-          <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary font-display text-xs font-bold text-primary-foreground">NX</span>
-          {!recolhida && <span className="truncate font-display text-sm font-semibold text-sidebar-foreground">NXS</span>}
+      <div className="flex h-20 shrink-0 items-center border-b border-sidebar-border px-4">
+        <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="NXS — página inicial">
+          <span className="grid size-9 shrink-0 place-items-center rounded-md bg-sidebar-primary font-display text-sm font-bold text-sidebar-primary-foreground">N</span>
+          {!recolhida && <span className="truncate font-display text-base font-bold text-sidebar-foreground">NXS SISTEMAS</span>}
         </Link>
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-3" aria-label="Navegação principal">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Navegação principal">
+        {!recolhida && <p className="px-3 pb-2 text-[10px] font-semibold uppercase text-sidebar-foreground/45">Principal</p>}
         {inicioItem && (
           <Link
             to="/"
             title={recolhida ? inicioItem.label : undefined}
             aria-current={ativo("/") ? "page" : undefined}
             className={cn(
-              "group flex h-9 min-w-0 items-center gap-3 rounded-md px-2.5 text-sm font-medium transition-colors duration-150",
+              "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
               ativo("/")
                 ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
             )}
           >
             <inicioItem.icon className={cn("size-4 shrink-0", ativo("/") && "text-primary")} />
@@ -91,7 +92,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           type="button"
           onClick={() => setComercialAberta((v) => !v)}
           aria-expanded={comercialAberta}
-          className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+           className="mt-3 flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
           title={recolhida ? "COM" : undefined}
         >
           <span className="truncate">{recolhida ? "COM" : "Comercial"}</span>
@@ -102,7 +103,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           type="button"
           onClick={() => setDpAberta((v) => !v)}
           aria-expanded={dpAberta}
-          className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+          className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
           title={recolhida ? "DP" : undefined}
         >
           <span className="truncate">{recolhida ? "DP" : "Departamento pessoal"}</span>
@@ -113,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           type="button"
           onClick={() => setFinanceiroAberta((v) => !v)}
           aria-expanded={financeiroAberta}
-          className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+          className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
           title={recolhida ? "FIN" : undefined}
         >
           <span className="truncate">{recolhida ? "FIN" : "Financeiro"}</span>
@@ -124,7 +125,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           type="button"
           onClick={() => setOperacionalAberta((v) => !v)}
           aria-expanded={operacionalAberta}
-          className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+          className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
           title={recolhida ? "OP" : undefined}
         >
           <span className="truncate">{recolhida ? "OP" : "Operacional"}</span>
@@ -141,10 +142,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                     title={recolhida ? item.label : undefined}
                     aria-current={selecionado ? "page" : undefined}
                     className={cn(
-                      "group flex h-9 min-w-0 items-center gap-3 rounded-md px-2.5 text-sm font-medium transition-colors duration-150",
+                      "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
                       selecionado
                         ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                        : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
                     )}
                   >
                     <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
@@ -163,7 +164,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => setRhAberta((v) => !v)}
               aria-expanded={rhAberta}
-              className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+              className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
               title={recolhida ? "RH" : undefined}
             >
               <span className="truncate">{recolhida ? "RH" : "Recursos humanos"}</span>
@@ -180,10 +181,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                         title={recolhida ? item.label : undefined}
                         aria-current={selecionado ? "page" : undefined}
                         className={cn(
-                          "group flex h-9 min-w-0 items-center gap-3 rounded-md px-2.5 text-sm font-medium transition-colors duration-150",
+                            "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
                           selecionado
                             ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                            : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                              : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
                         )}
                       >
                         <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
@@ -202,7 +203,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           type="button"
           onClick={() => setSuprimentosAberta((v) => !v)}
           aria-expanded={suprimentosAberta}
-          className="flex h-9 w-full items-center justify-between rounded-md px-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+          className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
           title={recolhida ? "SUP" : undefined}
         >
           <span className="truncate">{recolhida ? "SUP" : "Suprimentos"}</span>
@@ -223,15 +224,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       {!recolhida && user && (
         <div className="border-t border-sidebar-border px-4 py-3">
           <p className="truncate text-xs font-medium text-sidebar-foreground">{nomeDoUsuario(user)}</p>
-          <p className="truncate text-[11px] text-muted-foreground">Sessão ativa</p>
+          <p className="truncate text-[11px] text-sidebar-foreground/50">Sessão ativa</p>
         </div>
       )}
     </>
   );
 
   return (
-    <div className={cn("app-shell min-h-screen", recolhida ? "lg:pl-16" : "lg:pl-60")}>
-      <aside className={cn("fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-sidebar-border bg-sidebar lg:flex", recolhida ? "w-16" : "w-60")}>
+    <div className={cn("app-shell min-h-screen", recolhida ? "lg:pl-16" : "lg:pl-68")}>
+      <aside className={cn("fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-sidebar-border bg-sidebar lg:flex", recolhida ? "w-16" : "w-68")}>
         {navigation}
         <Button variant="ghost" size="icon" onClick={alternar} className="absolute -right-4 top-20 size-8 rounded-full border bg-background shadow-xs" title={recolhida ? "Expandir menu" : "Recolher menu"}>
           {recolhida ? <PanelLeftOpen /> : <PanelLeftClose />}
@@ -251,7 +252,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="min-w-0">
         <div className="sticky top-0 z-30 flex h-14 items-center border-b border-border bg-background/95 px-4 lg:hidden">
           <Button variant="ghost" size="icon" onClick={() => setMenuMobile(true)} aria-label="Abrir menu"><Menu /></Button>
-          <span className="ml-3 truncate font-display text-sm font-semibold">Operacional</span>
+          <span className="ml-3 truncate font-display text-sm font-semibold">NXS SISTEMAS</span>
         </div>
         <div className="app-workspace min-w-0">{children}</div>
       </div>
