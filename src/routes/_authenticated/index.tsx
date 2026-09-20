@@ -6,11 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
-      { title: "Início" },
+      { title: "Visão geral | NXS Sistemas" },
       {
         name: "description",
-        content: "Painel central operacional — utilize o menu lateral para acessar o sistema.",
+        content: "Visão geral do sistema de gestão empresarial NXS.",
       },
+      { property: "og:title", content: "Visão geral | NXS Sistemas" },
+      { property: "og:description", content: "Visão geral do sistema de gestão empresarial NXS." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: HomePage,
@@ -63,10 +67,10 @@ function HomePage() {
   return (
     <main className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
-        <div className="mx-auto grid max-w-[88rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-5 sm:px-6 lg:px-8">
+        <div className="mx-auto grid min-h-24 max-w-[88rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-5 sm:px-6 lg:px-8">
           <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">Bem-vindo, {userName}</p>
-            <h1 className="mt-1 truncate font-display text-2xl font-semibold">NXS GESTÃO EMPRESARIAL</h1>
+            <h1 className="truncate font-display text-2xl font-bold">Visão Geral</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Bem-vindo, {userName}</p>
           </div>
           <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
             <Clock3 className="size-4" />
@@ -75,6 +79,18 @@ function HomePage() {
           </div>
         </div>
       </header>
+      <section className="mx-auto w-full max-w-[88rem] px-4 py-8 sm:px-6 lg:px-8">
+        <div className="panel flex min-h-44 items-center overflow-hidden">
+          <div className="h-full w-1 self-stretch bg-primary" />
+          <div className="px-6 py-8 sm:px-8">
+            <p className="text-xs font-semibold uppercase text-primary">Central integrada</p>
+            <h2 className="mt-2 font-display text-2xl font-bold text-foreground">NXS Gestão Empresarial</h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+              Selecione uma categoria no menu lateral para acessar as ferramentas disponíveis.
+            </p>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
