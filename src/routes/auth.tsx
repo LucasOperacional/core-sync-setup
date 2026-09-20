@@ -133,7 +133,7 @@ function AuthPage() {
         </div>
 
         {/* ── Right panel: login form ── */}
-        <div className="flex items-center justify-center px-5 py-16 sm:px-8">
+        <div className="relative z-10 flex items-center justify-center px-5 py-16 sm:px-8">
           <div className="w-full max-w-sm">
             <div className="rounded-lg border border-border bg-card p-6 shadow-panel sm:p-8">
               <div className="mb-5 grid grid-cols-2 gap-1 rounded-md border border-border bg-muted/40 p-1">
