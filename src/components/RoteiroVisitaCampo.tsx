@@ -370,6 +370,7 @@ export function RoteiroVisitaCampo() {
       inicioPreenchimento.current = inicio;
       setIniciadoEm(inicio);
       setAgora(inicio);
+      avisarControlIniciado(busca.nome, busca.posto ?? 0);
       toast.success(`Chegada em ${busca.nome} — preenchimento iniciado automaticamente.`);
     }
   }, [busca]);
