@@ -123,6 +123,8 @@ export async function evolutionFetch(
     ...init,
     headers: {
       "Content-Type": "application/json",
+      "Accept": "application/json",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
       ...(chave ? { apikey: chave } : {}),
       ...(init?.headers ?? {}),
     },
@@ -186,6 +188,8 @@ function mensagemErro(status: number, corpo: unknown): string {
   if (status === 401)
     return "Não autorizado: confira a chave global e o nome da instância no Evolution Go.";
   if (status === 404) return "Instância não encontrada no Evolution Go.";
+  if (status === 530)
+    return "Erro 530 (Cloudflare/Hospedagem): O acesso foi bloqueado por proteção antibot ou o DNS do servidor falhou.";
   return `Erro ${status} na API do Evolution Go.`;
 }
 
