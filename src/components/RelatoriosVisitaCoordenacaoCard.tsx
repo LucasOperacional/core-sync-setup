@@ -8,7 +8,15 @@ import { listarRelatoriosRoteiroCoordenacao } from "@/lib/roteiro-campo.function
 function dataBr(iso: string | null) {
   if (!iso) return "—";
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString("pt-BR");
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
+}
+
+function horaBr(iso: string | null, subSegundos: number = 0) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  if (subSegundos > 0) d.setSeconds(d.getSeconds() - subSegundos);
+  return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 /** Relatórios em PDF enviados automaticamente pela supervisão de campo. */
@@ -42,35 +50,33 @@ export function RelatoriosVisitaCoordenacaoCard() {
           <p className="text-sm text-muted-foreground">Nenhum relatório recebido até o momento.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm whitespace-nowrap">
               <thead className="text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th className="py-2 pr-4">Recebido em</th>
                   <th className="py-2 pr-4">Data da visita</th>
+                  <th className="py-2 pr-4">Início</th>
+                  <th className="py-2 pr-4">Finalização</th>
                   <th className="py-2 pr-4">Posto</th>
-                  <th className="py-2 pr-4">Função</th>
-                  <th className="py-2 pr-4">Colaborador</th>
                   <th className="py-2 pr-4">Enviado por</th>
                   <th className="py-2 pr-4">Conformidade</th>
-                  <th className="py-2 pr-4">Críticos</th>
                   <th className="py-2 pr-4">PDF</th>
                 </tr>
               </thead>
               <tbody>
                 {relatorios.map((r) => (
                   <tr key={r.id} className="border-t border-border">
-                    <td className="py-2 pr-4">{dataBr(r.relatorio_enviado_em)}</td>
-                    <td className="py-2 pr-4">{r.data_visita?.split("-").reverse().join("/")}</td>
+                    <td className="py-2 pr-4">
+                      {r.data_visita?.split("-").reverse().join("/")}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {horaBr(r.relatorio_enviado_em, r.duracao_segundos ?? 0)}
+                    </td>
+                    <td className="py-2 pr-4 font-medium text-foreground">
+                      {horaBr(r.relatorio_enviado_em)}
+                    </td>
                     <td className="py-2 pr-4">{r.posto}</td>
-                    <td className="py-2 pr-4">{r.funcao}</td>
-                    <td className="py-2 pr-4">{r.colaborador || "—"}</td>
                     <td className="py-2 pr-4">{r.enviado_por_nome || r.supervisor || "—"}</td>
                     <td className="py-2 pr-4 font-semibold">{r.percentual_conformidade}%</td>
-                    <td
-                      className={`py-2 pr-4 ${r.criticas_abertas > 0 ? "font-semibold text-destructive" : ""}`}
-                    >
-                      {r.criticas_abertas}
-                    </td>
                     <td className="py-2 pr-4">
                       {r.url ? (
                         <Button asChild size="sm" variant="secondary">

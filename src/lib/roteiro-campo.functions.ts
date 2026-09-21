@@ -206,6 +206,7 @@ export type RelatorioRoteiroCoordenacao = {
   criticas_abertas: number;
   relatorio_enviado_em: string | null;
   enviado_por_nome: string | null;
+  duracao_segundos?: number | null;
   url: string | null;
 };
 
@@ -216,7 +217,7 @@ export const listarRelatoriosRoteiroCoordenacao = createServerFn({ method: "GET"
     const { data, error } = await context.supabase
       .from("roteiros_visita_campo")
       .select(
-        "id,data_visita,posto,cliente,funcao,colaborador,supervisor,percentual_conformidade,total_nao_conformes,criticas_abertas,relatorio_enviado_em,relatorio_pdf_path,enviado_por_nome",
+        "id,data_visita,posto,cliente,funcao,colaborador,supervisor,percentual_conformidade,total_nao_conformes,criticas_abertas,relatorio_enviado_em,relatorio_pdf_path,enviado_por_nome,duracao_segundos",
       )
       .not("relatorio_pdf_path", "is", null)
       .order("relatorio_enviado_em", { ascending: false })

@@ -26,6 +26,9 @@ export type DadosRelatorioRoteiro = {
   iniciadoEm?: number | null;
   finalizadoEm?: number;
   duracaoSegundos?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  endereco?: string;
 };
 
 const ROTULO_RESPOSTA: Record<RespostaValor, string> = {
@@ -79,6 +82,8 @@ export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
     ["Início", dados.iniciadoEm ? formatarDataHora(new Date(dados.iniciadoEm).toISOString()) : "—"],
     ["Encerramento", dados.finalizadoEm ? formatarDataHora(new Date(dados.finalizadoEm).toISOString()) : "—"],
     ["Tempo de permanência", extensoDuracao(dados.duracaoSegundos)],
+    ["Localização", (dados.latitude && dados.longitude) ? `${dados.latitude.toFixed(6)}, ${dados.longitude.toFixed(6)}` : "Não registrada"],
+    ["Endereço", dados.endereco || "Não registrado"],
     ["Função avaliada", dados.funcao],
     ["Posto", dados.posto || "—"],
     ["Emitido em", formatarDataHora(new Date().toISOString())],

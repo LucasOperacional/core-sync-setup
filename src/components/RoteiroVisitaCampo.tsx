@@ -559,7 +559,24 @@ export function RoteiroVisitaCampo() {
         try {
           const agoraFim = Date.now();
           const duracaoSecs = inicioPreenchimento.current === null ? null : Math.max(0, Math.round((agoraFim - inicioPreenchimento.current) / 1000));
+          
+          let enderecoEscrito = "";
+          if (geo.latitude && geo.longitude) {
+            try {
+              const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${geo.latitude}&lon=${geo.longitude}`);
+              if (res.ok) {
+                const b = await res.json();
+                enderecoEscrito = b.display_name || "";
+              }
+            } catch (e) {
+               console.error("Falha ao obter endereço OSM", e);
+            }
+          }
+
           const pdfBase64 = gerarRelatorioRoteiroPdf({
+            latitude: geo.latitude,
+            longitude: geo.longitude,
+            endereco: enderecoEscrito,
             dataVisita,
             posto: postoNexti?.nome ?? "",
             cliente: "",
