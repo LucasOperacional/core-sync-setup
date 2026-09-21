@@ -557,6 +557,8 @@ export function RoteiroVisitaCampo() {
       const roteiroId = (resultado as { id?: string } | undefined)?.id;
       if (roteiroId) {
         try {
+          const agoraFim = Date.now();
+          const duracaoSecs = inicioPreenchimento.current === null ? null : Math.max(0, Math.round((agoraFim - inicioPreenchimento.current) / 1000));
           const pdfBase64 = gerarRelatorioRoteiroPdf({
             dataVisita,
             posto: postoNexti?.nome ?? "",
@@ -578,6 +580,9 @@ export function RoteiroVisitaCampo() {
               percentual: resumo.percentual,
             },
             fotos,
+            iniciadoEm: inicioPreenchimento.current,
+            finalizadoEm: agoraFim,
+            duracaoSegundos: duracaoSecs,
           });
           const envio = await enviarRelatorio({ data: { roteiroId, pdfBase64 } });
           if (envio?.ok) toast.success("Relatório em PDF enviado para a Coordenação.");

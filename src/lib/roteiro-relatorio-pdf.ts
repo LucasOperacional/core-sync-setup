@@ -23,6 +23,9 @@ export type DadosRelatorioRoteiro = {
     percentual: number;
   };
   fotos: FotoChecklist[];
+  iniciadoEm?: number | null;
+  finalizadoEm?: number;
+  duracaoSegundos?: number | null;
 };
 
 const ROTULO_RESPOSTA: Record<RespostaValor, string> = {
@@ -34,6 +37,18 @@ const ROTULO_RESPOSTA: Record<RespostaValor, string> = {
 function dataBr(iso: string) {
   const partes = iso.split("-");
   return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : iso;
+}
+
+function extensoDuracao(totalSegundos: number | null | undefined): string {
+  if (totalSegundos == null) return "—";
+  const h = Math.floor(totalSegundos / 3600);
+  const m = Math.floor((totalSegundos % 3600) / 60);
+  const s = totalSegundos % 60;
+  const partes = [];
+  if (h > 0) partes.push(`${h}h`);
+  if (m > 0 || h > 0) partes.push(`${m}m`);
+  partes.push(`${s}s`);
+  return partes.join(" ");
 }
 
 /** Monta o relatório em PDF da visita de campo e devolve o conteúdo em base64. */
@@ -61,6 +76,9 @@ export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
   const cabecalho: [string, string][] = [
     ["Realizado por", dados.supervisor || "—"],
     ["Data da visita", dataBr(dados.dataVisita)],
+    ["Início", dados.iniciadoEm ? formatarDataHora(new Date(dados.iniciadoEm).toISOString()) : "—"],
+    ["Encerramento", dados.finalizadoEm ? formatarDataHora(new Date(dados.finalizadoEm).toISOString()) : "—"],
+    ["Tempo de permanência", extensoDuracao(dados.duracaoSegundos)],
     ["Função avaliada", dados.funcao],
     ["Posto", dados.posto || "—"],
     ["Emitido em", formatarDataHora(new Date().toISOString())],
