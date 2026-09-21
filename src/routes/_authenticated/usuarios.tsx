@@ -117,6 +117,26 @@ function formatDate(iso: string | null) {
   });
 }
 
+function categoriasVisiveisDoMenu(
+  user: UsuarioAdmin,
+  permissions: Record<string, UserPermission[]>,
+) {
+  if (isSuperAdmin(user.email) || user.role === "admin") {
+    return AVAILABLE_PAGES.map((page) => page.label);
+  }
+
+  if (user.role === "supervisor") {
+    const supervisorPage = AVAILABLE_PAGES.find((page) => page.key === "supervisor");
+    return supervisorPage ? [supervisorPage.label] : [];
+  }
+
+  const allowedKeys = new Set(
+    (permissions[user.id] ?? []).filter((permission) => permission.allowed).map((permission) => permission.pageKey),
+  );
+
+  return AVAILABLE_PAGES.filter((page) => allowedKeys.has(page.key)).map((page) => page.label);
+}
+
 function PasswordStrengthIndicator({ password }: { password: string }) {
   const checks = useMemo(() => {
     return [
@@ -160,7 +180,6 @@ function UsuariosPage() {
   const [newEmail, setNewEmail] = useState("");
   const [newSenha, setNewSenha] = useState("");
   const [newDepartment, setNewDepartment] = useState("");
-  const [newCategoria, setNewCategoria] = useState("");
   const [newRole, setNewRole] = useState<AppRole>("user");
   const [showPassword, setShowPassword] = useState(false);
   const [newPerms, setNewPerms] = useState<Record<string, boolean>>({});
@@ -213,7 +232,6 @@ function UsuariosPage() {
     setNewEmail("");
     setNewSenha("");
     setNewDepartment("");
-    setNewCategoria("");
     setNewRole("user");
     setShowPassword(false);
     setNewPerms({});
@@ -392,6 +410,7 @@ function UsuariosPage() {
                       <TableHead>E-mail</TableHead>
                       <TableHead>Departamento</TableHead>
                       <TableHead>Papel</TableHead>
+                      <TableHead>Categorias no Sidebar</TableHead>
                       <TableHead>Criado em</TableHead>
                       <TableHead>Último login</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
@@ -426,6 +445,24 @@ function UsuariosPage() {
                               )}
                               {u.role}
                             </Badge>
+                          </TableCell>
+                          <TableCell className="min-w-56">
+                            {(() => {
+                              const categorias = categoriasVisiveisDoMenu(u, allPermissions);
+                              return categorias.length > 0 ? (
+                                <div className="flex max-w-md flex-wrap gap-1">
+                                  {categorias.map((categoria) => (
+                                    <Badge key={categoria} variant="outline" className="text-xs">
+                                      {categoria}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">
+                                  Nenhuma categoria liberada
+                                </span>
+                              );
+                            })()}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {formatDate(u.createdAt)}
@@ -584,18 +621,6 @@ function UsuariosPage() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="new-categoria">Categoria de dados visível</Label>
-              <Input
-                id="new-categoria"
-                type="text"
-                placeholder="Ex: Operacional, Comercial..."
-                value={newCategoria}
-                onChange={(e) => setNewCategoria(e.target.value)}
-                autoComplete="off"
-              />
-              <p className="text-xs text-muted-foreground">Define qual categoria de dados este usuário pode enxergar.</p>
-            </div>
-            <div className="grid gap-2">
               <Label>Papel</Label>
               <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
                 <SelectTrigger>
@@ -611,13 +636,13 @@ function UsuariosPage() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Páginas no Menu Lateral (Sidebar)</Label>
+              <Label>Categorias visíveis no Menu Lateral (Sidebar)</Label>
               <p className="text-xs text-muted-foreground">
                 {newRole === "admin"
-                  ? "Administradores têm acesso total ao menu."
+                  ? "Administradores visualizam todas as categorias do menu."
                   : newRole === "supervisor"
-                    ? "Supervisores têm um menu predefinido."
-                    : "Selecione as opções que irão aparecer no menu sidebar deste usuário."}
+                    ? "Supervisores visualizam somente a categoria Supervisor."
+                    : "Selecione somente as categorias que aparecerão no menu Sidebar deste usuário. As categorias não selecionadas não serão exibidas."}
               </p>
               <div className="grid max-h-56 grid-cols-1 gap-1 overflow-y-auto rounded-md border border-input p-3 sm:grid-cols-2">
                 {AVAILABLE_PAGES.map((p: (typeof AVAILABLE_PAGES)[number]) => (
@@ -747,18 +772,15 @@ function UsuariosPage() {
             <DialogDescription>{permUser?.email}</DialogDescription>
           </DialogHeader>
           <div className="px-1 py-1">
-            <Label className="mb-1 block">Categoria de dados visível</Label>
-            <Input
-              value={permCategoria}
-              onChange={(e) => setPermCategoria(e.target.value)}
-              placeholder="Ex: Operacional, Comercial..."
-            />
-            <p className="mt-1 text-xs text-muted-foreground">Defina a qual categoria de dados este usuário terá acesso.</p>
+            <Label className="mb-1 block">Categorias visíveis no Menu Lateral (Sidebar)</Label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Marque somente as categorias que este usuário poderá visualizar. As categorias sem seleção não aparecerão no menu Sidebar.
+            </p>
           </div>
           <div className="mt-4">
-            <Label className="mb-1 block">Telas visíveis no menu</Label>
-            <p className="text-xs text-muted-foreground mb-3">
-              Marque as opções que irão aparecer no sidebar deste usuário.
+            <Label className="mb-1 block">Categorias liberadas no menu</Label>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Cada opção selecionada será exibida no menu lateral deste usuário.
             </p>
           </div>
           <div className="max-h-80 space-y-3 overflow-y-auto py-2 border-t border-border pt-4">
