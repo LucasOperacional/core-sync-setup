@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import autoTable, { type RowInput } from "jspdf-autotable";
 import type { PerguntaRoteiro, RespostaValor } from "./roteiro-campo-perguntas";
 import { formatarCoordenadas, formatarDataHora, type FotoChecklist } from "./foto-carimbo";
 
@@ -139,7 +139,7 @@ export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
   y += 32;
 
   // --- CHECKLIST ---
-  const tBody = [];
+  const tBody: RowInput[] = [];
   let blocoAtual = "";
   
   dados.perguntas.forEach((p, i) => {
@@ -201,7 +201,7 @@ export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
        body: [
          [{ content: "OBSERVAÇÕES GERAIS DA VISITA", styles: { fontStyle: "bold", fillColor: [241, 245, 249], textColor: [15, 23, 42] } }],
          [dados.observacaoGeral?.trim() || "Nenhuma observação registrada."],
-         [{ content: "PLANO DE AÇÃO E PRAZOS", styles: { fontStyle: "bold", fillColor: [241, 245, 249], textColor: [15, 23, 42], marginTop: 5 } }],
+         [{ content: "PLANO DE AÇÃO E PRAZOS", styles: { fontStyle: "bold", fillColor: [241, 245, 249], textColor: [15, 23, 42] } }],
          [dados.planoAcao?.trim() || "Nenhum plano de ação registrado."]
        ],
        theme: "grid",
