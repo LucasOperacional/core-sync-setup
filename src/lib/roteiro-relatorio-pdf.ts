@@ -39,6 +39,7 @@ const ROTULO_RESPOSTA: Record<RespostaValor, string> = {
 };
 
 function dataBr(iso: string) {
+  if (!iso) return "—";
   const partes = iso.split("-");
   return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : iso;
 }
@@ -60,7 +61,7 @@ export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margins = { top: 35, bottom: 25, left: 15, right: 15 };
+  const margins = { top: 38, bottom: 25, left: 15, right: 15 };
   
   let y = margins.top;
 
@@ -74,20 +75,20 @@ export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
   // --- INFORMAÇÕES GERAIS ---
   autoTable(doc, {
     startY: y,
-    theme: "plain",
-    margin: { top: margins.top, bottom: margins.bottom, left: margins.left, right: margins.right },
-    styles: { fontSize: 9, cellPadding: 1, textColor: [71, 85, 105] },
+    theme: "grid",
+    margin: { left: margins.left, right: margins.right },
+    styles: { fontSize: 8.5, cellPadding: 4, textColor: [30, 41, 59], lineColor: [226, 232, 240] },
     columnStyles: {
-      0: { fontStyle: "bold", textColor: [30, 58, 138], cellWidth: 35 },
-      1: { cellWidth: 55, textColor: [15, 23, 42] },
-      2: { fontStyle: "bold", textColor: [30, 58, 138], cellWidth: 35 },
-      3: { cellWidth: "auto", textColor: [15, 23, 42] }
+      0: { fontStyle: "bold", textColor: [15, 23, 42], fillColor: [248, 250, 252], cellWidth: 35 },
+      1: { cellWidth: 55 },
+      2: { fontStyle: "bold", textColor: [15, 23, 42], fillColor: [248, 250, 252], cellWidth: 35 },
+      3: { cellWidth: "auto" }
     },
     body: [
       ["Posto Avaliado:", dados.posto || "—", "Supervisor:", dados.supervisor || "—"],
       ["Endereço:", dados.endereco || "Não registrado", "Data da Visita:", dataBr(dados.dataVisita)],
       ["Localização:", (dados.latitude && dados.longitude) ? `${dados.latitude.toFixed(6)}, ${dados.longitude.toFixed(6)}` : "Não registrada", "Início:", dados.iniciadoEm ? formatarDataHora(new Date(dados.iniciadoEm).toISOString()) : "—"],
-      ["Função Avaliada:", dados.funcao, "Encerramento:", dados.finalizadoEm ? formatarDataHora(new Date(dados.finalizadoEm).toISOString()) : "—"],
+      ["Função Avaliada:", dados.funcao || "—", "Encerramento:", dados.finalizadoEm ? formatarDataHora(new Date(dados.finalizadoEm).toISOString()) : "—"],
       ["Colaborador:", dados.colaborador || "—", "Duração:", extensoDuracao(dados.duracaoSegundos)]
     ]
   });
@@ -95,22 +96,47 @@ export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
   y = (doc as any).lastAutoTable.finalY + 8;
 
   // --- PAINEL DE CONFORMIDADE ---
+  // Bloco percentual
   doc.setFillColor(...corStatus);
-  doc.roundedRect(margins.left, y, pageWidth - margins.left - margins.right, 20, 2, 2, "F");
+  doc.roundedRect(margins.left, y, 45, 24, 2, 2, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(24);
-  doc.text(`${dados.resumo.percentual}%`, margins.left + 8, y + 14);
-  
-  doc.setFontSize(10);
-  doc.text("ÍNDICE DE CONFORMIDADE DA VISITA", margins.left + 40, y + 9);
-  
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  const textoMesa = `Conformes: ${dados.resumo.conformes}   |   Não conformes: ${dados.resumo.naoConformes}   |   N/A: ${dados.resumo.naoAplicaveis}   |   Críticos em aberto: ${dados.resumo.criticasAbertas}`;
-  doc.text(textoMesa, margins.left + 40, y + 15);
-  
-  y += 28;
+  doc.text(`${dados.resumo.percentual}%`, margins.left + 22.5, y + 14, { align: "center" });
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "bold");
+  doc.text("ÍNDICE DE CONFORMIDADE", margins.left + 22.5, y + 20, { align: "center" });
+
+  // Grid de resumo "Conformes", "Não Conformes", "N/A", "Críticas"
+  const wResumo = (pageWidth - margins.left - margins.right - 50) / 4;
+  const xOffset = margins.left + 50;
+
+  const paineisResumo = [
+    { rotulo: "CONFORMES", valor: dados.resumo.conformes, corValor: [22, 163, 74] as [number, number, number] },
+    { rotulo: "NÃO CONFORMES", valor: dados.resumo.naoConformes, corValor: [220, 38, 38] as [number, number, number] },
+    { rotulo: "NÃO APLICÁVEL", valor: dados.resumo.naoAplicaveis, corValor: [100, 116, 139] as [number, number, number] },
+    { rotulo: "CRÍTICOS ABERTOS", valor: dados.resumo.criticasAbertas, corValor: [234, 179, 8] as [number, number, number] }
+  ];
+
+  paineisResumo.forEach((p, idx) => {
+    const rx = xOffset + (idx * wResumo);
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(rx, y, wResumo - 4, 24, 2, 2, "F");
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(rx, y, wResumo - 4, 24, 2, 2, "S");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(...p.corValor);
+    doc.text(p.valor.toString(), rx + ((wResumo - 4) / 2), y + 12, { align: "center" });
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text(p.rotulo, rx + ((wResumo - 4) / 2), y + 19, { align: "center" });
+  });
+
+  y += 32;
 
   // --- CHECKLIST ---
   const tBody = [];
@@ -119,7 +145,11 @@ export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
   dados.perguntas.forEach((p, i) => {
     if (p.bloco !== blocoAtual) {
       tBody.push([
-        { content: p.bloco.toUpperCase(), colSpan: 3, styles: { fillColor: [241, 245, 249], textColor: [30, 58, 138], fontStyle: "bold", halign: "center" } }
+        { 
+          content: p.bloco.toUpperCase(), 
+          colSpan: 3, 
+          styles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: "bold", halign: "center", fontSize: 9 } 
+        }
       ]);
       blocoAtual = p.bloco;
     }
@@ -140,19 +170,19 @@ export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
 
     tBody.push([
       { content: (i + 1).toString(), styles: { fontStyle: "bold" } },
-      itemContent,
+      { content: itemContent },
       { content: rText, styles: { textColor: rColor, fontStyle: "bold" } }
     ]);
   });
 
   autoTable(doc, {
     startY: y,
-    margin: { top: margins.top, bottom: margins.bottom, left: margins.left, right: margins.right },
+    margin: { left: margins.left, right: margins.right, bottom: margins.bottom },
     head: [["#", "Item Avaliado (Checklist)", "Status"]],
     body: tBody,
     theme: "grid",
-    headStyles: { fillColor: [30, 58, 138], textColor: 255 },
-    styles: { fontSize: 9, cellPadding: 3, lineColor: [226, 232, 240] },
+    headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 9 },
+    styles: { fontSize: 8.5, cellPadding: 4, lineColor: [226, 232, 240] },
     columnStyles: {
         0: { cellWidth: 10, halign: "center" },
         1: { cellWidth: "auto" },
@@ -167,48 +197,51 @@ export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
   if (dados.observacaoGeral?.trim() || dados.planoAcao?.trim()) {
      autoTable(doc, {
        startY: y,
-       margin: { top: margins.top, bottom: margins.bottom, left: margins.left, right: margins.right },
+       margin: { left: margins.left, right: margins.right, bottom: margins.bottom },
        body: [
-         [{ content: "OBSERVAÇÕES GERAIS DA VISITA", styles: { fontStyle: "bold", fillColor: [241, 245, 249], textColor: [30, 58, 138] } }],
+         [{ content: "OBSERVAÇÕES GERAIS DA VISITA", styles: { fontStyle: "bold", fillColor: [241, 245, 249], textColor: [15, 23, 42] } }],
          [dados.observacaoGeral?.trim() || "Nenhuma observação registrada."],
-         [{ content: "PLANO DE AÇÃO E PRAZOS", styles: { fontStyle: "bold", fillColor: [241, 245, 249], textColor: [30, 58, 138], marginTop: 5 } }],
+         [{ content: "PLANO DE AÇÃO E PRAZOS", styles: { fontStyle: "bold", fillColor: [241, 245, 249], textColor: [15, 23, 42], marginTop: 5 } }],
          [dados.planoAcao?.trim() || "Nenhum plano de ação registrado."]
        ],
        theme: "grid",
-       styles: { fontSize: 9, cellPadding: 4, lineColor: [226, 232, 240] },
+       styles: { fontSize: 9, cellPadding: 5, lineColor: [226, 232, 240] },
        pageBreak: "auto"
      });
      y = (doc as any).lastAutoTable.finalY + 10;
   }
 
   // --- REGISTRO FOTOGRÁFICO ---
-  if (dados.fotos.length > 0) {
+  if (dados.fotos && dados.fotos.length > 0) {
       doc.addPage();
       let cy = margins.top;
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
-      doc.setTextColor(30, 58, 138);
+      doc.setTextColor(15, 23, 42);
       doc.text("EVIDÊNCIAS FOTOGRÁFICAS", margins.left, cy);
-      cy += 8;
+      
+      doc.setDrawColor(226, 232, 240);
+      doc.line(margins.left, cy + 3, pageWidth - margins.right, cy + 3);
+      
+      cy += 10;
 
-      const photoColW = (pageWidth - margins.left - margins.right - 8) / 2;
+      const photoColW = (pageWidth - margins.left - margins.right - 10) / 2;
       const photoH = photoColW * 0.75;
       let col = 0;
 
       for (const foto of dados.fotos) {
-          if (cy + photoH + 22 > pageHeight - margins.bottom) {
+          if (cy + photoH + 28 > pageHeight - margins.bottom) {
              doc.addPage();
-             cy = margins.top + 8;
+             cy = margins.top + 5;
              col = 0;
           }
 
-          const x = margins.left + col * (photoColW + 8);
+          const x = margins.left + col * (photoColW + 10);
 
-          doc.setFillColor(248, 250, 252);
-          doc.setDrawColor(226, 232, 240);
+          doc.setFillColor(255, 255, 255);
+          doc.setDrawColor(203, 213, 225);
           doc.setLineWidth(0.5);
-          doc.rect(x, cy, photoColW, photoH + 18, "F");
-          doc.rect(x, cy, photoColW, photoH + 18, "S");
+          doc.roundedRect(x, cy, photoColW, photoH + 26, 3, 3, "DF");
 
           try {
               doc.addImage(foto.dataUrl, "JPEG", x + 1, cy + 1, photoColW - 2, photoH);
@@ -220,26 +253,29 @@ export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
               doc.text("Erro ao carregar imagem", x + photoColW/2, cy + photoH/2, { align: "center" });
           }
 
+          doc.setDrawColor(226, 232, 240);
+          doc.line(x, cy + photoH, x + photoColW, cy + photoH);
+
           doc.setFont("helvetica", "bold");
-          doc.setFontSize(7.5);
+          doc.setFontSize(8);
           doc.setTextColor(15, 23, 42);
-          const txtItem = doc.splitTextToSize(`Item: ${foto.perguntaTexto}`, photoColW - 4);
-          doc.text(txtItem.slice(0, 2), x + 2, cy + photoH + 6);
+          const txtItem = doc.splitTextToSize(`Item: ${foto.perguntaTexto}`, photoColW - 6);
+          doc.text(txtItem.slice(0, 2), x + 3, cy + photoH + 5);
 
           doc.setFont("helvetica", "normal");
           doc.setFontSize(7);
           doc.setTextColor(71, 85, 105);
           
           let mt = `${formatarDataHora(foto.capturadaEm)}`;
-          if (foto.latitude && foto.longitude) mt += ` | ${formatarCoordenadas(foto)}`;
+          if (foto.latitude && foto.longitude) mt += ` | C: ${formatarCoordenadas(foto)}`;
           if (foto.observacao) mt += `\nObs: ${foto.observacao}`;
           
-          const txtMeta = doc.splitTextToSize(mt, photoColW - 4);
-          doc.text(txtMeta.slice(0, 3), x + 2, cy + photoH + 11);
+          const txtMeta = doc.splitTextToSize(mt, photoColW - 6);
+          doc.text(txtMeta.slice(0, 3), x + 3, cy + photoH + 11.5);
 
           if (col === 1) {
               col = 0;
-              cy += photoH + 22;
+              cy += photoH + 34;
           } else {
               col = 1;
           }
@@ -251,23 +287,29 @@ export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
 
-    // Top banner estilo marca
-    doc.setFillColor(30, 58, 138); // blue-900
-    doc.rect(0, 0, pageWidth, 25, "F");
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, pageWidth, 28, "F");
+    
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
-    doc.text("RELATÓRIO TÉCNICO DE CAMPO", margins.left, 16);
+    doc.text("RELATÓRIO TÉCNICO DE CAMPO", margins.left, 12);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text(`EMPRESA: ${dados.empresa?.toUpperCase() || "NÃO REGISTRADA"}   |   CLIENTE: ${dados.cliente?.toUpperCase() || "NÃO REGISTRADO"}`, margins.left, 20);
 
-    // Footer padronizado
     doc.setFillColor(248, 250, 252);
     doc.rect(0, pageHeight - 18, pageWidth, 18, "F");
     doc.setDrawColor(226, 232, 240);
     doc.line(0, pageHeight - 18, pageWidth, pageHeight - 18);
+    
     doc.setTextColor(100, 116, 139);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.text(`Gerado pelo Sistema CIOP em ${formatarDataHora(new Date().toISOString())}`, margins.left, pageHeight - 8);
+    doc.setFontSize(7.5);
+    
+    doc.text(`Gerado pelo Sistema em ${formatarDataHora(new Date().toISOString())}`, margins.left, pageHeight - 8);
     doc.text(`Página ${i} de ${totalPages}`, pageWidth - margins.right, pageHeight - 8, { align: "right" });
   }
 
