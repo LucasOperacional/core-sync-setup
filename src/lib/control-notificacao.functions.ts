@@ -51,5 +51,10 @@ export const notificarInicioControl = createServerFn({ method: "POST" })
       `Relatório: ${LINK_RELATORIO}`,
     ].join("\n");
 
-    return enviarMensagemEvolution(NUMERO_NOTIFICACAO_CONTROL, texto);
+    const envio = await enviarMensagemEvolution(NUMERO_NOTIFICACAO_CONTROL, texto);
+    console.log(
+      "[control-notificacao] aviso de início",
+      JSON.stringify({ supervisor, posto: data.postoNome, ok: envio.ok, erro: envio.erro ?? null }),
+    );
+    return envio;
   });
