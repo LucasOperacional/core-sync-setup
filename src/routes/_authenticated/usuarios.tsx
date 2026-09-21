@@ -160,6 +160,7 @@ function UsuariosPage() {
   const [newEmail, setNewEmail] = useState("");
   const [newSenha, setNewSenha] = useState("");
   const [newDepartment, setNewDepartment] = useState("");
+  const [newCategoria, setNewCategoria] = useState("");
   const [newRole, setNewRole] = useState<AppRole>("user");
   const [showPassword, setShowPassword] = useState(false);
   const [newPerms, setNewPerms] = useState<Record<string, boolean>>({});
@@ -182,6 +183,7 @@ function UsuariosPage() {
   // Permissions
   const [permUser, setPermUser] = useState<UsuarioAdmin | null>(null);
   const [permState, setPermState] = useState<Record<string, boolean>>({});
+  const [permCategoria, setPermCategoria] = useState("");
   const [savingPerms, setSavingPerms] = useState(false);
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim());
@@ -211,6 +213,7 @@ function UsuariosPage() {
     setNewEmail("");
     setNewSenha("");
     setNewDepartment("");
+    setNewCategoria("");
     setNewRole("user");
     setShowPassword(false);
     setNewPerms({});
@@ -305,6 +308,7 @@ function UsuariosPage() {
       state[p.key] = found ? found.allowed : false;
     }
     setPermState(state);
+    setPermCategoria(""); // O dado virá do banco futuramente
     setPermUser(user);
   }
 
@@ -580,6 +584,18 @@ function UsuariosPage() {
               </Select>
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="new-categoria">Categoria de dados visível</Label>
+              <Input
+                id="new-categoria"
+                type="text"
+                placeholder="Ex: Operacional, Comercial..."
+                value={newCategoria}
+                onChange={(e) => setNewCategoria(e.target.value)}
+                autoComplete="off"
+              />
+              <p className="text-xs text-muted-foreground">Define qual categoria de dados este usuário pode enxergar.</p>
+            </div>
+            <div className="grid gap-2">
               <Label>Papel</Label>
               <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
                 <SelectTrigger>
@@ -730,7 +746,16 @@ function UsuariosPage() {
             <DialogTitle>Permissões de Acesso</DialogTitle>
             <DialogDescription>{permUser?.email}</DialogDescription>
           </DialogHeader>
-          <div className="max-h-80 space-y-3 overflow-y-auto py-2">
+          <div className="px-1 py-1">
+            <Label className="mb-1 block">Categoria de dados visível</Label>
+            <Input
+              value={permCategoria}
+              onChange={(e) => setPermCategoria(e.target.value)}
+              placeholder="Ex: Operacional, Comercial..."
+            />
+            <p className="mt-1 text-xs text-muted-foreground">Defina a qual categoria de dados este usuário terá acesso.</p>
+          </div>
+          <div className="mt-2 max-h-80 space-y-3 overflow-y-auto py-2 border-t border-border pt-4">
             {AVAILABLE_PAGES.map((page: (typeof AVAILABLE_PAGES)[number]) => (
               <label
                 key={page.key}
