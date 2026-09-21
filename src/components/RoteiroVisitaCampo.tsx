@@ -315,12 +315,27 @@ export function RoteiroVisitaCampo() {
   ]);
 
   const enviarMensagemEvolution = useServerFn(evolutionGoEnviarTexto);
+  const avisarInicioControl = useServerFn(notificarInicioControl);
+
+  /** Avisa no WhatsApp de notificação que um control foi iniciado. */
+  function avisarControlIniciado(nomePosto: string, idPosto: number) {
+    void (async () => {
+      try {
+        await avisarInicioControl({ data: { postoNome: nomePosto, postoId: idPosto } });
+      } catch {
+        // o aviso não pode atrapalhar o preenchimento
+      }
+    })();
+  }
 
   function iniciarPreenchimento() {
     const inicio = Date.now();
     inicioPreenchimento.current = inicio;
     setIniciadoEm(inicio);
     setAgora(inicio);
+
+    avisarControlIniciado(postoNexti?.nome ?? "", postoNexti?.id ?? 0);
+
 
     const numero = (window.localStorage.getItem("evolution-go-numero-notificacao") ?? "").replace(/\D/g, "");
     if (numero) {
