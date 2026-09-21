@@ -10,7 +10,6 @@ import {
 
 import { FloatingNav } from "@/components/FloatingNav";
 import { RelatoriosVisitaCoordenacaoCard } from "@/components/RelatoriosVisitaCoordenacaoCard";
-import { PostosServicoMapaCard } from "@/components/PostosServicoMapaCard";
 
 export const Route = createFileRoute("/_authenticated/coordenacao")({
   head: () => ({
@@ -83,7 +82,6 @@ function CoordenacaoPage() {
 
       <div className="mx-auto mt-8 max-w-7xl space-y-8 px-4">
         <RelatoriosVisitaCoordenacaoCard />
-        <PostosServicoMapaCard />
       </div>
 
       <FloatingNav />

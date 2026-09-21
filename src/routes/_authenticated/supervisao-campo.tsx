@@ -3,6 +3,7 @@ import { ArrowLeft, ListChecks } from "lucide-react";
 import { FloatingNav } from "@/components/FloatingNav";
 import { ChecklistAutomaticoCard } from "@/components/ChecklistAutomaticoCard";
 import { RelatoriosVisitaCoordenacaoCard } from "@/components/RelatoriosVisitaCoordenacaoCard";
+import { PostosServicoMapaCard } from "@/components/PostosServicoMapaCard";
 
 export const Route = createFileRoute("/_authenticated/supervisao-campo")({
   head: () => ({
@@ -43,11 +44,12 @@ function SupervisaoCampoPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-7xl px-6 py-8">
+      <div className="mx-auto w-full max-w-7xl space-y-8 px-6 py-8">
         <div className="grid gap-6 lg:grid-cols-2">
           <ChecklistAutomaticoCard />
           <RelatoriosVisitaCoordenacaoCard />
         </div>
+        <PostosServicoMapaCard />
       </div>
 
       <FloatingNav />
