@@ -322,14 +322,16 @@ export function RoteiroVisitaCampo() {
     setIniciadoEm(inicio);
     setAgora(inicio);
 
-    const numero = window.localStorage.getItem("evolution-go-numero-notificacao")?.trim();
+    const numero = (window.localStorage.getItem("evolution-go-numero-notificacao") ?? "").replace(/\D/g, "");
     if (numero) {
-      void enviarMensagemEvolution({
-        data: {
-          numero,
-          texto: `📍 Supervisor chegou ao posto.\nPosto: ${postoNexti?.nome ?? "Não informado"}\nInício: ${new Date(inicio).toLocaleString("pt-BR")}`,
-        },
-      }).catch(() => {});
+      const textoChegada = `📍 Supervisor chegou ao posto.\nPosto: ${postoNexti?.nome ?? "Não informado"}\nInício: ${new Date(inicio).toLocaleString("pt-BR")}`;
+      void (async () => {
+        try {
+          await enviarMensagemEvolution({ data: { numero, texto: textoChegada } });
+        } catch {
+          // não interrompe o preenchimento se a notificação falhar
+        }
+      })();
     }
 
     toast.success("Preenchimento iniciado — o tempo começou a contar.");

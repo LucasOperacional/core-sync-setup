@@ -121,9 +121,14 @@ export const salvarRoteiroVisita = createServerFn({ method: "POST" })
     if (error) throw new Error(`Não foi possível salvar o roteiro: ${error.message}`);
 
     const roteiroId = inserido?.id as string;
-    if (data.numeroNotificacao) {
+    const numeroNotificacao = String(data.numeroNotificacao ?? "").replace(/\D/g, "");
+    if (numeroNotificacao) {
       const mensagem = `✅ Control finalizado com sucesso.\nPosto: ${data.posto}\nData: ${data.dataVisita}`;
-      void enviarMensagemEvolution(data.numeroNotificacao, mensagem).catch(() => {});
+      try {
+        await enviarMensagemEvolution(numeroNotificacao, mensagem);
+      } catch {
+        // uma falha no WhatsApp não deve impedir o registro do roteiro
+      }
     }
     let fotosSalvas = 0;
 
