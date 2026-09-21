@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import autoTable, { type RowInput } from "jspdf-autotable";
 import type { PerguntaRoteiro, RespostaValor } from "./roteiro-campo-perguntas";
 import { formatarCoordenadas, formatarDataHora, type FotoChecklist } from "./foto-carimbo";
 
