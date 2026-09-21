@@ -1,15 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { FileText, Loader2 } from "lucide-react";
+import { 
+  Download, 
+  FileText, 
+  Loader2, 
+  MapPin, 
+  CalendarDays, 
+  Clock, 
+  CheckCircle2, 
+  AlertTriangle, 
+  XCircle 
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { listarRelatoriosRoteiroCoordenacao } from "@/lib/roteiro-campo.functions";
-
-function dataBr(iso: string | null) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
-}
 
 function horaBr(iso: string | null, subSegundos: number = 0) {
   if (!iso) return "—";
@@ -31,68 +44,97 @@ export function RelatoriosVisitaCoordenacaoCard() {
   const relatorios = data?.relatorios ?? [];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="size-5 text-primary" /> Relatórios de visita de campo
+    <Card className="shadow-lg border-border/50">
+      <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <FileText className="size-5 text-primary" /> Relatórios de Visita de Campo
         </CardTitle>
         <CardDescription>
-          Cada roteiro salvo pela supervisão chega aqui em PDF, com respostas, não conformidades e
-          fotos.
+          Supervisões finalizadas. Faça download do PDF com evidências fotográficas e não conformidades.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         {isLoading ? (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Carregando relatórios...
-          </p>
+          <div className="flex flex-col items-center justify-center p-10 text-muted-foreground">
+            <Loader2 className="size-8 animate-spin mb-2" />
+            <p className="text-sm">Carregando relatórios...</p>
+          </div>
         ) : relatorios.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum relatório recebido até o momento.</p>
+          <div className="flex flex-col items-center justify-center p-10 text-muted-foreground text-center">
+            <FileText className="size-10 mb-2 opacity-20" />
+            <p className="text-sm font-medium">Nenhum relatório recebido até o momento.</p>
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="text-xs uppercase text-muted-foreground">
-                <tr>
-                  <th className="py-2 pr-4">Data da visita</th>
-                  <th className="py-2 pr-4">Início</th>
-                  <th className="py-2 pr-4">Finalização</th>
-                  <th className="py-2 pr-4">Posto</th>
-                  <th className="py-2 pr-4">Enviado por</th>
-                  <th className="py-2 pr-4">Conformidade</th>
-                  <th className="py-2 pr-4">PDF</th>
-                </tr>
-              </thead>
-              <tbody>
-                {relatorios.map((r) => (
-                  <tr key={r.id} className="border-t border-border">
-                    <td className="py-2 pr-4">
-                      {r.data_visita?.split("-").reverse().join("/")}
-                    </td>
-                    <td className="py-2 pr-4">
-                      {horaBr(r.relatorio_enviado_em, r.duracao_segundos ?? 0)}
-                    </td>
-                    <td className="py-2 pr-4 font-medium text-foreground">
-                      {horaBr(r.relatorio_enviado_em)}
-                    </td>
-                    <td className="py-2 pr-4">{r.posto}</td>
-                    <td className="py-2 pr-4">{r.enviado_por_nome || r.supervisor || "—"}</td>
-                    <td className="py-2 pr-4 font-semibold">{r.percentual_conformidade}%</td>
-                    <td className="py-2 pr-4">
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead className="font-semibold">Local e Responsável</TableHead>
+                <TableHead className="font-semibold text-center">Data</TableHead>
+                <TableHead className="font-semibold text-center">Duração</TableHead>
+                <TableHead className="font-semibold text-center">Conformidade</TableHead>
+                <TableHead className="text-right font-semibold">Arquivo</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {relatorios.map((r) => {
+                const conf = typeof r.percentual_conformidade === "number" ? r.percentual_conformidade : 0;
+                let badgeColor = "bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-500/20";
+                let Icon = CheckCircle2;
+                if (conf < 70) {
+                  badgeColor = "bg-red-500/10 text-red-700 dark:text-red-400 hover:bg-red-500/20";
+                  Icon = XCircle;
+                } else if (conf < 95) {
+                  badgeColor = "bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-400 hover:bg-yellow-500/20";
+                  Icon = AlertTriangle;
+                }
+
+                return (
+                  <TableRow key={r.id} className="hover:bg-muted/30 transition-colors">
+                    <TableCell>
+                      <div className="font-medium text-foreground flex items-center gap-1.5">
+                        <MapPin className="size-3.5 text-muted-foreground" />
+                        {r.posto}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5 ml-5">
+                        Por {r.enviado_por_nome || r.supervisor || "—"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1.5 text-sm">
+                        <CalendarDays className="size-3.5 text-muted-foreground" />
+                        {r.data_visita?.split("-").reverse().join("/")}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="size-3" /> {horaBr(r.relatorio_enviado_em, r.duracao_segundos ?? 0)} às {horaBr(r.relatorio_enviado_em)}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className={`border-transparent font-medium gap-1 ${badgeColor}`}>
+                        <Icon className="size-3.5" />
+                        {conf}%
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
                       {r.url ? (
-                        <Button asChild size="sm" variant="secondary">
+                        <Button asChild size="sm" className="gap-1.5 h-8">
                           <a href={r.url} target="_blank" rel="noreferrer">
-                            Abrir PDF
+                            <Download className="size-3.5" />
+                            Baixar
                           </a>
                         </Button>
                       ) : (
-                        <span className="text-xs text-muted-foreground">indisponível</span>
+                        <span className="text-xs text-muted-foreground italic">Indisponível</span>
                       )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         )}
       </CardContent>
     </Card>
