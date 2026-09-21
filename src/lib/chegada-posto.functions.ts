@@ -3,8 +3,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { areaGerenteCanonica } from "@/lib/areas-gerentes";
 import { normalizarNome } from "@/lib/gerentes-area-a";
 
-/** Distância, em metros, para considerar que o supervisor chegou ao posto. */
-export const RAIO_CHEGADA_METROS = 200;
+/** Distância, em metros, para considerar que o supervisor chegou ao posto (regra unificada 900m). */
+export const RAIO_CHEGADA_METROS = 900;
 /** Tempo mínimo entre dois avisos do mesmo posto (evita mensagens repetidas). */
 const INTERVALO_AVISO_HORAS = 4;
 

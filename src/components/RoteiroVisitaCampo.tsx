@@ -609,6 +609,48 @@ export function RoteiroVisitaCampo() {
       toast.error(e instanceof Error ? e.message : "Não foi possível salvar o roteiro."),
   });
 
+  // LÓGICA DE GEOFENCE AUTO (RAIO 900M)
+  const refEstado = useRef({ iniciadoEm, respostas, fotos, mutation });
+  useEffect(() => {
+    refEstado.current = { iniciadoEm, respostas, fotos, mutation };
+  }, [iniciadoEm, respostas, fotos, mutation]);
+
+  const geoTracking = useRef({ postoId: null as number | null, estavaDentro: false });
+
+  useEffect(() => {
+    if (!postoNexti || !postosProximos || geo.status !== "ok") return;
+
+    const infoPosto = postosProximos.find((p) => p.id === postoNexti.id);
+    if (!infoPosto) return;
+
+    const agoraDentro = infoPosto.distanciaKm <= 0.9;
+    const pId = postoNexti.id;
+
+    if (geoTracking.current.postoId !== pId) {
+      geoTracking.current = { postoId: pId, estavaDentro: agoraDentro };
+      if (agoraDentro && refEstado.current.iniciadoEm === null) {
+        iniciarPreenchimento();
+      }
+      return;
+    }
+
+    if (agoraDentro && !geoTracking.current.estavaDentro) {
+      geoTracking.current.estavaDentro = true;
+      if (refEstado.current.iniciadoEm === null) {
+        iniciarPreenchimento();
+      }
+    } else if (!agoraDentro && geoTracking.current.estavaDentro) {
+      geoTracking.current.estavaDentro = false;
+      if (refEstado.current.iniciadoEm !== null && !refEstado.current.mutation.isPending) {
+        const temDados = Object.keys(refEstado.current.respostas).length > 0 || refEstado.current.fotos.length > 0;
+        if (temDados) {
+          toast.info("Você saiu do perímetro (900m). O relatório está sendo salvo automaticamente.");
+          refEstado.current.mutation.mutate();
+        }
+      }
+    }
+  }, [postoNexti, postosProximos, geo.status]);
+
   async function capturarFoto(pergunta: PerguntaRoteiro, arquivo: File) {
     const capturadaEm = new Date().toISOString();
     try {
