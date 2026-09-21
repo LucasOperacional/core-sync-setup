@@ -499,7 +499,7 @@ function UsuariosPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                title="Permissões de acesso"
+                                title="Editar Menu Sidebar"
                                 disabled={isSuper}
                                 onClick={() => openPermissions(u)}
                               >
@@ -780,30 +780,42 @@ function UsuariosPage() {
           <div className="mt-4">
             <Label className="mb-1 block">Categorias liberadas no menu</Label>
             <p className="mb-3 text-xs text-muted-foreground">
-              Cada opção selecionada será exibida no menu lateral deste usuário.
+              {permUser?.role === "admin"
+                ? "Administradores possuem acesso a todas as categorias do menu por padrão."
+                : permUser?.role === "supervisor"
+                  ? "Supervisores possuem acesso fixo apenas à categoria Supervisor."
+                  : "Cada opção selecionada será exibida no menu lateral deste usuário."}
             </p>
           </div>
           <div className="max-h-80 space-y-3 overflow-y-auto py-2 border-t border-border pt-4">
-            {AVAILABLE_PAGES.map((page: (typeof AVAILABLE_PAGES)[number]) => (
-              <label
-                key={page.key}
-                className="flex items-start gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-accent/50"
-              >
-                <Checkbox
-                  checked={permState[page.key] ?? false}
-                  onCheckedChange={(checked) =>
-                    setPermState((prev) => ({
-                      ...prev,
-                      [page.key]: !!checked,
-                    }))
-                  }
-                />
-                <div>
-                  <span className="text-sm font-medium text-foreground">{page.label}</span>
-                  <p className="text-xs text-muted-foreground">{page.description}</p>
-                </div>
-              </label>
-            ))}
+            {AVAILABLE_PAGES.map((page: (typeof AVAILABLE_PAGES)[number]) => {
+              const isFixedAdmin = permUser?.role === "admin";
+              const isFixedSupervisor = permUser?.role === "supervisor";
+              const isDisabled = isFixedAdmin || isFixedSupervisor;
+              const isChecked = isFixedAdmin ? true : (isFixedSupervisor ? page.key === "supervisor" : (permState[page.key] ?? false));
+
+              return (
+                <label
+                  key={page.key}
+                  className="flex items-start gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-accent/50"
+                >
+                  <Checkbox
+                    checked={isChecked}
+                    disabled={isDisabled}
+                    onCheckedChange={(checked) =>
+                      setPermState((prev) => ({
+                        ...prev,
+                        [page.key]: !!checked,
+                      }))
+                    }
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-foreground">{page.label}</span>
+                    <p className="text-xs text-muted-foreground">{page.description}</p>
+                  </div>
+                </label>
+              );
+            })}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPermUser(null)} disabled={savingPerms}>
