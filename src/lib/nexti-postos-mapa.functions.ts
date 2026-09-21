@@ -35,6 +35,7 @@ export interface PostoMapa {
   restrito: boolean;
   latitude: number | null;
   longitude: number | null;
+  visitasRealizadas?: number;
 }
 
 type LinhaPosto = {
@@ -226,7 +227,19 @@ export const listarPostosMapa = createServerFn({ method: "GET" })
       postos.push(...lote.map(paraPosto));
       if (lote.length < passo) break;
     }
-    return postos;
+
+    const contagem = new Map<number, number>();
+    const { data: respostas } = await supabase.from("nexti_checklist_answers").select("workplace_id");
+    if (respostas) {
+      for (const res of respostas) {
+        const wid = Number(res.workplace_id);
+        if (Number.isFinite(wid)) {
+          contagem.set(wid, (contagem.get(wid) ?? 0) + 1);
+        }
+      }
+    }
+
+    return postos.map(p => ({ ...p, visitasRealizadas: contagem.get(p.id) || 0 }));
   });
 
 /** Rebusca na API da NEXTI todos os postos e endereços completos. */

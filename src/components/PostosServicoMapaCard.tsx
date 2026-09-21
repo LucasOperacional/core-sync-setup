@@ -155,6 +155,7 @@ export function PostosServicoMapaCard() {
                 <th className="px-2 py-2">Posto</th>
                 <th className="px-2 py-2">Cliente</th>
                 <th className="px-2 py-2">Endereço completo</th>
+                <th className="px-2 py-2 text-center">Visitas</th>
                 <th className="px-2 py-2"></th>
               </tr>
             </thead>
@@ -164,6 +165,7 @@ export function PostosServicoMapaCard() {
                   <td className="px-2 py-2 font-medium">{p.nome}</td>
                   <td className="px-2 py-2 text-muted-foreground">{p.cliente || "—"}</td>
                   <td className="px-2 py-2 text-muted-foreground">{p.enderecoCompleto || "—"}</td>
+                  <td className="px-2 py-2 text-center font-bold text-primary">{p.visitasRealizadas || 0}</td>
                   <td className="px-2 py-2 text-right">
                     {p.latitude !== null && p.longitude !== null ? (
                       <div className="flex items-center justify-end gap-1">
