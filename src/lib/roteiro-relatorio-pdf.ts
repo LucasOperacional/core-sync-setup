@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import type { PerguntaRoteiro, RespostaValor } from "./roteiro-campo-perguntas";
 import { formatarCoordenadas, formatarDataHora, type FotoChecklist } from "./foto-carimbo";
 
@@ -57,269 +58,217 @@ function extensoDuracao(totalSegundos: number | null | undefined): string {
 /** Monta o relatório em PDF da visita de campo e devolve o conteúdo em base64. */
 export function gerarRelatorioRoteiroPdf(dados: DadosRelatorioRoteiro): string {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const margem = 15;
-  const largura = doc.internal.pageSize.getWidth() - margem * 2;
-  const alturaPagina = doc.internal.pageSize.getHeight();
-  let y = margem;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margins = { top: 35, bottom: 25, left: 15, right: 15 };
+  
+  let y = margins.top;
 
-  // Cores institucionais
-  const COR_TEMA: [number, number, number] = [30, 58, 138]; // blue-900
-  const COR_SECUNDARIA: [number, number, number] = [71, 85, 105]; // slate-500
-  const COR_FUNDO_CABECALHO: [number, number, number] = [241, 245, 249]; // slate-100
-  const COR_TEXTO: [number, number, number] = [15, 23, 42]; // slate-900
-  const COR_LINHA: [number, number, number] = [226, 232, 240]; // slate-200
-
-  // Cores de status
   const getCorConformidade = (p: number): [number, number, number] => {
-    if (p === 100) return [22, 163, 74]; // green-600
-    if (p >= 80) return [234, 179, 8]; // yellow-500
-    return [220, 38, 38]; // red-600
+    if (p === 100) return [22, 163, 74];    // green-600
+    if (p >= 80) return [234, 179, 8];      // yellow-500
+    return [220, 38, 38];                   // red-600
   };
-
   const corStatus = getCorConformidade(dados.resumo.percentual);
 
-  function quebrar(altura: number) {
-    if (y + altura > alturaPagina - margem) {
-      doc.addPage();
-      y = margem;
-    }
-  }
-
-  function desenharLinha() {
-    doc.setDrawColor(...COR_LINHA);
-    doc.setLineWidth(0.5);
-    doc.line(margem, y, margem + largura, y);
-    y += 4;
-  }
-
-  // --- CABEÇALHO DO DOCUMENTO ---
-  doc.setTextColor(...COR_TEMA);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text("RELATÓRIO DE VISITA TÉCNICA DE CAMPO", margem, y + 5);
-  doc.setTextColor(...COR_TEXTO);
-  y += 12;
-
-  // Caixa de dados principais
-  doc.setFillColor(...COR_FUNDO_CABECALHO);
-  doc.roundedRect(margem, y, largura, 52, 2, 2, "F");
-
-  doc.setFontSize(9);
-  const infosEsq = [
-    ["Posto Avaliado", dados.posto || "—"],
-    ["Endereço", dados.endereco || "Não registrado"],
-    ["Localização (Lat/Lng)", (dados.latitude && dados.longitude) ? `${dados.latitude.toFixed(6)}, ${dados.longitude.toFixed(6)}` : "Não registrada"],
-    ["Função Avaliada", dados.funcao],
-    ["Colaborador Avaliado", dados.colaborador || "—"],
-  ];
-  const infosDir = [
-    ["Realizado por (Supervisor)", dados.supervisor || "—"],
-    ["Data da Visita", dataBr(dados.dataVisita)],
-    ["Início", dados.iniciadoEm ? formatarDataHora(new Date(dados.iniciadoEm).toISOString()) : "—"],
-    ["Encerramento", dados.finalizadoEm ? formatarDataHora(new Date(dados.finalizadoEm).toISOString()) : "—"],
-    ["Duração", extensoDuracao(dados.duracaoSegundos)],
-  ];
-
-  const offsetY = y + 6;
-  doc.setFont("helvetica", "bold");
-  
-  [infosEsq, infosDir].forEach((bloco, cIdx) => {
-    let linhaY = offsetY;
-    const xBase = cIdx === 0 ? margem + 4 : margem + largura / 2 + 4;
-    bloco.forEach(([rotulo, valor]) => {
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(...COR_SECUNDARIA);
-      doc.text(rotulo.toUpperCase(), xBase, linhaY);
-      linhaY += 4.5;
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...COR_TEXTO);
-      
-      const lines = doc.splitTextToSize(String(valor), (largura / 2) - 8);
-      doc.text(lines, xBase, linhaY);
-      linhaY += lines.length * 4.5;
-    });
+  // --- INFORMAÇÕES GERAIS ---
+  autoTable(doc, {
+    startY: y,
+    theme: "plain",
+    margin: { top: margins.top, bottom: margins.bottom, left: margins.left, right: margins.right },
+    styles: { fontSize: 9, cellPadding: 1, textColor: [71, 85, 105] },
+    columnStyles: {
+      0: { fontStyle: "bold", textColor: [30, 58, 138], cellWidth: 35 },
+      1: { cellWidth: 55, textColor: [15, 23, 42] },
+      2: { fontStyle: "bold", textColor: [30, 58, 138], cellWidth: 35 },
+      3: { cellWidth: "auto", textColor: [15, 23, 42] }
+    },
+    body: [
+      ["Posto Avaliado:", dados.posto || "—", "Supervisor:", dados.supervisor || "—"],
+      ["Endereço:", dados.endereco || "Não registrado", "Data da Visita:", dataBr(dados.dataVisita)],
+      ["Localização:", (dados.latitude && dados.longitude) ? `${dados.latitude.toFixed(6)}, ${dados.longitude.toFixed(6)}` : "Não registrada", "Início:", dados.iniciadoEm ? formatarDataHora(new Date(dados.iniciadoEm).toISOString()) : "—"],
+      ["Função Avaliada:", dados.funcao, "Encerramento:", dados.finalizadoEm ? formatarDataHora(new Date(dados.finalizadoEm).toISOString()) : "—"],
+      ["Colaborador:", dados.colaborador || "—", "Duração:", extensoDuracao(dados.duracaoSegundos)]
+    ]
   });
 
-  y += 58;
+  y = (doc as any).lastAutoTable.finalY + 8;
 
   // --- PAINEL DE CONFORMIDADE ---
-  quebrar(18);
   doc.setFillColor(...corStatus);
+  doc.roundedRect(margins.left, y, pageWidth - margins.left - margins.right, 20, 2, 2, "F");
   doc.setTextColor(255, 255, 255);
-  doc.roundedRect(margem, y, largura, 14, 2, 2, "F");
-  
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.text(`${dados.resumo.percentual}%`, margem + 5, y + 9);
+  doc.setFontSize(24);
+  doc.text(`${dados.resumo.percentual}%`, margins.left + 8, y + 14);
   
   doc.setFontSize(10);
-  doc.text("ÍNDICE DE CONFORMIDADE", margem + 20, y + 9);
+  doc.text("ÍNDICE DE CONFORMIDADE DA VISITA", margins.left + 40, y + 9);
   
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
   const textoMesa = `Conformes: ${dados.resumo.conformes}   |   Não conformes: ${dados.resumo.naoConformes}   |   N/A: ${dados.resumo.naoAplicaveis}   |   Críticos em aberto: ${dados.resumo.criticasAbertas}`;
-  doc.text(textoMesa, margem + largura - 5, y + 9, { align: "right" });
+  doc.text(textoMesa, margins.left + 40, y + 15);
   
-  doc.setTextColor(...COR_TEXTO);
-  y += 22;
+  y += 28;
 
   // --- CHECKLIST ---
+  const tBody = [];
   let blocoAtual = "";
-  dados.perguntas.forEach((pergunta, indice) => {
-    if (pergunta.bloco !== blocoAtual) {
-      blocoAtual = pergunta.bloco;
-      quebrar(15);
-      y += 4;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.setTextColor(...COR_TEMA);
-      doc.text(blocoAtual.toUpperCase(), margem, y);
-      doc.setTextColor(...COR_TEXTO);
-      y += 3;
-      desenharLinha();
-      y += 2;
+  
+  dados.perguntas.forEach((p, i) => {
+    if (p.bloco !== blocoAtual) {
+      tBody.push([
+        { content: p.bloco.toUpperCase(), colSpan: 3, styles: { fillColor: [241, 245, 249], textColor: [30, 58, 138], fontStyle: "bold", halign: "center" } }
+      ]);
+      blocoAtual = p.bloco;
     }
-    const resposta = dados.respostas[pergunta.id];
-    let iconCor = COR_TEXTO;
-    if (resposta === "conforme") iconCor = [22, 163, 74];
-    else if (resposta === "nao_conforme") iconCor = [220, 38, 38];
-    else if (resposta === "na") iconCor = [156, 163, 175];
 
-    const rotuloFinal = resposta ? ROTULO_RESPOSTA[resposta] : "SEM RESPOSTA";
-    
-    const textoPergunta = `${indice + 1}. ${pergunta.texto}${pergunta.critica ? " [CRÍTICO]" : ""}`;
-    const linhas = doc.splitTextToSize(textoPergunta, largura - 40) as string[];
-    
-    quebrar(linhas.length * 5 + 6);
-    
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(linhas, margem, y + 4);
-    
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...iconCor);
-    doc.text(rotuloFinal, margem + largura, y + 4, { align: "right" });
-    doc.setTextColor(...COR_TEXTO);
-    
-    y += linhas.length * 5;
+    const resposta = dados.respostas[p.id];
+    const rText = resposta ? ROTULO_RESPOSTA[resposta] : "SEM RESP.";
+    let rColor: [number, number, number] = [15, 23, 42];
+    if (resposta === "conforme") rColor = [22, 163, 74];
+    else if (resposta === "nao_conforme") rColor = [220, 38, 38];
+    else if (resposta === "na") rColor = [156, 163, 175];
 
-    const observacao = dados.observacoes[pergunta.id];
-    if (observacao?.trim()) {
-      const obs = doc.splitTextToSize(`Observação: ${observacao.trim()}`, largura - 10) as string[];
-      quebrar(obs.length * 4.4 + 2);
-      
-      doc.setDrawColor(203, 213, 225);
-      doc.setLineWidth(1);
-      doc.line(margem, y, margem, y + (obs.length * 4.4));
-      
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(9);
-      doc.setTextColor(...COR_SECUNDARIA);
-      doc.text(obs, margem + 3, y + 3.5);
-      doc.setTextColor(...COR_TEXTO);
-      y += obs.length * 4.4 + 1;
+    const criticaTag = p.critica ? " [CRÍTICO]" : "";
+    let itemContent = `${p.texto}${criticaTag}`;
+    const obs = dados.observacoes[p.id];
+    if (obs?.trim()) {
+       itemContent += `\n\n📌 Obs: ${obs.trim()}`;
     }
-    
-    doc.setDrawColor(241, 245, 249);
-    doc.setLineWidth(0.5);
-    doc.line(margem, y + 3, margem + largura, y + 3);
-    y += 5;
+
+    tBody.push([
+      { content: (i + 1).toString(), styles: { fontStyle: "bold" } },
+      itemContent,
+      { content: rText, styles: { textColor: rColor, fontStyle: "bold" } }
+    ]);
   });
 
-  // --- OBSERVAÇÕES GERAIS E PLANO DE AÇÃO ---
-  for (const [titulo, texto] of [
-    ["OBSERVAÇÕES GERAIS DA VISITA", dados.observacaoGeral],
-    ["PLANO DE AÇÃO E PRAZOS", dados.planoAcao],
-  ] as const) {
-    if (!texto.trim()) continue;
-    quebrar(25);
-    y += 8;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(...COR_TEMA);
-    doc.text(titulo, margem, y);
-    doc.setTextColor(...COR_TEXTO);
-    y += 3;
-    desenharLinha();
-    y += 2;
+  autoTable(doc, {
+    startY: y,
+    margin: { top: margins.top, bottom: margins.bottom, left: margins.left, right: margins.right },
+    head: [["#", "Item Avaliado (Checklist)", "Status"]],
+    body: tBody,
+    theme: "grid",
+    headStyles: { fillColor: [30, 58, 138], textColor: 255 },
+    styles: { fontSize: 9, cellPadding: 3, lineColor: [226, 232, 240] },
+    columnStyles: {
+        0: { cellWidth: 10, halign: "center" },
+        1: { cellWidth: "auto" },
+        2: { cellWidth: 35, halign: "center", valign: "middle" }
+    },
+    pageBreak: "auto"
+  });
 
-    const linhas = doc.splitTextToSize(texto.trim(), largura) as string[];
-    quebrar(linhas.length * 5);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(linhas, margem, y + 3);
-    y += linhas.length * 5 + 3;
+  y = (doc as any).lastAutoTable.finalY + 10;
+
+  // --- OBSERVAÇÕES E PLANO GERAL ---
+  if (dados.observacaoGeral?.trim() || dados.planoAcao?.trim()) {
+     autoTable(doc, {
+       startY: y,
+       margin: { top: margins.top, bottom: margins.bottom, left: margins.left, right: margins.right },
+       body: [
+         [{ content: "OBSERVAÇÕES GERAIS DA VISITA", styles: { fontStyle: "bold", fillColor: [241, 245, 249], textColor: [30, 58, 138] } }],
+         [dados.observacaoGeral?.trim() || "Nenhuma observação registrada."],
+         [{ content: "PLANO DE AÇÃO E PRAZOS", styles: { fontStyle: "bold", fillColor: [241, 245, 249], textColor: [30, 58, 138], marginTop: 5 } }],
+         [dados.planoAcao?.trim() || "Nenhum plano de ação registrado."]
+       ],
+       theme: "grid",
+       styles: { fontSize: 9, cellPadding: 4, lineColor: [226, 232, 240] },
+       pageBreak: "auto"
+     });
+     y = (doc as any).lastAutoTable.finalY + 10;
   }
 
   // --- REGISTRO FOTOGRÁFICO ---
   if (dados.fotos.length > 0) {
-    doc.addPage();
-    y = margem;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.setTextColor(...COR_TEMA);
-    doc.text("EVIDÊNCIAS FOTOGRÁFICAS", margem, y + 5);
-    doc.setTextColor(...COR_TEXTO);
-    y += 12;
-    
-    const larguraFoto = (largura - 8) / 2;
-    const alturaFoto = larguraFoto * 0.75; // Proporção 4:3
-    let coluna = 0;
-    
-    for (const foto of dados.fotos) {
-      if (coluna === 0) quebrar(alturaFoto + 20);
-      const x = margem + coluna * (larguraFoto + 8);
-      
-      doc.setDrawColor(...COR_LINHA);
-      doc.setLineWidth(0.5);
-      doc.roundedRect(x - 1, y - 1, larguraFoto + 2, alturaFoto + 2, 1, 1, "S");
-      
-      try {
-        doc.addImage(foto.dataUrl, "JPEG", x, y, larguraFoto, alturaFoto);
-      } catch {
-        doc.setFillColor(...COR_FUNDO_CABECALHO);
-        doc.rect(x, y, larguraFoto, alturaFoto, "F");
-        doc.text("Falha ao carregar imagem", x + larguraFoto/2, y + alturaFoto/2, { align: "center" });
-      }
-      
+      doc.addPage();
+      let cy = margins.top;
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
-      doc.setTextColor(...COR_TEXTO);
-      
-      const legendaTop = doc.splitTextToSize(`Item: ${foto.perguntaTexto}`, larguraFoto);
-      doc.text(legendaTop.slice(0, 2), x, y + alturaFoto + 4.5);
-      
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7.5);
-      doc.setTextColor(...COR_SECUNDARIA);
-      
-      let infosFoto = `${formatarDataHora(foto.capturadaEm)}`;
-      if (foto.latitude && foto.longitude) {
-        infosFoto += `\nLocal: ${formatarCoordenadas(foto)}`;
+      doc.setFontSize(12);
+      doc.setTextColor(30, 58, 138);
+      doc.text("EVIDÊNCIAS FOTOGRÁFICAS", margins.left, cy);
+      cy += 8;
+
+      const photoColW = (pageWidth - margins.left - margins.right - 8) / 2;
+      const photoH = photoColW * 0.75;
+      let col = 0;
+
+      for (const foto of dados.fotos) {
+          if (cy + photoH + 22 > pageHeight - margins.bottom) {
+             doc.addPage();
+             cy = margins.top + 8;
+             col = 0;
+          }
+
+          const x = margins.left + col * (photoColW + 8);
+
+          doc.setFillColor(248, 250, 252);
+          doc.setDrawColor(226, 232, 240);
+          doc.setLineWidth(0.5);
+          doc.rect(x, cy, photoColW, photoH + 18, "F");
+          doc.rect(x, cy, photoColW, photoH + 18, "S");
+
+          try {
+              doc.addImage(foto.dataUrl, "JPEG", x + 1, cy + 1, photoColW - 2, photoH);
+          } catch {
+              doc.setFillColor(241, 245, 249);
+              doc.rect(x + 1, cy + 1, photoColW - 2, photoH, "F");
+              doc.setTextColor(156, 163, 175);
+              doc.setFontSize(9);
+              doc.text("Erro ao carregar imagem", x + photoColW/2, cy + photoH/2, { align: "center" });
+          }
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.setTextColor(15, 23, 42);
+          const txtItem = doc.splitTextToSize(`Item: ${foto.perguntaTexto}`, photoColW - 4);
+          doc.text(txtItem.slice(0, 2), x + 2, cy + photoH + 6);
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          doc.setTextColor(71, 85, 105);
+          
+          let mt = `${formatarDataHora(foto.capturadaEm)}`;
+          if (foto.latitude && foto.longitude) mt += ` | ${formatarCoordenadas(foto)}`;
+          if (foto.observacao) mt += `\nObs: ${foto.observacao}`;
+          
+          const txtMeta = doc.splitTextToSize(mt, photoColW - 4);
+          doc.text(txtMeta.slice(0, 3), x + 2, cy + photoH + 11);
+
+          if (col === 1) {
+              col = 0;
+              cy += photoH + 22;
+          } else {
+              col = 1;
+          }
       }
-      if (foto.observacao) {
-        infosFoto += `\nObs: ${foto.observacao}`;
-      }
-      
-      const detalhes = doc.splitTextToSize(infosFoto, larguraFoto);
-      doc.text(detalhes.slice(0, 3), x, y + alturaFoto + 9);
-      
-      if (coluna === 1) y += alturaFoto + 22;
-      coluna = coluna === 0 ? 1 : 0;
-    }
   }
 
-  // --- RODAPÉ ---
-  const numPaginas = doc.getNumberOfPages();
-  const txRodapeCor = [156, 163, 175]; // gray-400
-  for (let i = 1; i <= numPaginas; i++) {
+  // --- HEADER E FOOTER GERAIS ---
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
+
+    // Top banner estilo marca
+    doc.setFillColor(30, 58, 138); // blue-900
+    doc.rect(0, 0, pageWidth, 25, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("RELATÓRIO TÉCNICO DE CAMPO", margins.left, 16);
+
+    // Footer padronizado
+    doc.setFillColor(248, 250, 252);
+    doc.rect(0, pageHeight - 18, pageWidth, 18, "F");
+    doc.setDrawColor(226, 232, 240);
+    doc.line(0, pageHeight - 18, pageWidth, pageHeight - 18);
+    doc.setTextColor(100, 116, 139);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.setTextColor(...txRodapeCor);
-    const textoEmissao = `Gerado pelo Sistema Shark Git em ${formatarDataHora(new Date().toISOString())}`;
-    doc.text(textoEmissao, margem, alturaPagina - 8);
-    doc.text(`Página ${i} de ${numPaginas}`, margem + largura, alturaPagina - 8, { align: "right" });
+    doc.text(`Gerado pelo Sistema CIOP em ${formatarDataHora(new Date().toISOString())}`, margins.left, pageHeight - 8);
+    doc.text(`Página ${i} de ${totalPages}`, pageWidth - margins.right, pageHeight - 8, { align: "right" });
   }
 
   const saida = doc.output("datauristring");
