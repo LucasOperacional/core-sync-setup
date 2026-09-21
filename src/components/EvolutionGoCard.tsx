@@ -58,6 +58,7 @@ export function EvolutionGoCard() {
   const [salvando, setSalvando] = useState(false);
   const [testando, setTestando] = useState(false);
   const [numeroTeste, setNumeroTeste] = useState("");
+  const [numeroNotificacao, setNumeroNotificacao] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [ativando, setAtivando] = useState(false);
 
@@ -81,8 +82,22 @@ export function EvolutionGoCard() {
 
   useEffect(() => {
     void carregar();
+    setNumeroNotificacao(
+      window.localStorage.getItem("evolution-go-numero-notificacao") ?? "",
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const salvarNumeroNotificacao = () => {
+    const numero = numeroNotificacao.replace(/\D/g, "");
+    setNumeroNotificacao(numero);
+    window.localStorage.setItem("evolution-go-numero-notificacao", numero);
+    toast.success(
+      numero
+        ? "Número das notificações de control salvo neste dispositivo."
+        : "Número das notificações removido.",
+    );
+  };
 
   const salvar = async () => {
     setSalvando(true);
@@ -300,6 +315,28 @@ export function EvolutionGoCard() {
               Documentação
             </a>
           </Button>
+        </div>
+
+        <div className="space-y-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <div>
+            <Label htmlFor="evo-notificacao-control">Número para notificações do control</Label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Receberá uma mensagem quando o supervisor chegar ao posto e outra quando finalizar o control. Informe com DDI e DDD.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-end gap-2">
+            <Input
+              id="evo-notificacao-control"
+              placeholder="5511999999999"
+              value={numeroNotificacao}
+              onChange={(e) => setNumeroNotificacao(e.target.value)}
+              className="w-64"
+            />
+            <Button variant="secondary" onClick={salvarNumeroNotificacao}>
+              <Save className="mr-2 size-4" />
+              Salvar número
+            </Button>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-end gap-2 border-t border-border pt-4">

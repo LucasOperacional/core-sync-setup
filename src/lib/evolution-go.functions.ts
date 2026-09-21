@@ -556,34 +556,41 @@ export const evolutionGoCriarInstancias = createServerFn({ method: "POST" })
     },
   );
 
+export async function enviarMensagemEvolution(
+  numero: string,
+  texto: string,
+): Promise<{ ok: boolean; id?: string; erro?: string }> {
+  const destino = String(numero ?? "").replace(/\D/g, "");
+  const mensagem = String(texto ?? "").trim();
+  if (!destino) return { ok: false, erro: "Informe o número do destinatário." };
+  if (!mensagem) return { ok: false, erro: "Mensagem vazia." };
+  if (mensagem.length > 4000) return { ok: false, erro: "Mensagem muito longa." };
+
+  const cfg = await lerConfigResolvida();
+  if (!cfg.baseUrl) return { ok: false, erro: "Evolution Go não configurado." };
+  try {
+    const { status, corpo } = await evolutionFetch(cfg, "/send/text", {
+      method: "POST",
+      body: JSON.stringify({ number: destino, text: mensagem }),
+    });
+    if (status >= 400) return { ok: false, erro: mensagemErro(status, corpo) };
+    const d = rec(rec(corpo)["data"] ?? corpo);
+    const info = rec(d["Info"]);
+    const id = info["ID"] ?? d["messageId"] ?? d["id"];
+    return { ok: true, ...(typeof id === "string" ? { id } : {}) };
+  } catch (e) {
+    return { ok: false, erro: e instanceof Error ? e.message : String(e) };
+  }
+}
+
 /** Envia uma mensagem de texto pelo Evolution Go (POST /send/text). */
 export const evolutionGoEnviarTexto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { numero: string; texto: string }) => {
-    const numero = String(input?.numero ?? "").replace(/\D/g, "");
-    const texto = String(input?.texto ?? "").trim();
-    if (!numero) throw new Error("Informe o número do destinatário.");
-    if (!texto) throw new Error("Mensagem vazia.");
-    if (texto.length > 4000) throw new Error("Mensagem muito longa.");
-    return { numero, texto };
-  })
-  .handler(async ({ data }): Promise<{ ok: boolean; id?: string; erro?: string }> => {
-    const cfg = await lerConfigResolvida();
-    if (!cfg.baseUrl) return { ok: false, erro: "Evolution Go não configurado." };
-    try {
-      const { status, corpo } = await evolutionFetch(cfg, "/send/text", {
-        method: "POST",
-        body: JSON.stringify({ number: data.numero, text: data.texto }),
-      });
-      if (status >= 400) return { ok: false, erro: mensagemErro(status, corpo) };
-      const d = rec(rec(corpo)["data"] ?? corpo);
-      const info = rec(d["Info"]);
-      const id = info["ID"] ?? d["messageId"] ?? d["id"];
-      return { ok: true, ...(typeof id === "string" ? { id } : {}) };
-    } catch (e) {
-      return { ok: false, erro: e instanceof Error ? e.message : String(e) };
-    }
-  });
+  .inputValidator((input: { numero: string; texto: string }) => ({
+    numero: String(input?.numero ?? "").replace(/\D/g, ""),
+    texto: String(input?.texto ?? "").trim(),
+  }))
+  .handler(async ({ data }) => enviarMensagemEvolution(data.numero, data.texto));
 
 /**
  * Ativa o recebimento de mensagens: registra a URL do nosso recebedor

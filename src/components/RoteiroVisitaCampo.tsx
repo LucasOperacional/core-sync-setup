@@ -50,6 +50,7 @@ import { normalizarNome } from "@/lib/gerentes-area-a";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearch } from "@tanstack/react-router";
 import { nomeDoUsuario, useSessao } from "@/hooks/use-sessao";
+import { evolutionGoEnviarTexto } from "@/lib/evolution-go.functions";
 
 const OPCOES: { valor: RespostaValor; label: string; icon: typeof CheckCircle2; classe: string }[] =
   [
@@ -313,11 +314,24 @@ export function RoteiroVisitaCampo() {
     iniciadoEm,
   ]);
 
+  const enviarMensagemEvolution = useServerFn(evolutionGoEnviarTexto);
+
   function iniciarPreenchimento() {
     const inicio = Date.now();
     inicioPreenchimento.current = inicio;
     setIniciadoEm(inicio);
     setAgora(inicio);
+
+    const numero = window.localStorage.getItem("evolution-go-numero-notificacao")?.trim();
+    if (numero) {
+      void enviarMensagemEvolution({
+        data: {
+          numero,
+          texto: `📍 Supervisor chegou ao posto.\nPosto: ${postoNexti?.nome ?? "Não informado"}\nInício: ${new Date(inicio).toLocaleString("pt-BR")}`,
+        },
+      }).catch(() => {});
+    }
+
     toast.success("Preenchimento iniciado — o tempo começou a contar.");
   }
 
@@ -539,6 +553,10 @@ export function RoteiroVisitaCampo() {
             inicioPreenchimento.current === null
               ? null
               : Math.max(0, Math.round((Date.now() - inicioPreenchimento.current) / 1000)),
+          numeroNotificacao:
+            typeof window === "undefined"
+              ? ""
+              : window.localStorage.getItem("evolution-go-numero-notificacao") ?? "",
           fotos: fotos.map((f) => ({
             perguntaId: f.perguntaId,
             perguntaTexto: f.perguntaTexto,
