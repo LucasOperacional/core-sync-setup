@@ -611,13 +611,13 @@ function UsuariosPage() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Cards que o usuário pode ver</Label>
+              <Label>Páginas no Menu Lateral (Sidebar)</Label>
               <p className="text-xs text-muted-foreground">
                 {newRole === "admin"
-                  ? "Administradores têm acesso total, independente da seleção."
+                  ? "Administradores têm acesso total ao menu."
                   : newRole === "supervisor"
-                    ? "Supervisores acessam somente o card Supervisor, independente da seleção."
-                    : "Selecione as páginas que este usuário poderá acessar."}
+                    ? "Supervisores têm um menu predefinido."
+                    : "Selecione as opções que irão aparecer no menu sidebar deste usuário."}
               </p>
               <div className="grid max-h-56 grid-cols-1 gap-1 overflow-y-auto rounded-md border border-input p-3 sm:grid-cols-2">
                 {AVAILABLE_PAGES.map((p: (typeof AVAILABLE_PAGES)[number]) => (
@@ -743,7 +743,7 @@ function UsuariosPage() {
       <Dialog open={!!permUser} onOpenChange={(open) => !open && setPermUser(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Permissões de Acesso</DialogTitle>
+            <DialogTitle>Permissões e Menu Lateral (Sidebar)</DialogTitle>
             <DialogDescription>{permUser?.email}</DialogDescription>
           </DialogHeader>
           <div className="px-1 py-1">
@@ -755,7 +755,13 @@ function UsuariosPage() {
             />
             <p className="mt-1 text-xs text-muted-foreground">Defina a qual categoria de dados este usuário terá acesso.</p>
           </div>
-          <div className="mt-2 max-h-80 space-y-3 overflow-y-auto py-2 border-t border-border pt-4">
+          <div className="mt-4">
+            <Label className="mb-1 block">Telas visíveis no menu</Label>
+            <p className="text-xs text-muted-foreground mb-3">
+              Marque as opções que irão aparecer no sidebar deste usuário.
+            </p>
+          </div>
+          <div className="max-h-80 space-y-3 overflow-y-auto py-2 border-t border-border pt-4">
             {AVAILABLE_PAGES.map((page: (typeof AVAILABLE_PAGES)[number]) => (
               <label
                 key={page.key}
