@@ -51,6 +51,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSearch } from "@tanstack/react-router";
 import { nomeDoUsuario, useSessao } from "@/hooks/use-sessao";
 import { evolutionGoEnviarTexto } from "@/lib/evolution-go.functions";
+import { notificarInicioControl } from "@/lib/control-notificacao.functions";
 
 const OPCOES: { valor: RespostaValor; label: string; icon: typeof CheckCircle2; classe: string }[] =
   [
