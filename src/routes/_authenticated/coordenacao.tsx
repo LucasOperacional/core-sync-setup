@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 
 import { FloatingNav } from "@/components/FloatingNav";
-import { RelatoriosVisitaCoordenacaoCard } from "@/components/RelatoriosVisitaCoordenacaoCard";
 
 export const Route = createFileRoute("/_authenticated/coordenacao")({
   head: () => ({
@@ -80,8 +79,12 @@ function CoordenacaoPage() {
         </div>
       </nav>
 
-      <div className="mx-auto mt-8 max-w-7xl space-y-8 px-4">
-        <RelatoriosVisitaCoordenacaoCard />
+      <div className="mx-auto mt-16 max-w-7xl px-4 text-center">
+        <ShieldCheck className="mx-auto mb-4 size-16 text-muted-foreground/20" />
+        <h2 className="text-xl font-medium text-muted-foreground">Central da Coordenação</h2>
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+          Selecione uma das opções no menu acima para acessar as ferramentas da coordenação.
+        </p>
       </div>
 
       <FloatingNav />

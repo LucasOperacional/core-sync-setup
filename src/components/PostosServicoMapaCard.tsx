@@ -77,7 +77,16 @@ export function PostosServicoMapaCard() {
   }, [permitidos, busca]);
 
   const noMapa = useMemo(
-    () => filtrados.filter((p) => p.latitude !== null && p.longitude !== null && !ocultarNoMapa(p)),
+    () =>
+      filtrados
+        .filter((p) => p.latitude !== null && p.longitude !== null && !ocultarNoMapa(p))
+        .map((p) => ({
+          ...p,
+          nome:
+            p.visitasRealizadas && p.visitasRealizadas > 0
+              ? `${p.nome} (${p.visitasRealizadas} ${p.visitasRealizadas === 1 ? "visita" : "visitas"})`
+              : p.nome,
+        })),
     [filtrados],
   );
 
