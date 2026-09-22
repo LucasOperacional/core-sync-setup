@@ -593,8 +593,8 @@ export type ValidacaoPessoa = {
   nome: string;
   erros: string[];
   avisos: string[];
-  payload: Record<string, string | number | boolean>;
-  resolvido: { empresa?: string; cargo?: string; posto?: string; escala?: string };
+  payload: Record<string, string | number | boolean | number[]>;
+  resolvido: { empresa?: string; cargo?: string; posto?: string; escala?: string; supervisor?: string };
 };
 
 /** Monta o corpo do POST /api/persons e acusa tudo que a NEXTI recusaria. */
