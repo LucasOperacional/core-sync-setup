@@ -815,6 +815,9 @@ function montarCadastro(
     ...(limpar(p.mae) ? { mothersName: limpar(p.mae).toUpperCase() } : {}),
     ...(limpar(p.pai) ? { fathersName: limpar(p.pai).toUpperCase() } : {}),
     ...(limpar(p.rg) ? { registerNumber: limpar(p.rg) } : {}),
+    ...(supervisor
+      ? { personSupervisorIds: [supervisor.id], personResponsibleId: supervisor.id }
+      : {}),
   };
 
   const resolvido: ValidacaoPessoa["resolvido"] = {};
@@ -822,6 +825,7 @@ function montarCadastro(
   if (cargo) resolvido.cargo = cargo.nome;
   if (posto) resolvido.posto = posto.nome;
   if (escala) resolvido.escala = escala.nome;
+  if (supervisor) resolvido.supervisor = supervisor.nome;
 
   return { nome: nome || "(sem nome)", erros, avisos, payload, resolvido };
 }
