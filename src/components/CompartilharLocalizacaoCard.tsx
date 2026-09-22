@@ -432,11 +432,72 @@ export function CompartilharLocalizacaoCard() {
           }
         ).periodicSync;
         await periodico?.register("gps-ping", { minInterval: 60_000 }).catch(() => undefined);
+        // Pede a permissão do sincronismo em segundo plano (Android/Chrome).
+        try {
+          await navigator.permissions?.query({
+            name: "periodic-background-sync" as PermissionName,
+          });
+        } catch {
+          /* navegador sem esta permissão */
+        }
+        setSegundoPlano(true);
       } catch {
         /* aparelho sem suporte: segue com o envio em primeiro plano */
       }
     })();
   }, [gpsTravado, souLider]);
+
+  /**
+   * Ao sair do site, fechar a aba ou minimizar, manda a última posição direto
+   * pelo endpoint público (sendBeacon) e acorda o service worker: o sinal
+   * continua saindo mesmo fora do site.
+   */
+  useEffect(() => {
+    if (!souLider || !gpsTravado) return;
+
+    const aoSair = () => {
+      const pos = ultimaPosRef.current;
+      if (!pos) return;
+      void (async () => {
+        try {
+          await avisarServiceWorker(pos);
+          const { data } = await supabase.auth.getSession();
+          const token = data.session?.access_token;
+          if (!token) return;
+          const corpo = JSON.stringify({
+            token,
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            precisaoMetros: pos.coords.accuracy ?? null,
+            velocidade: pos.coords.speed ?? null,
+            direcao: pos.coords.heading ?? null,
+            tipoSinal: tipoSinal(),
+            capturadoEm: new Date().toISOString(),
+          });
+          navigator.sendBeacon?.(
+            "/api/public/rastreio-ping",
+            new Blob([corpo], { type: "application/json" }),
+          );
+        } catch {
+          /* sem sessão ou sem rede: o worker reenvia depois */
+        }
+      })();
+    };
+
+    const aoEsconder = () => {
+      if (document.visibilityState === "hidden") aoSair();
+    };
+
+    window.addEventListener("pagehide", aoSair);
+    window.addEventListener("beforeunload", aoSair);
+    document.addEventListener("visibilitychange", aoEsconder);
+    return () => {
+      window.removeEventListener("pagehide", aoSair);
+      window.removeEventListener("beforeunload", aoSair);
+      document.removeEventListener("visibilitychange", aoEsconder);
+    };
+  }, [souLider, gpsTravado, avisarServiceWorker]);
+
 
   // Regra: liga sozinho e permanece ligado — não há opção de desligar.
   useEffect(() => {
