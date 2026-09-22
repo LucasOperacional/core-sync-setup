@@ -237,6 +237,11 @@ export function CompartilharLocalizacaoCard() {
         tipo: "gps-posicao",
         estado: {
           token,
+          // Permite ao segundo plano renovar o acesso sozinho quando o app
+          // fica horas fechado, sem perder o envio do sinal.
+          refreshToken: data.session?.refresh_token ?? null,
+          supabaseUrl: import.meta.env["VITE_SUPABASE_URL"] ?? null,
+          apiKey: import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ?? null,
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
           precisaoMetros: pos.coords.accuracy ?? null,
@@ -245,6 +250,14 @@ export function CompartilharLocalizacaoCard() {
           tipoSinal: tipoSinal(),
         },
       });
+      // Pede ao navegador para acordar o worker quando a rede voltar.
+      const sync = (
+        registro as ServiceWorkerRegistration & {
+          sync?: { register: (t: string) => Promise<void> };
+        }
+      ).sync;
+      await sync?.register("gps-ping").catch(() => undefined);
+      setSegundoPlano(true);
     } catch {
       /* segue com o envio direto */
     }
