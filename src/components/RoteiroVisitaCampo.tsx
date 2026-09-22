@@ -710,7 +710,8 @@ export function RoteiroVisitaCampo() {
       toast.error(e instanceof Error ? e.message : "Não foi possível salvar o roteiro."),
   });
 
-  // LÓGICA DE GEOFENCE AUTO (RAIO 900M)
+  // LÓGICA DE GEOFENCE AUTO (CERCA DE 600 M, POSTOS DA NEXTI)
+  const RAIO_CERCA_KM = 0.6;
   const refEstado = useRef({ iniciadoEm, respostas, fotos, mutation });
   useEffect(() => {
     refEstado.current = { iniciadoEm, respostas, fotos, mutation };
@@ -719,13 +720,41 @@ export function RoteiroVisitaCampo() {
   const geoTracking = useRef({ postoId: null as number | null, estavaDentro: false });
 
   useEffect(() => {
-    if (!postoNexti || !postosProximos || geo.status !== "ok") return;
+    if (!postosProximos || geo.status !== "ok") return;
+
+    // Sem posto escolhido: ao entrar na cerca de 600 m de um posto da NEXTI,
+    // seleciona o mais próximo e inicia a supervisão automaticamente.
+    if (!postoNexti) {
+      const maisProximo = postosProximos[0];
+      if (maisProximo && maisProximo.distanciaKm <= RAIO_CERCA_KM) {
+        setPostoNexti({
+          id: maisProximo.id,
+          nome: maisProximo.nome,
+          externalId: maisProximo.externalId ?? "",
+        });
+      }
+      return;
+    }
 
     const infoPosto = postosProximos.find((p) => p.id === postoNexti.id);
     if (!infoPosto) return;
 
-    const agoraDentro = infoPosto.distanciaKm <= 0.9;
+    const agoraDentro = infoPosto.distanciaKm <= RAIO_CERCA_KM;
     const pId = postoNexti.id;
+
+    function encerrarPorSaida() {
+      if (refEstado.current.iniciadoEm === null || refEstado.current.mutation.isPending) return;
+      const temDados =
+        Object.keys(refEstado.current.respostas).length > 0 || refEstado.current.fotos.length > 0;
+      if (temDados) {
+        toast.info("Você saiu da cerca de 600 m. O relatório foi fechado e está sendo salvo.");
+        refEstado.current.mutation.mutate();
+      } else {
+        toast.warning("Você saiu da cerca de 600 m. A supervisão foi encerrada sem registros.");
+        inicioPreenchimento.current = null;
+        setIniciadoEm(null);
+      }
+    }
 
     if (geoTracking.current.postoId !== pId) {
       geoTracking.current = { postoId: pId, estavaDentro: agoraDentro };
@@ -742,13 +771,7 @@ export function RoteiroVisitaCampo() {
       }
     } else if (!agoraDentro && geoTracking.current.estavaDentro) {
       geoTracking.current.estavaDentro = false;
-      if (refEstado.current.iniciadoEm !== null && !refEstado.current.mutation.isPending) {
-        const temDados = Object.keys(refEstado.current.respostas).length > 0 || refEstado.current.fotos.length > 0;
-        if (temDados) {
-          toast.info("Você saiu do perímetro (900m). O relatório está sendo salvo automaticamente.");
-          refEstado.current.mutation.mutate();
-        }
-      }
+      encerrarPorSaida();
     }
   }, [postoNexti, postosProximos, geo.status]);
 
