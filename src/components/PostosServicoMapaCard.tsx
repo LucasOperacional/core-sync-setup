@@ -7,6 +7,7 @@ import { ClientOnly } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Building2, Eye, Loader2, MapPin, Navigation, RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import {
   filtrarEmpresasPermitidas,
   listarPostosMapa,
