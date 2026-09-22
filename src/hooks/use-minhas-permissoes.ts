@@ -33,11 +33,22 @@ export function useMinhasPermissoes() {
     };
   }, [permitidas, query.isLoading, query.data]);
 
+  // Categorias do menu lateral: só ficam ocultas quando existe um registro
+  // marcado como não permitido. Usuários antigos (sem registro) seguem vendo.
+  const podeVerCategoria = useMemo(() => {
+    const registros = query.data ?? [];
+    return (chave: string) => {
+      const encontrado = registros.find((p) => p.pageKey === chave);
+      return encontrado ? encontrado.allowed : true;
+    };
+  }, [query.data]);
+
   return {
     carregando: query.isLoading,
     permitidas,
     /** A rota "/" (início) é sempre liberada. */
     podeVer,
+    podeVerCategoria,
   };
 }
 
