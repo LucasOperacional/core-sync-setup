@@ -108,6 +108,21 @@ export const AVAILABLE_PAGES = [
 
 export type PageKey = (typeof AVAILABLE_PAGES)[number]["key"];
 
+/**
+ * Categorias do menu lateral. Cada uma vira uma permissão própria
+ * ("categoria-operacional", etc.) para liberar o menu por usuário.
+ */
+export const SIDEBAR_CATEGORIES = [
+  { key: "categoria-comercial", label: "Comercial" },
+  { key: "categoria-departamento-pessoal", label: "Departamento pessoal" },
+  { key: "categoria-financeiro", label: "Financeiro" },
+  { key: "categoria-operacional", label: "Operacional" },
+  { key: "categoria-recursos-humanos", label: "Recursos humanos" },
+  { key: "categoria-suprimentos", label: "Suprimentos" },
+] as const;
+
+export type SidebarCategoryKey = (typeof SIDEBAR_CATEGORIES)[number]["key"];
+
 export type UserPermission = {
   pageKey: string;
   allowed: boolean;
