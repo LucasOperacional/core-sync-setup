@@ -213,7 +213,9 @@ export function AbaUsuariosNexti() {
       registrar(`Enviando "${linha.nome}" para a NEXTI...`);
       const { id: _id, status: _s, mensagem: _m, ...pessoa } = linha;
       try {
-        const res = await cadastrar({ data: { pessoa } });
+        const res = await cadastrar({
+          data: { pessoa: { ...pessoa, empresa: pessoa.empresa || empresaPadrao.trim() } },
+        });
         if (res.ok) sucesso += 1;
         registrar(`${linha.nome}: ${res.mensagem}`, res.ok ? "ok" : "erro");
         setLinhas((atual) =>
