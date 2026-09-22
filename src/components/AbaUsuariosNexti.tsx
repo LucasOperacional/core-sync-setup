@@ -66,6 +66,12 @@ export function AbaUsuariosNexti() {
   const [arquivoNome, setArquivoNome] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [busca, setBusca] = useState("");
+  // Arquivos de folha não trazem a coluna de empresa; aqui ela é informada uma vez.
+  const [empresaPadrao, setEmpresaPadrao] = useState("");
+  const [colunas, setColunas] = useState<{
+    reconhecidas: { rotulo: string; coluna: string }[];
+    ignoradas: string[];
+  }>({ reconhecidas: [], ignoradas: [] });
   const [logs, setLogs] = useState<LinhaLog[]>([]);
   const [previewAberto, setPreviewAberto] = useState(false);
   const [validacoes, setValidacoes] = useState<ValidacaoPessoa[]>([]);
@@ -122,7 +128,10 @@ export function AbaUsuariosNexti() {
     setValidacoes([]);
     registrar(`Validando ${lista.length} colaboradores contra a NEXTI...`);
     try {
-      const pessoas = lista.map(({ id: _i, status: _s, mensagem: _m, ...pessoa }) => pessoa);
+      const pessoas = lista.map(({ id: _i, status: _s, mensagem: _m, ...pessoa }) => ({
+        ...pessoa,
+        empresa: pessoa.empresa || empresaPadrao.trim(),
+      }));
       const res = await validar({ data: { pessoas } });
       if (!res.ok) {
         registrar(`Falha na validação: ${res.erro ?? "erro desconhecido"}`, "erro");
@@ -161,6 +170,7 @@ export function AbaUsuariosNexti() {
       }));
       setLinhas(novas);
       setValidacoes([]);
+      setColunas({ reconhecidas: colunasReconhecidas, ignoradas: colunasIgnoradas });
       registrar(`Planilha "${file.name}" lida: ${novas.length} colaboradores.`);
       registrar(
         `Colunas convertidas para a NEXTI: ${colunasReconhecidas
@@ -208,7 +218,9 @@ export function AbaUsuariosNexti() {
       registrar(`Enviando "${linha.nome}" para a NEXTI...`);
       const { id: _id, status: _s, mensagem: _m, ...pessoa } = linha;
       try {
-        const res = await cadastrar({ data: { pessoa } });
+        const res = await cadastrar({
+          data: { pessoa: { ...pessoa, empresa: pessoa.empresa || empresaPadrao.trim() } },
+        });
         if (res.ok) sucesso += 1;
         registrar(`${linha.nome}: ${res.mensagem}`, res.ok ? "ok" : "erro");
         setLinhas((atual) =>
@@ -263,6 +275,12 @@ export function AbaUsuariosNexti() {
               type="file"
               accept=".xlsx,.xls,.csv"
               onChange={processarArquivo}
+            />
+            <Input
+              placeholder="Empresa (usada quando o arquivo não tiver essa coluna)"
+              value={empresaPadrao}
+              onChange={(e) => setEmpresaPadrao(e.target.value)}
+              aria-label="Empresa padrão do arquivo"
             />
           </div>
           <Dialog open={previewAberto} onOpenChange={setPreviewAberto}>
@@ -455,6 +473,23 @@ export function AbaUsuariosNexti() {
           cargo, posto e escala são casados pelo nome cadastrado na NEXTI.
           {arquivoNome ? ` Arquivo: ${arquivoNome}.` : ""}
         </p>
+
+        {colunas.reconhecidas.length > 0 && (
+          <div className="space-y-1 rounded-md border p-3 text-xs">
+            <p className="font-medium">Conferência das colunas do arquivo</p>
+            <p className="text-muted-foreground">
+              Usadas no cadastro:{" "}
+              {colunas.reconhecidas.map((c) => `${c.coluna} → ${c.rotulo}`).join(" · ")}
+            </p>
+            {colunas.ignoradas.length > 0 && (
+              <p className="text-muted-foreground">
+                Não usadas (a NEXTI não guarda estes dados no cadastro):{" "}
+                {colunas.ignoradas.join(", ")}
+              </p>
+            )}
+          </div>
+        )}
+
 
         {linhas.length > 0 && (
           <>
