@@ -493,13 +493,17 @@ export function RoteiroVisitaCampo() {
     staleTime: 60_000,
   });
 
+  // Coordenadas arredondadas (~100 m) para a busca não refazer a cada leitura do GPS.
+  const chaveLat = geo.latitude === null ? null : Math.round(geo.latitude * 1000) / 1000;
+  const chaveLon = geo.longitude === null ? null : Math.round(geo.longitude * 1000) / 1000;
+
   const {
     data: proximos,
     error: erroProximos,
     isFetching: carregandoProximos,
     refetch: refetchProximos,
   } = useQuery({
-    queryKey: ["postos-proximos", geo.latitude, geo.longitude],
+    queryKey: ["postos-proximos", chaveLat, chaveLon],
     queryFn: async () => {
       const { data: sessao } = await supabase.auth.getSession();
       if (!sessao.session) {
