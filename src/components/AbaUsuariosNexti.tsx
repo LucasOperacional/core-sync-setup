@@ -474,6 +474,23 @@ export function AbaUsuariosNexti() {
           {arquivoNome ? ` Arquivo: ${arquivoNome}.` : ""}
         </p>
 
+        {colunas.reconhecidas.length > 0 && (
+          <div className="space-y-1 rounded-md border p-3 text-xs">
+            <p className="font-medium">Conferência das colunas do arquivo</p>
+            <p className="text-muted-foreground">
+              Usadas no cadastro:{" "}
+              {colunas.reconhecidas.map((c) => `${c.coluna} → ${c.rotulo}`).join(" · ")}
+            </p>
+            {colunas.ignoradas.length > 0 && (
+              <p className="text-muted-foreground">
+                Não usadas (a NEXTI não guarda estes dados no cadastro):{" "}
+                {colunas.ignoradas.join(", ")}
+              </p>
+            )}
+          </div>
+        )}
+
+
         {linhas.length > 0 && (
           <>
             <Separator />
