@@ -88,127 +88,141 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
         )}
 
-        <button
-          type="button"
-          onClick={() => setComercialAberta((v) => !v)}
-          aria-expanded={comercialAberta}
-           className="mt-3 flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-          title={recolhida ? "COM" : undefined}
-        >
-          <span className="truncate">{recolhida ? "COM" : "Comercial"}</span>
-          <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", comercialAberta && "rotate-180")} />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setDpAberta((v) => !v)}
-          aria-expanded={dpAberta}
-          className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-          title={recolhida ? "DP" : undefined}
-        >
-          <span className="truncate">{recolhida ? "DP" : "Departamento pessoal"}</span>
-          <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", dpAberta && "rotate-180")} />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setFinanceiroAberta((v) => !v)}
-          aria-expanded={financeiroAberta}
-          className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-          title={recolhida ? "FIN" : undefined}
-        >
-          <span className="truncate">{recolhida ? "FIN" : "Financeiro"}</span>
-          <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", financeiroAberta && "rotate-180")} />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setOperacionalAberta((v) => !v)}
-          aria-expanded={operacionalAberta}
-          className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-          title={recolhida ? "OP" : undefined}
-        >
-          <span className="truncate">{recolhida ? "OP" : "Operacional"}</span>
-          <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", operacionalAberta && "rotate-180")} />
-        </button>
-        {operacionalAberta && (
-          <ul className="mt-1 space-y-0.5">
-            {itensOperacional.map((item) => {
-              const selecionado = ativo(item.to);
-              return (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    title={recolhida ? item.label : undefined}
-                    aria-current={selecionado ? "page" : undefined}
-                    className={cn(
-                      "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                      selecionado
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                    )}
-                  >
-                    <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
-                    {!recolhida && <span className="truncate">{item.label}</span>}
-                    {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+        {podeVerCategoria("categoria-comercial") && (
+          <button
+            type="button"
+            onClick={() => setComercialAberta((v) => !v)}
+            aria-expanded={comercialAberta}
+             className="mt-3 flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+            title={recolhida ? "COM" : undefined}
+          >
+            <span className="truncate">{recolhida ? "COM" : "Comercial"}</span>
+            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", comercialAberta && "rotate-180")} />
+          </button>
         )}
 
-        {itensRh.length > 0 && (
+        {podeVerCategoria("categoria-departamento-pessoal") && (
+          <button
+            type="button"
+            onClick={() => setDpAberta((v) => !v)}
+            aria-expanded={dpAberta}
+            className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+            title={recolhida ? "DP" : undefined}
+          >
+            <span className="truncate">{recolhida ? "DP" : "Departamento pessoal"}</span>
+            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", dpAberta && "rotate-180")} />
+          </button>
+        )}
+
+        {podeVerCategoria("categoria-financeiro") && (
+          <button
+            type="button"
+            onClick={() => setFinanceiroAberta((v) => !v)}
+            aria-expanded={financeiroAberta}
+            className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+            title={recolhida ? "FIN" : undefined}
+          >
+            <span className="truncate">{recolhida ? "FIN" : "Financeiro"}</span>
+            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", financeiroAberta && "rotate-180")} />
+          </button>
+        )}
+
+        {podeVerCategoria("categoria-operacional") && (
           <>
-            <button
-              type="button"
-              onClick={() => setRhAberta((v) => !v)}
-              aria-expanded={rhAberta}
-              className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-              title={recolhida ? "RH" : undefined}
-            >
-              <span className="truncate">{recolhida ? "RH" : "Recursos humanos"}</span>
-              <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", rhAberta && "rotate-180")} />
-            </button>
-            {rhAberta && (
-              <ul className="mt-1 space-y-0.5">
-                {itensRh.map((item) => {
-                  const selecionado = ativo(item.to);
-                  return (
-                    <li key={item.to}>
-                      <Link
-                        to={item.to}
-                        title={recolhida ? item.label : undefined}
-                        aria-current={selecionado ? "page" : undefined}
-                        className={cn(
-                            "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                          selecionado
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                              : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                        )}
-                      >
-                        <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
-                        {!recolhida && <span className="truncate">{item.label}</span>}
-                        {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+          <button
+            type="button"
+            onClick={() => setOperacionalAberta((v) => !v)}
+            aria-expanded={operacionalAberta}
+            className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+            title={recolhida ? "OP" : undefined}
+          >
+            <span className="truncate">{recolhida ? "OP" : "Operacional"}</span>
+            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", operacionalAberta && "rotate-180")} />
+          </button>
+          {operacionalAberta && (
+            <ul className="mt-1 space-y-0.5">
+              {itensOperacional.map((item) => {
+                const selecionado = ativo(item.to);
+                return (
+                  <li key={item.to}>
+                    <Link
+                      to={item.to}
+                      title={recolhida ? item.label : undefined}
+                      aria-current={selecionado ? "page" : undefined}
+                      className={cn(
+                        "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
+                        selecionado
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                      )}
+                    >
+                      <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
+                      {!recolhida && <span className="truncate">{item.label}</span>}
+                      {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
           </>
         )}
 
-        <button
-          type="button"
-          onClick={() => setSuprimentosAberta((v) => !v)}
-          aria-expanded={suprimentosAberta}
-          className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-          title={recolhida ? "SUP" : undefined}
-        >
-          <span className="truncate">{recolhida ? "SUP" : "Suprimentos"}</span>
-          <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", suprimentosAberta && "rotate-180")} />
-        </button>
+        {podeVerCategoria("categoria-recursos-humanos") && (
+          {itensRh.length > 0 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setRhAberta((v) => !v)}
+                aria-expanded={rhAberta}
+                className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+                title={recolhida ? "RH" : undefined}
+              >
+                <span className="truncate">{recolhida ? "RH" : "Recursos humanos"}</span>
+                <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", rhAberta && "rotate-180")} />
+              </button>
+              {rhAberta && (
+                <ul className="mt-1 space-y-0.5">
+                  {itensRh.map((item) => {
+                    const selecionado = ativo(item.to);
+                    return (
+                      <li key={item.to}>
+                        <Link
+                          to={item.to}
+                          title={recolhida ? item.label : undefined}
+                          aria-current={selecionado ? "page" : undefined}
+                          className={cn(
+                              "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
+                            selecionado
+                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                          )}
+                        >
+                          <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
+                          {!recolhida && <span className="truncate">{item.label}</span>}
+                          {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </>
+          )}
+        )}
+
+        {podeVerCategoria("categoria-suprimentos") && (
+          <button
+            type="button"
+            onClick={() => setSuprimentosAberta((v) => !v)}
+            aria-expanded={suprimentosAberta}
+            className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+            title={recolhida ? "SUP" : undefined}
+          >
+            <span className="truncate">{recolhida ? "SUP" : "Suprimentos"}</span>
+            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", suprimentosAberta && "rotate-180")} />
+          </button>
+        )}
       </nav>
 
 
