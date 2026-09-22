@@ -284,6 +284,7 @@ export function PostosExcelImportCard() {
                 <tr className="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">
                   <th className="px-3 py-2">Posto</th>
                   <th className="px-3 py-2">Diferença</th>
+                  <th className="px-3 py-2">Nome parecido na NEXTI</th>
                   <th className="px-3 py-2">Empresa na NEXTI</th>
                   <th className="px-3 py-2">Empresa na planilha</th>
                   <th className="px-3 py-2 text-right">Vagas NEXTI</th>
