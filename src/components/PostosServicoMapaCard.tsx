@@ -43,6 +43,26 @@ export function PostosServicoMapaCard() {
     void carregar();
   }, [carregar]);
 
+  // Atualiza o mapa automaticamente assim que um supervisor registra uma visita.
+  useEffect(() => {
+    const canal = supabase
+      .channel("mapa-postos-visitas")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "roteiros_visita_campo" },
+        () => {
+          void carregar();
+        },
+      )
+      .subscribe();
+
+    const intervalo = setInterval(() => void carregar(), 60_000);
+    return () => {
+      clearInterval(intervalo);
+      void supabase.removeChannel(canal);
+    };
+  }, [carregar]);
+
   const buscarNaNexti = useCallback(async () => {
     setBuscando(true);
     setAviso(null);
