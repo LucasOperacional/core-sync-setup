@@ -53,7 +53,7 @@ const POSTOS_IGNORAR = new Set(["TOTAL", "TOTAL GERAL", "POSTO", "SOMA"]);
  * 3) detalhamento: Posto | Vaga original | Quantidade de vagas (soma por posto).
  * A empresa pode vir só no título da aba (ex.: "TEKTRON ADMINISTRACAO").
  */
-function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
+export function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
   let cPosto = -1;
   let cEmpresa = -1;
   let cTotal = -1;
