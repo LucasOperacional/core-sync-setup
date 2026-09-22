@@ -360,6 +360,36 @@ function acharEscalaCompativel(
   return melhor && melhor.pontos >= 4 ? melhor : null;
 }
 
+/**
+ * Regra: "12X36 (PAR/ÍMPAR) 19:00 às 07:00" na planilha corresponde, na NEXTI,
+ * à escala noturna com intervalo de 20 minutos ("19:00 as 23:00 / 23:20 as 07:00").
+ */
+function acharEscalaNoturnaIntervalo(
+  escalasRaw: Record<string, unknown>[],
+  termo?: string,
+): OpcaoNexti | null {
+  const horarios = extrairHorarios(limpar(termo));
+  if (!horarios.includes("19:00") || !horarios.includes("07:00")) return null;
+  for (const item of escalasRaw) {
+    const id = Number(item["id"] ?? 0);
+    const nome = typeof item["name"] === "string" ? item["name"] : "";
+    if (!id || !nome) continue;
+    const he = extrairHorarios(textoDaEscala(item));
+    if (
+      he.includes("19:00") &&
+      he.includes("23:00") &&
+      he.includes("23:20") &&
+      he.includes("07:00")
+    ) {
+      const opcao: OpcaoNexti = { id, nome };
+      const codigo = codigoExternoDe(item);
+      if (codigo) opcao.externalId = codigo;
+      return opcao;
+    }
+  }
+  return null;
+}
+
 /** PORTEIRO I / PORTEIRO II (aceita algarismos romanos ou números). */
 function ehPorteiroNumerado(cargo?: string): boolean {
   const base = normalizar(limpar(cargo)).replace(/[^a-z0-9 ]+/g, " ");
@@ -606,8 +636,14 @@ function montarCadastro(
     const porCodigo = escalasBusca.find(
       (item) => !!codigoExternoDe(item) && normalizar(codigoExternoDe(item)) === termoEscala,
     );
-    // 1) horário exato; 2) escala mais compatível (horário + jornada + período + palavras).
-    const porHorario = porCodigo ? null : acharEscalaPorHorario(escalasBusca, textoEscala);
+    // 1) escala noturna 19:00 às 07:00 com intervalo de 20 minutos;
+    // 2) horário exato; 3) escala mais compatível (horário + jornada + período + palavras).
+    const noturnaIntervalo = porCodigo
+      ? null
+      : (acharEscalaNoturnaIntervalo(escalasBusca, textoEscala) ??
+        acharEscalaNoturnaIntervalo(listas.escalasRaw, textoEscala));
+    const porHorario =
+      porCodigo || noturnaIntervalo ? null : acharEscalaPorHorario(escalasBusca, textoEscala);
     const compativel = porCodigo
       ? {
           opcao: {
@@ -617,9 +653,11 @@ function montarCadastro(
           } as OpcaoNexti,
           pontos: 100,
         }
-      : porHorario
-        ? { opcao: porHorario, pontos: 99 }
-        : acharEscalaCompativel(escalasBusca, textoEscala);
+      : noturnaIntervalo
+        ? { opcao: noturnaIntervalo, pontos: 100 }
+        : porHorario
+          ? { opcao: porHorario, pontos: 99 }
+          : acharEscalaCompativel(escalasBusca, textoEscala);
     if (compativel) {
       escala = compativel.opcao;
       avisos.push(
