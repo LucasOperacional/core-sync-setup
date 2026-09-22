@@ -132,6 +132,7 @@ export function AbaUsuariosNexti() {
       const pessoas = lista.map(({ id: _i, status: _s, mensagem: _m, ...pessoa }) => ({
         ...pessoa,
         empresa: pessoa.empresa || empresaPadrao.trim(),
+        supervisor: pessoa.supervisor || supervisorPadrao.trim(),
       }));
       const res = await validar({ data: { pessoas } });
       if (!res.ok) {
