@@ -27,6 +27,8 @@ export type PessoaCadastro = {
   empresa?: string;
   cargo?: string;
   posto?: string;
+  /** Nome do supervisor responsável (casado com as pessoas da NEXTI). */
+  supervisor?: string;
   escala?: string;
   /** Descrição da jornada (horário) — usada para achar a escala na NEXTI. */
   jornada?: string;
