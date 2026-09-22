@@ -58,6 +58,7 @@ export const REGRAS_COLUNAS: Regra[] = [
       "telefone recado",
       "telefone comercial",
       "phone2",
+      "telefone",
     ],
   },
   { chave: "genero", rotulo: "Sexo", termos: ["sexo", "genero"] },
