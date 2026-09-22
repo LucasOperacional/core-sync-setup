@@ -406,11 +406,23 @@ export function RoteiroVisitaCampo() {
   }, [carregarPerguntas]);
 
   const aplicarPosicao = useCallback((pos: GeolocationPosition) => {
-    setGeo({
-      latitude: pos.coords.latitude,
-      longitude: pos.coords.longitude,
-      precisao: pos.coords.accuracy,
-      status: "ok",
+    setGeo((anterior) => {
+      // Só atualiza quando houver deslocamento real (~25 m); evita que a lista
+      // de postos próximos fique piscando a cada leitura do GPS.
+      if (anterior.status === "ok" && anterior.latitude !== null && anterior.longitude !== null) {
+        const dLat = (pos.coords.latitude - anterior.latitude) * 111_320;
+        const dLon =
+          (pos.coords.longitude - anterior.longitude) *
+          111_320 *
+          Math.cos((anterior.latitude * Math.PI) / 180);
+        if (Math.sqrt(dLat * dLat + dLon * dLon) < 25) return anterior;
+      }
+      return {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        precisao: pos.coords.accuracy,
+        status: "ok",
+      };
     });
   }, []);
 
@@ -481,13 +493,17 @@ export function RoteiroVisitaCampo() {
     staleTime: 60_000,
   });
 
+  // Coordenadas arredondadas (~100 m) para a busca não refazer a cada leitura do GPS.
+  const chaveLat = geo.latitude === null ? null : Math.round(geo.latitude * 1000) / 1000;
+  const chaveLon = geo.longitude === null ? null : Math.round(geo.longitude * 1000) / 1000;
+
   const {
     data: proximos,
     error: erroProximos,
     isFetching: carregandoProximos,
     refetch: refetchProximos,
   } = useQuery({
-    queryKey: ["postos-proximos", geo.latitude, geo.longitude],
+    queryKey: ["postos-proximos", chaveLat, chaveLon],
     queryFn: async () => {
       const { data: sessao } = await supabase.auth.getSession();
       if (!sessao.session) {
@@ -510,8 +526,12 @@ export function RoteiroVisitaCampo() {
       }
     },
     enabled: geo.status === "ok" && geo.latitude !== null && geo.longitude !== null,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
     retry: 1,
+    // Mantém a lista anterior na tela enquanto uma nova busca acontece.
+    placeholderData: (anterior) => anterior,
+    refetchOnWindowFocus: false,
   });
 
   // Gerente de área: só pode visitar os postos vinculados à área dele.
@@ -520,8 +540,12 @@ export function RoteiroVisitaCampo() {
     return new Set(vinculo.postos.map((p) => normalizarNome(p.nome)));
   }, [vinculo]);
 
-  const postosProximos = (proximos?.ok ? proximos.postos : []).filter(
-    (p) => !postosPermitidos || postosPermitidos.has(normalizarNome(p.nome)),
+  const postosProximos = useMemo(
+    () =>
+      (proximos?.ok ? proximos.postos : []).filter(
+        (p) => !postosPermitidos || postosPermitidos.has(normalizarNome(p.nome)),
+      ),
+    [proximos, postosPermitidos],
   );
   const mensagemErroProximos =
     proximos && !proximos.ok
