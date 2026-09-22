@@ -169,7 +169,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
 
         {podeVerCategoria("categoria-recursos-humanos") && itensRh.length > 0 && (
-          <>{(
+          (
             <>
               <button
                 type="button"
