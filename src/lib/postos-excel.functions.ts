@@ -26,12 +26,16 @@ export type LinhaPlanilhaPosto = {
 export type DivergenciaPosto = {
   posto: string;
   nextiId: number | null;
-  /** "empresa" | "vagas" | "ambos" | "nao_encontrado" */
-  tipo: "empresa" | "vagas" | "ambos" | "nao_encontrado";
+  /** "empresa" | "vagas" | "ambos" | "semelhante" | "nao_encontrado" */
+  tipo: "empresa" | "vagas" | "ambos" | "semelhante" | "nao_encontrado";
   empresaPlanilha: string;
   empresaNexti: string | null;
   vagasPlanilha: number | null;
   vagasNexti: number | null;
+  /** Nome do posto parecido encontrado na NEXTI (quando não houve nome igual). */
+  postoNexti?: string;
+  /** 0 a 100 — quanto o nome da planilha parece com o nome da NEXTI. */
+  semelhanca?: number;
 };
 
 export type PreviaPostosExcel = {
