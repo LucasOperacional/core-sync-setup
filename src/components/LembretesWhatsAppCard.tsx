@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BellRing, Loader2, Play, Send, Trash2, XCircle } from "lucide-react";
+import { BellRing, FileText, Loader2, Play, Send, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,31 @@ function formatar(valor: string | null) {
   return new Date(valor).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
+function formatarDataModelo(valor: string) {
+  if (!valor) return "[DATA]";
+  const [ano, mes, dia] = valor.split("-");
+  return ano && mes && dia ? `${dia}/${mes}/${ano}` : "[DATA]";
+}
+
+function montarModeloRegularizacao(nome: string, data: string, horario: string) {
+  return `📢 AVISO – REGULARIZAÇÃO DA FOLHA DE PONTO
+
+Olá, ${nome.trim() || "[Nome do colaborador]"}!
+
+Informamos que no dia ${formatarDataModelo(data)} você deverá comparecer à base para realizar a conferência e regularização das folhas de ponto referentes à sua rota.
+
+📅 Data: ${formatarDataModelo(data)}
+⏰ Horário: ${horario || "[HORÁRIO]"}
+📍 Local: Base
+
+Pedimos que compareça no horário informado para que as pendências sejam verificadas e devidamente regularizadas.
+
+Contamos com sua colaboração!
+
+Mesa Operacional
+Grupo Tektron`;
+}
+
 /** Lembretes por WhatsApp: modelos de mensagem e disparos agendados. */
 export function LembretesWhatsAppCard() {
   const queryClient = useQueryClient();
@@ -71,6 +96,14 @@ export function LembretesWhatsAppCard() {
   const [repeticao, setRepeticao] = useState("unica");
   const [quando, setQuando] = useState(() => paraInputLocal(new Date(Date.now() + 30 * 60000)));
   const [nomeTemplate, setNomeTemplate] = useState("");
+  const [nomeColaborador, setNomeColaborador] = useState("");
+  const [dataEntrega, setDataEntrega] = useState("");
+  const [horarioEntrega, setHorarioEntrega] = useState("");
+  const [modeloRegularizacaoAtivo, setModeloRegularizacaoAtivo] = useState(false);
+
+  const atualizarModeloRegularizacao = (nome: string, data: string, horario: string) => {
+    if (modeloRegularizacaoAtivo) setTexto(montarModeloRegularizacao(nome, data, horario));
+  };
 
   const lembretes = useQuery({
     queryKey: ["wa-lembretes"],
@@ -222,12 +255,77 @@ export function LembretesWhatsAppCard() {
           </div>
         </div>
 
+        <div className="space-y-3 rounded-md border p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-sm font-medium">Regularização da folha de ponto</p>
+              <p className="text-xs text-muted-foreground">
+                Preencha os dados para personalizar o aviso ao colaborador.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setModeloRegularizacaoAtivo(true);
+                setTexto(montarModeloRegularizacao(nomeColaborador, dataEntrega, horarioEntrega));
+              }}
+            >
+              <FileText className="size-4" />
+              Usar este modelo
+            </Button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1">
+              <Label>Nome do colaborador</Label>
+              <Input
+                value={nomeColaborador}
+                maxLength={120}
+                onChange={(e) => {
+                  const nome = e.target.value;
+                  setNomeColaborador(nome);
+                  atualizarModeloRegularizacao(nome, dataEntrega, horarioEntrega);
+                }}
+                placeholder="Nome completo"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Data da entrega</Label>
+              <Input
+                type="date"
+                value={dataEntrega}
+                onChange={(e) => {
+                  const data = e.target.value;
+                  setDataEntrega(data);
+                  atualizarModeloRegularizacao(nomeColaborador, data, horarioEntrega);
+                }}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Horário da entrega</Label>
+              <Input
+                type="time"
+                value={horarioEntrega}
+                onChange={(e) => {
+                  const horario = e.target.value;
+                  setHorarioEntrega(horario);
+                  atualizarModeloRegularizacao(nomeColaborador, dataEntrega, horario);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="space-y-1">
           <Label>Mensagem</Label>
           <Textarea
             rows={4}
             value={texto}
-            onChange={(e) => setTexto(e.target.value)}
+            onChange={(e) => {
+              setModeloRegularizacaoAtivo(false);
+              setTexto(e.target.value);
+            }}
             placeholder="Escreva aqui o lembrete que será enviado."
           />
         </div>
