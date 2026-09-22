@@ -1,6 +1,6 @@
 import { ClientOnly, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { LogIn, Mail, Lock, Shield, User, Building2, UserPlus } from "lucide-react";
+import { LogIn, Mail, Lock, Shield, User, Building2, UserPlus, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -75,6 +75,7 @@ function AuthPage() {
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
   useEffect(() => {
     supabase.auth
@@ -249,13 +250,22 @@ function AuthPage() {
                     <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="auth-password"
-                      type="password"
+                      type={mostrarSenha ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       placeholder="••••••••"
-                      className="h-11 border-border/60 bg-background/50 pl-10 text-sm transition-all focus-visible:border-primary/50 focus-visible:ring-primary/30"
+                      className="h-11 border-border/60 bg-background/50 pl-10 pr-10 text-sm transition-all focus-visible:border-primary/50 focus-visible:ring-primary/30"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setMostrarSenha((v) => !v)}
+                      aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                      aria-pressed={mostrarSenha}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
+                    >
+                      {mostrarSenha ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
                   </div>
                   {modo === "cadastro" && (
                     <p className="text-xs text-muted-foreground">
