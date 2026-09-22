@@ -166,6 +166,7 @@ export function AbaUsuariosNexti() {
       }));
       setLinhas(novas);
       setValidacoes([]);
+      setColunas({ reconhecidas: colunasReconhecidas, ignoradas: colunasIgnoradas });
       registrar(`Planilha "${file.name}" lida: ${novas.length} colaboradores.`);
       registrar(
         `Colunas convertidas para a NEXTI: ${colunasReconhecidas
