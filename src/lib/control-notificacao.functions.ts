@@ -58,3 +58,71 @@ export const notificarInicioControl = createServerFn({ method: "POST" })
     );
     return envio;
   });
+
+/** Aviso no WhatsApp quando o supervisor finaliza o relatório do control. */
+export const notificarFimControl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (
+      input:
+        | {
+            postoNome?: string;
+            percentual?: number;
+            naoConformes?: number;
+            duracaoSegundos?: number | null;
+          }
+        | undefined,
+    ) => ({
+      postoNome: String(input?.postoNome ?? "").trim(),
+      percentual: Number.isFinite(Number(input?.percentual)) ? Number(input?.percentual) : 0,
+      naoConformes: Number.isFinite(Number(input?.naoConformes)) ? Number(input?.naoConformes) : 0,
+      duracaoSegundos: Number.isFinite(Number(input?.duracaoSegundos))
+        ? Number(input?.duracaoSegundos)
+        : null,
+    }),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: boolean; erro?: string }> => {
+    const { data: perfil } = await context.supabase
+      .from("user_profiles")
+      .select("display_name")
+      .eq("id", context.userId)
+      .maybeSingle();
+
+    const supervisor = (perfil?.display_name ?? "").trim() || "Supervisor";
+
+    let cliente = "";
+    if (data.postoNome) {
+      const { data: posto } = await context.supabase
+        .from("nexti_workplaces")
+        .select("client_name")
+        .eq("name", data.postoNome)
+        .maybeSingle();
+      cliente = String(posto?.client_name ?? "").trim();
+    }
+
+    const quando = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+    const duracao =
+      data.duracaoSegundos === null
+        ? ""
+        : `${Math.floor(data.duracaoSegundos / 60)}min ${data.duracaoSegundos % 60}s`;
+
+    const texto = [
+      "✅ *Control finalizado*",
+      `Supervisor: ${supervisor}`,
+      `Posto: ${data.postoNome || "Não informado"}`,
+      `Cliente: ${cliente || "Não informado"}`,
+      `Conformidade: ${data.percentual}%`,
+      `Não conformes: ${data.naoConformes}`,
+      ...(duracao ? [`Tempo de preenchimento: ${duracao}`] : []),
+      `Data e hora: ${quando}`,
+      `Relatório: ${LINK_RELATORIO}`,
+    ].join("\n");
+
+    const envio = await enviarMensagemEvolution(NUMERO_NOTIFICACAO_CONTROL, texto);
+    console.log(
+      "[control-notificacao] aviso de fim",
+      JSON.stringify({ supervisor, posto: data.postoNome, ok: envio.ok, erro: envio.erro ?? null }),
+    );
+    return envio;
+  });
