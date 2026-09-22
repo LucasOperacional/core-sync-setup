@@ -5064,6 +5064,75 @@ export type Database = {
           },
         ]
       }
+      wa_lembrete_templates: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          id: string
+          nome: string
+          texto: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          nome: string
+          texto: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          nome?: string
+          texto?: string
+        }
+        Relationships: []
+      }
+      wa_lembretes: {
+        Row: {
+          agendado_para: string
+          created_at: string
+          criado_por: string | null
+          erro: string | null
+          id: string
+          numeros: string[]
+          proximo_envio_em: string | null
+          repeticao: string
+          status: string
+          texto: string
+          titulo: string | null
+          ultimo_envio_em: string | null
+        }
+        Insert: {
+          agendado_para: string
+          created_at?: string
+          criado_por?: string | null
+          erro?: string | null
+          id?: string
+          numeros?: string[]
+          proximo_envio_em?: string | null
+          repeticao?: string
+          status?: string
+          texto: string
+          titulo?: string | null
+          ultimo_envio_em?: string | null
+        }
+        Update: {
+          agendado_para?: string
+          created_at?: string
+          criado_por?: string | null
+          erro?: string | null
+          id?: string
+          numeros?: string[]
+          proximo_envio_em?: string | null
+          repeticao?: string
+          status?: string
+          texto?: string
+          titulo?: string | null
+          ultimo_envio_em?: string | null
+        }
+        Relationships: []
+      }
       whatsapp_conversations: {
         Row: {
           assigned_at: string | null
