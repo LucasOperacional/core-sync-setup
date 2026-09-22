@@ -14,6 +14,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/PageHeader";
+import { PostosExcelImportCard } from "@/components/PostosExcelImportCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -300,6 +301,8 @@ function PostosPage() {
             <CardContent className="text-2xl font-semibold">{comVagas}</CardContent>
           </Card>
         </div>
+
+        <PostosExcelImportCard />
 
         <Card>
           <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
