@@ -710,23 +710,31 @@ export function RoteiroVisitaCampo() {
       toast.error(e instanceof Error ? e.message : "Não foi possível salvar o roteiro."),
   });
 
-  // LÓGICA DE GEOFENCE AUTO (CERCA DE 600 M, POSTOS DA NEXTI)
-  const RAIO_CERCA_KM = 0.6;
+  // LÓGICA DE GEOFENCE AUTO (DENTRO DO PRÉDIO, POSTOS DA NEXTI)
+  // Entrada só bem em cima do posto (60 m) e depois de permanecer parado ali por
+  // 90 s — assim quem só passa na porta ou perto não inicia a supervisão.
+  const RAIO_ENTRADA_KM = 0.06;
+  const RAIO_SAIDA_KM = 0.09;
+  const PERMANENCIA_MS = 90_000;
   const refEstado = useRef({ iniciadoEm, respostas, fotos, mutation });
   useEffect(() => {
     refEstado.current = { iniciadoEm, respostas, fotos, mutation };
   }, [iniciadoEm, respostas, fotos, mutation]);
 
-  const geoTracking = useRef({ postoId: null as number | null, estavaDentro: false });
+  const geoTracking = useRef({
+    postoId: null as number | null,
+    estavaDentro: false,
+    dentroDesde: null as number | null,
+  });
+  const timerPermanencia = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!postosProximos || geo.status !== "ok") return;
 
-    // Sem posto escolhido: ao entrar na cerca de 600 m de um posto da NEXTI,
-    // seleciona o mais próximo e inicia a supervisão automaticamente.
+    // Sem posto escolhido: só seleciona quando estiver realmente no local.
     if (!postoNexti) {
       const maisProximo = postosProximos[0];
-      if (maisProximo && maisProximo.distanciaKm <= RAIO_CERCA_KM) {
+      if (maisProximo && maisProximo.distanciaKm <= RAIO_ENTRADA_KM) {
         setPostoNexti({
           id: maisProximo.id,
           nome: maisProximo.nome,
@@ -739,41 +747,81 @@ export function RoteiroVisitaCampo() {
     const infoPosto = postosProximos.find((p) => p.id === postoNexti.id);
     if (!infoPosto) return;
 
-    const agoraDentro = infoPosto.distanciaKm <= RAIO_CERCA_KM;
     const pId = postoNexti.id;
+    const dentroAntes = geoTracking.current.postoId === pId && geoTracking.current.estavaDentro;
+    // Histerese: entra a 60 m, só sai depois de passar de 90 m.
+    const agoraDentro = dentroAntes
+      ? infoPosto.distanciaKm <= RAIO_SAIDA_KM
+      : infoPosto.distanciaKm <= RAIO_ENTRADA_KM;
+
+    function limparTimer() {
+      if (timerPermanencia.current) {
+        clearTimeout(timerPermanencia.current);
+        timerPermanencia.current = null;
+      }
+    }
+
+    function agendarInicio() {
+      if (timerPermanencia.current || refEstado.current.iniciadoEm !== null) return;
+      const desde = geoTracking.current.dentroDesde ?? Date.now();
+      const restante = Math.max(0, PERMANENCIA_MS - (Date.now() - desde));
+      timerPermanencia.current = setTimeout(() => {
+        timerPermanencia.current = null;
+        if (
+          geoTracking.current.postoId === pId &&
+          geoTracking.current.estavaDentro &&
+          refEstado.current.iniciadoEm === null
+        ) {
+          iniciarPreenchimento();
+        }
+      }, restante);
+    }
 
     function encerrarPorSaida() {
+      limparTimer();
       if (refEstado.current.iniciadoEm === null || refEstado.current.mutation.isPending) return;
       const temDados =
         Object.keys(refEstado.current.respostas).length > 0 || refEstado.current.fotos.length > 0;
       if (temDados) {
-        toast.info("Você saiu da cerca de 600 m. O relatório foi fechado e está sendo salvo.");
+        toast.info("Você saiu do local do posto. O relatório foi fechado e está sendo salvo.");
         refEstado.current.mutation.mutate();
       } else {
-        toast.warning("Você saiu da cerca de 600 m. A supervisão foi encerrada sem registros.");
+        toast.warning("Você saiu do local do posto. A supervisão foi encerrada sem registros.");
         inicioPreenchimento.current = null;
         setIniciadoEm(null);
       }
     }
 
     if (geoTracking.current.postoId !== pId) {
-      geoTracking.current = { postoId: pId, estavaDentro: agoraDentro };
-      if (agoraDentro && refEstado.current.iniciadoEm === null) {
-        iniciarPreenchimento();
-      }
+      limparTimer();
+      geoTracking.current = {
+        postoId: pId,
+        estavaDentro: agoraDentro,
+        dentroDesde: agoraDentro ? Date.now() : null,
+      };
+      if (agoraDentro) agendarInicio();
       return;
     }
 
     if (agoraDentro && !geoTracking.current.estavaDentro) {
       geoTracking.current.estavaDentro = true;
-      if (refEstado.current.iniciadoEm === null) {
-        iniciarPreenchimento();
-      }
+      geoTracking.current.dentroDesde = Date.now();
+      agendarInicio();
+    } else if (agoraDentro) {
+      agendarInicio();
     } else if (!agoraDentro && geoTracking.current.estavaDentro) {
       geoTracking.current.estavaDentro = false;
+      geoTracking.current.dentroDesde = null;
       encerrarPorSaida();
     }
   }, [postoNexti, postosProximos, geo.status]);
+
+  useEffect(
+    () => () => {
+      if (timerPermanencia.current) clearTimeout(timerPermanencia.current);
+    },
+    [],
+  );
 
   async function capturarFoto(pergunta: PerguntaRoteiro, arquivo: File) {
     const capturadaEm = new Date().toISOString();
