@@ -124,7 +124,10 @@ export function AbaUsuariosNexti() {
     setValidacoes([]);
     registrar(`Validando ${lista.length} colaboradores contra a NEXTI...`);
     try {
-      const pessoas = lista.map(({ id: _i, status: _s, mensagem: _m, ...pessoa }) => pessoa);
+      const pessoas = lista.map(({ id: _i, status: _s, mensagem: _m, ...pessoa }) => ({
+        ...pessoa,
+        empresa: pessoa.empresa || empresaPadrao.trim(),
+      }));
       const res = await validar({ data: { pessoas } });
       if (!res.ok) {
         registrar(`Falha na validação: ${res.erro ?? "erro desconhecido"}`, "erro");
