@@ -514,19 +514,45 @@ type ListasNexti = {
   cargosRaw: Record<string, unknown>[];
   postosRaw: Record<string, unknown>[];
   escalasRaw: Record<string, unknown>[];
+  /** Pessoas ativas na NEXTI, usadas para casar o supervisor da planilha. */
+  supervisores: OpcaoNexti[];
 };
+
+/** Lista as pessoas ativas (base local sincronizada) para casar o supervisor. */
+async function carregarSupervisores(): Promise<OpcaoNexti[]> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("nexti_persons")
+      .select("nexti_id, nome, external_id")
+      .is("demission_date", null)
+      .limit(20000);
+    if (error || !data) return [];
+    return (data as { nexti_id: number; nome: string | null; external_id: string | null }[])
+      .filter((r) => Number(r.nexti_id) > 0 && (r.nome ?? "").trim())
+      .map((r) => ({
+        id: Number(r.nexti_id),
+        nome: String(r.nome).trim(),
+        ...(r.external_id ? { externalId: String(r.external_id) } : {}),
+      }));
+  } catch {
+    return [];
+  }
+}
 
 async function carregarListas(
   config: Awaited<ReturnType<typeof loadConfig>>,
 ): Promise<ListasNexti> {
-  const [empresasRaw, cargosRaw, postosRaw, escalasRaw] = await Promise.all([
+  const [empresasRaw, cargosRaw, postosRaw, escalasRaw, supervisores] = await Promise.all([
     listarTudo(config, "/api/companies/all"),
     listarTudo(config, "/api/careers/all"),
     listarTudo(config, "/api/workplaces/all"),
     listarTudo(config, "/api/schedules/all"),
+    carregarSupervisores(),
   ]);
-  return { empresasRaw, cargosRaw, postosRaw, escalasRaw };
+  return { empresasRaw, cargosRaw, postosRaw, escalasRaw, supervisores };
 }
+
 
 /** Contagem de ativos por posto, usada para saber se ainda há vaga. */
 async function contarAtivosPorPosto(postoIds: number[]): Promise<Map<number, number>> {
