@@ -625,7 +625,7 @@ function montarCadastro(
   else if (!empresa) erros.push(`Empresa "${p.empresa}" não existe na NEXTI.`);
   if (limpar(p.cargo) && !cargo) erros.push(`Cargo "${p.cargo}" não existe na NEXTI.`);
   if (!limpar(p.cargo)) avisos.push("Cargo não informado.");
-  if (limpar(p.escala) && !escala) erros.push(`Escala "${p.escala}" não existe na NEXTI.`);
+  if (textoEscala && !escala) erros.push(`Escala "${textoEscala}" não existe na NEXTI.`);
 
   // Regra: posto não localizado pelo nome → tenta pelo código externo (matrícula)
   // da escala compatível; se ainda assim não achar, lota em "NOVAS ADMISSÕES".
