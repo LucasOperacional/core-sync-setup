@@ -1023,7 +1023,7 @@ const CAMPOS_DESLIGAMENTO = [
 async function atualizarPessoa(
   config: Awaited<ReturnType<typeof loadConfig>>,
   personId: number,
-  payload: Record<string, string | number | boolean>,
+  payload: Record<string, string | number | boolean | number[]>,
 ): Promise<{ ok: boolean; erro?: string }> {
   let atual: Record<string, unknown> | null = null;
   try {
