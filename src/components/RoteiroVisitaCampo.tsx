@@ -592,6 +592,23 @@ export function RoteiroVisitaCampo() {
       }),
     onSuccess: async (resultado) => {
       toast.success("Roteiro de visita registrado.");
+      void (async () => {
+        try {
+          await avisarFimControl({
+            data: {
+              postoNome: postoNexti?.nome ?? "",
+              percentual: resumo.percentual,
+              naoConformes: resumo.naoConformes,
+              duracaoSegundos:
+                inicioPreenchimento.current === null
+                  ? null
+                  : Math.max(0, Math.round((Date.now() - inicioPreenchimento.current) / 1000)),
+            },
+          });
+        } catch {
+          // o aviso não pode atrapalhar o envio do relatório
+        }
+      })();
       const roteiroId = (resultado as { id?: string } | undefined)?.id;
       if (roteiroId) {
         try {
