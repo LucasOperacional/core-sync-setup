@@ -51,7 +51,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSearch } from "@tanstack/react-router";
 import { nomeDoUsuario, useSessao } from "@/hooks/use-sessao";
 import { evolutionGoEnviarTexto } from "@/lib/evolution-go.functions";
-import { notificarInicioControl } from "@/lib/control-notificacao.functions";
+import { notificarFimControl, notificarInicioControl } from "@/lib/control-notificacao.functions";
 
 const OPCOES: { valor: RespostaValor; label: string; icon: typeof CheckCircle2; classe: string }[] =
   [
@@ -317,6 +317,7 @@ export function RoteiroVisitaCampo() {
 
   const enviarMensagemEvolution = useServerFn(evolutionGoEnviarTexto);
   const avisarInicioControl = useServerFn(notificarInicioControl);
+  const avisarFimControl = useServerFn(notificarFimControl);
 
   /** Avisa no WhatsApp de notificação que um control foi iniciado. */
   function avisarControlIniciado(nomePosto: string, idPosto: number) {
