@@ -84,7 +84,10 @@ export function LembretesWhatsAppCard() {
   const criarMut = useMutation({
     mutationFn: () => criar({ data: { titulo, numeros, texto, quando, repeticao } }),
     onSuccess: (r) => {
-      if (!r.ok) return toast.error(r.erro ?? "Não foi possível agendar.");
+      if (!r.ok) {
+        toast.error(r.erro ?? "Não foi possível agendar.");
+        return;
+      }
       toast.success("Lembrete agendado.");
       setTitulo("");
       setTexto("");
@@ -115,7 +118,10 @@ export function LembretesWhatsAppCard() {
     mutationFn: (v: { id: string; acao: "cancelar" | "reativar" | "excluir" }) =>
       alterar({ data: v }),
     onSuccess: (r) => {
-      if (!r.ok) return toast.error(r.erro ?? "Não foi possível alterar.");
+      if (!r.ok) {
+        toast.error(r.erro ?? "Não foi possível alterar.");
+        return;
+      }
       atualizar();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -124,7 +130,10 @@ export function LembretesWhatsAppCard() {
   const templateMut = useMutation({
     mutationFn: () => salvarTemplate({ data: { nome: nomeTemplate, texto } }),
     onSuccess: (r) => {
-      if (!r.ok) return toast.error(r.erro ?? "Não foi possível salvar o modelo.");
+      if (!r.ok) {
+        toast.error(r.erro ?? "Não foi possível salvar o modelo.");
+        return;
+      }
       toast.success("Modelo salvo.");
       setNomeTemplate("");
       void queryClient.invalidateQueries({ queryKey: ["wa-lembretes-templates"] });
