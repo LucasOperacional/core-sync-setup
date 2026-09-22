@@ -360,6 +360,18 @@ function acharEscalaCompativel(
   return melhor && melhor.pontos >= 4 ? melhor : null;
 }
 
+/** PORTEIRO I / PORTEIRO II (aceita algarismos romanos ou números). */
+function ehPorteiroNumerado(cargo?: string): boolean {
+  const base = normalizar(limpar(cargo)).replace(/[^a-z0-9 ]+/g, " ");
+  return /\bporteiro\s*(i{1,2}|1|2)\b/.test(base);
+}
+
+/** Escala com intervalo de 20 minutos (diurna ou noturna). */
+function escalaDe20Minutos(item: Record<string, unknown>): boolean {
+  const texto = normalizar(textoDaEscala(item));
+  return /\b20\s*(min|minutos|m)\b/.test(texto) || /\b20\s*'/.test(texto);
+}
+
 /** Posto padrão para quem entra sem vaga no posto informado. */
 const POSTO_NOVAS_ADMISSOES = "NOVAS ADMISSÕES";
 
