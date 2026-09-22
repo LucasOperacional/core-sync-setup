@@ -32,48 +32,86 @@ function acharColuna(cabecalho: string[], termos: string[]): number {
   });
 }
 
-/** Converte as linhas da planilha em postos (somente das empresas autorizadas). */
+/**
+ * Varre a planilha inteira (todas as abas e linhas). Reconhece cabeçalhos em
+ * qualquer ponto do arquivo e, quando não houver cabeçalho, procura o nome da
+ * empresa em qualquer coluna e usa o texto mais descritivo da linha como posto.
+ */
 function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
-  let idxCabecalho = -1;
   let cPosto = -1;
   let cEmpresa = -1;
   let cVagas = -1;
 
-  for (let i = 0; i < Math.min(linhas.length, 25); i++) {
-    const linha = linhas[i] ?? [];
-    const posto = acharColuna(linha, ["nome do posto", "posto", "local", "workplace"]);
-    const empresa = acharColuna(linha, ["empresa", "company", "filial"]);
-    if (posto >= 0 && empresa >= 0) {
-      idxCabecalho = i;
-      cPosto = posto;
-      cEmpresa = empresa;
-      cVagas = acharColuna(linha, ["vaga", "vagas", "vacant", "quantidade", "efetivo"]);
-      break;
-    }
-  }
-  if (idxCabecalho < 0) return [];
+  const achados = new Map<string, LinhaPlanilhaPosto>();
 
-  const saida: LinhaPlanilhaPosto[] = [];
-  for (let i = idxCabecalho + 1; i < linhas.length; i++) {
-    const linha = linhas[i] ?? [];
-    const posto = (linha[cPosto] ?? "").trim();
-    const empresa = (linha[cEmpresa] ?? "").trim();
-    if (!posto || !empresa) continue;
-    if (!EMPRESAS_CHAVE.has(chaveNome(empresa))) continue;
-    const vagasBruto = cVagas >= 0 ? (linha[cVagas] ?? "").replace(/\D/g, "") : "";
-    saida.push({
-      posto,
-      empresa,
-      vagas: vagasBruto === "" ? null : Number(vagasBruto),
-    });
+  const guardar = (posto: string, empresa: string, vagas: number | null) => {
+    const chave = `${chaveNome(posto)}|${chaveNome(empresa)}`;
+    const atual = achados.get(chave);
+    if (atual && (atual.vagas ?? 0) >= (vagas ?? 0)) return;
+    achados.set(chave, { posto: posto.trim(), empresa: empresa.trim(), vagas });
+  };
+
+  for (const bruta of linhas) {
+    const linha = bruta ?? [];
+    if (linha.every((c) => !(c ?? "").trim())) continue;
+
+    // Cabeçalho pode aparecer várias vezes (uma por aba).
+    const hPosto = acharColuna(linha, ["nome do posto", "posto", "local", "unidade", "workplace"]);
+    const hEmpresa = acharColuna(linha, ["empresa", "company", "filial", "razao social"]);
+    if (hPosto >= 0 && hEmpresa >= 0) {
+      cPosto = hPosto;
+      cEmpresa = hEmpresa;
+      cVagas = acharColuna(linha, [
+        "vaga",
+        "vagas",
+        "vacant",
+        "quantidade",
+        "qtd",
+        "efetivo",
+        "posto de trabalho",
+      ]);
+      continue;
+    }
+
+    const numero = (v: string | undefined) => {
+      const limpo = (v ?? "").replace(/\D/g, "");
+      return limpo === "" ? null : Number(limpo);
+    };
+
+    // 1) Colunas identificadas pelo cabeçalho.
+    if (cPosto >= 0 && cEmpresa >= 0) {
+      const posto = (linha[cPosto] ?? "").trim();
+      const empresa = (linha[cEmpresa] ?? "").trim();
+      if (posto && empresa && EMPRESAS_CHAVE.has(chaveNome(empresa))) {
+        guardar(posto, empresa, cVagas >= 0 ? numero(linha[cVagas]) : null);
+        continue;
+      }
+    }
+
+    // 2) Sem cabeçalho: procura a empresa em qualquer coluna da linha.
+    const idxEmpresa = linha.findIndex((c) => EMPRESAS_CHAVE.has(chaveNome(c ?? "")));
+    if (idxEmpresa < 0) continue;
+    const empresa = (linha[idxEmpresa] ?? "").trim();
+    let posto = "";
+    for (let j = 0; j < linha.length; j++) {
+      if (j === idxEmpresa) continue;
+      const valor = (linha[j] ?? "").trim();
+      if (valor.length < 3) continue;
+      if (!/[A-Za-zÀ-ÿ]/.test(valor)) continue;
+      if (EMPRESAS_CHAVE.has(chaveNome(valor))) continue;
+      if (valor.length > posto.length) posto = valor;
+    }
+    if (posto) guardar(posto, empresa, null);
   }
-  return saida;
+
+  return [...achados.values()];
 }
 
 function rotuloTipo(t: DivergenciaPosto["tipo"]): string {
   if (t === "empresa") return "Empresa diferente";
   if (t === "vagas") return "Vagas diferentes";
   if (t === "ambos") return "Empresa e vagas";
+  if (t === "semelhante") return "Nome parecido na NEXTI";
   return "Não existe na NEXTI";
 }
 
@@ -90,7 +128,10 @@ export function PostosExcelImportCard() {
   const [lendo, setLendo] = useState(false);
 
   const corrigiveis = useMemo(
-    () => (divergencias ?? []).filter((d) => d.nextiId != null && d.tipo !== "nao_encontrado"),
+    () =>
+      (divergencias ?? []).filter(
+        (d) => d.nextiId != null && d.tipo !== "nao_encontrado" && d.tipo !== "semelhante",
+      ),
     [divergencias],
   );
 
@@ -243,6 +284,7 @@ export function PostosExcelImportCard() {
                 <tr className="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">
                   <th className="px-3 py-2">Posto</th>
                   <th className="px-3 py-2">Diferença</th>
+                  <th className="px-3 py-2">Nome parecido na NEXTI</th>
                   <th className="px-3 py-2">Empresa na NEXTI</th>
                   <th className="px-3 py-2">Empresa na planilha</th>
                   <th className="px-3 py-2 text-right">Vagas NEXTI</th>
@@ -254,10 +296,21 @@ export function PostosExcelImportCard() {
                   <tr key={`${d.nextiId ?? "x"}-${d.posto}`} className="border-b last:border-0">
                     <td className="px-3 py-2 font-medium">{d.posto}</td>
                     <td className="px-3 py-2">
-                      <Badge variant={d.tipo === "nao_encontrado" ? "outline" : "destructive"}>
+                      <Badge
+                        variant={
+                          d.tipo === "nao_encontrado"
+                            ? "outline"
+                            : d.tipo === "semelhante"
+                              ? "secondary"
+                              : "destructive"
+                        }
+                      >
                         <AlertTriangle className="mr-1 size-3" />
                         {rotuloTipo(d.tipo)}
                       </Badge>
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {d.postoNexti ? `${d.postoNexti} (${d.semelhanca ?? 0}%)` : "—"}
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">{d.empresaNexti ?? "—"}</td>
                     <td className="px-3 py-2">{d.empresaPlanilha}</td>

@@ -26,12 +26,16 @@ export type LinhaPlanilhaPosto = {
 export type DivergenciaPosto = {
   posto: string;
   nextiId: number | null;
-  /** "empresa" | "vagas" | "ambos" | "nao_encontrado" */
-  tipo: "empresa" | "vagas" | "ambos" | "nao_encontrado";
+  /** "empresa" | "vagas" | "ambos" | "semelhante" | "nao_encontrado" */
+  tipo: "empresa" | "vagas" | "ambos" | "semelhante" | "nao_encontrado";
   empresaPlanilha: string;
   empresaNexti: string | null;
   vagasPlanilha: number | null;
   vagasNexti: number | null;
+  /** Nome do posto parecido encontrado na NEXTI (quando não houve nome igual). */
+  postoNexti?: string;
+  /** 0 a 100 — quanto o nome da planilha parece com o nome da NEXTI. */
+  semelhanca?: number;
 };
 
 export type PreviaPostosExcel = {
@@ -84,6 +88,40 @@ export function chaveNome(v: string | null | undefined): string {
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, " ")
     .trim();
+}
+
+/** Distância de edição (Levenshtein) entre dois textos já normalizados. */
+function distancia(a: string, b: string): number {
+  const linha = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let anterior = linha[0] as number;
+    linha[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const temp = linha[j] as number;
+      linha[j] = Math.min(
+        (linha[j] as number) + 1,
+        (linha[j - 1] as number) + 1,
+        anterior + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+      anterior = temp;
+    }
+  }
+  return linha[b.length] as number;
+}
+
+/** 0 a 100: mistura de palavras em comum com a semelhança letra a letra. */
+export function semelhancaNome(a: string, b: string): number {
+  const x = chaveNome(a);
+  const y = chaveNome(b);
+  if (!x || !y) return 0;
+  if (x === y) return 100;
+  const px = new Set(x.split(" ").filter((p) => p.length > 2));
+  const py = new Set(y.split(" ").filter((p) => p.length > 2));
+  let comuns = 0;
+  for (const p of px) if (py.has(p)) comuns += 1;
+  const palavras = px.size && py.size ? (2 * comuns) / (px.size + py.size) : 0;
+  const letras = 1 - distancia(x, y) / Math.max(x.length, y.length);
+  return Math.round((palavras * 0.6 + Math.max(0, letras) * 0.4) * 100);
 }
 
 function listaDoPayload(payload: unknown): Rec[] {
@@ -168,10 +206,12 @@ export const analisarPostosExcel = createServerFn({ method: "POST" })
     }
 
     const porNome = new Map<string, Rec>();
+    const nomesNexti: { nome: string; posto: Rec }[] = [];
     for (const p of postos) {
       const nome = texto(escolher(p, ["name", "nome", "description", "workplaceName"]));
       if (!nome) continue;
       porNome.set(chaveNome(nome), p);
+      nomesNexti.push({ nome, posto: p });
     }
 
     const divergencias: DivergenciaPosto[] = [];
@@ -180,6 +220,36 @@ export const analisarPostosExcel = createServerFn({ method: "POST" })
     for (const linha of linhas) {
       const alvo = porNome.get(chaveNome(linha.posto));
       if (!alvo) {
+        // Nome exato não existe: procuramos o posto mais parecido na NEXTI.
+        let melhor: { nome: string; posto: Rec; nota: number } | null = null;
+        for (const item of nomesNexti) {
+          const nota = semelhancaNome(linha.posto, item.nome);
+          if (nota >= 70 && (!melhor || nota > melhor.nota)) {
+            melhor = { nome: item.nome, posto: item.posto, nota };
+          }
+        }
+        if (melhor) {
+          const idP = Number(escolher(melhor.posto, ["id", "nextiId", "workplaceId"]));
+          const vagasBrutoP = escolher(melhor.posto, [
+            "vacantJob",
+            "vacantJobs",
+            "vagas",
+            "vacancy",
+            "vacancies",
+          ]);
+          divergencias.push({
+            posto: linha.posto,
+            nextiId: Number.isFinite(idP) ? idP : null,
+            tipo: "semelhante",
+            empresaPlanilha: linha.empresa,
+            empresaNexti: texto(escolher(melhor.posto, ["companyName", "company", "empresa"])),
+            vagasPlanilha: linha.vagas,
+            vagasNexti: Number.isFinite(Number(vagasBrutoP)) ? Number(vagasBrutoP) : 0,
+            postoNexti: melhor.nome,
+            semelhanca: melhor.nota,
+          });
+          continue;
+        }
         divergencias.push({
           posto: linha.posto,
           nextiId: null,
