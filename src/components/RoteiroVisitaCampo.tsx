@@ -406,11 +406,23 @@ export function RoteiroVisitaCampo() {
   }, [carregarPerguntas]);
 
   const aplicarPosicao = useCallback((pos: GeolocationPosition) => {
-    setGeo({
-      latitude: pos.coords.latitude,
-      longitude: pos.coords.longitude,
-      precisao: pos.coords.accuracy,
-      status: "ok",
+    setGeo((anterior) => {
+      // Só atualiza quando houver deslocamento real (~25 m); evita que a lista
+      // de postos próximos fique piscando a cada leitura do GPS.
+      if (anterior.status === "ok" && anterior.latitude !== null && anterior.longitude !== null) {
+        const dLat = (pos.coords.latitude - anterior.latitude) * 111_320;
+        const dLon =
+          (pos.coords.longitude - anterior.longitude) *
+          111_320 *
+          Math.cos((anterior.latitude * Math.PI) / 180);
+        if (Math.sqrt(dLat * dLat + dLon * dLon) < 25) return anterior;
+      }
+      return {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        precisao: pos.coords.accuracy,
+        status: "ok",
+      };
     });
   }, []);
 
