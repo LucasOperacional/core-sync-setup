@@ -755,7 +755,12 @@ function montarCadastro(
     }
   }
 
-  const payload: Record<string, string | number | boolean> = {
+  const supervisor = acharOpcao(listas.supervisores, p.supervisor);
+  if (limpar(p.supervisor) && !supervisor) {
+    avisos.push(`Supervisor "${p.supervisor}" não encontrado na NEXTI — cadastro segue sem supervisor.`);
+  }
+
+  const payload: Record<string, string | number | boolean | number[]> = {
     name: nome,
     cpf,
     pis: pis.length === 11 ? pis : "00000000000",
