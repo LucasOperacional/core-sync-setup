@@ -66,6 +66,8 @@ export function AbaUsuariosNexti() {
   const [arquivoNome, setArquivoNome] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [busca, setBusca] = useState("");
+  // Arquivos de folha não trazem a coluna de empresa; aqui ela é informada uma vez.
+  const [empresaPadrao, setEmpresaPadrao] = useState("");
   const [logs, setLogs] = useState<LinhaLog[]>([]);
   const [previewAberto, setPreviewAberto] = useState(false);
   const [validacoes, setValidacoes] = useState<ValidacaoPessoa[]>([]);
