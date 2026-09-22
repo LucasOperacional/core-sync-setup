@@ -43,9 +43,12 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
   let cVagas = -1;
 
   const achados = new Map<string, LinhaPlanilhaPosto>();
+  /** Quantas vezes o posto aparece na coluna POSTO (1 linha = 1 vaga). */
+  const contagem = new Map<string, number>();
 
   const guardar = (posto: string, empresa: string, vagas: number | null) => {
     const chave = `${chaveNome(posto)}|${chaveNome(empresa)}`;
+    contagem.set(chave, (contagem.get(chave) ?? 0) + 1);
     const atual = achados.get(chave);
     if (atual && (atual.vagas ?? 0) >= (vagas ?? 0)) return;
     achados.set(chave, { posto: posto.trim(), empresa: empresa.trim(), vagas });
