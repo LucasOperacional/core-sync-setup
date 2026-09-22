@@ -107,7 +107,11 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
     if (posto) guardar(posto, empresa, null);
   }
 
-  return [...achados.values()];
+  // Sem coluna de vagas: cada linha da coluna POSTO vale uma vaga.
+  return [...achados.entries()].map(([chave, item]) => ({
+    ...item,
+    vagas: item.vagas ?? contagem.get(chave) ?? null,
+  }));
 }
 
 function rotuloTipo(t: DivergenciaPosto["tipo"]): string {
