@@ -27,6 +27,8 @@ export type PessoaCadastro = {
   empresa?: string;
   cargo?: string;
   posto?: string;
+  /** Nome do supervisor responsável (casado com as pessoas da NEXTI). */
+  supervisor?: string;
   escala?: string;
   /** Descrição da jornada (horário) — usada para achar a escala na NEXTI. */
   jornada?: string;
@@ -512,19 +514,45 @@ type ListasNexti = {
   cargosRaw: Record<string, unknown>[];
   postosRaw: Record<string, unknown>[];
   escalasRaw: Record<string, unknown>[];
+  /** Pessoas ativas na NEXTI, usadas para casar o supervisor da planilha. */
+  supervisores: OpcaoNexti[];
 };
+
+/** Lista as pessoas ativas (base local sincronizada) para casar o supervisor. */
+async function carregarSupervisores(): Promise<OpcaoNexti[]> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("nexti_persons")
+      .select("nexti_id, nome, external_id")
+      .is("demission_date", null)
+      .limit(20000);
+    if (error || !data) return [];
+    return (data as { nexti_id: number; nome: string | null; external_id: string | null }[])
+      .filter((r) => Number(r.nexti_id) > 0 && (r.nome ?? "").trim())
+      .map((r) => ({
+        id: Number(r.nexti_id),
+        nome: String(r.nome).trim(),
+        ...(r.external_id ? { externalId: String(r.external_id) } : {}),
+      }));
+  } catch {
+    return [];
+  }
+}
 
 async function carregarListas(
   config: Awaited<ReturnType<typeof loadConfig>>,
 ): Promise<ListasNexti> {
-  const [empresasRaw, cargosRaw, postosRaw, escalasRaw] = await Promise.all([
+  const [empresasRaw, cargosRaw, postosRaw, escalasRaw, supervisores] = await Promise.all([
     listarTudo(config, "/api/companies/all"),
     listarTudo(config, "/api/careers/all"),
     listarTudo(config, "/api/workplaces/all"),
     listarTudo(config, "/api/schedules/all"),
+    carregarSupervisores(),
   ]);
-  return { empresasRaw, cargosRaw, postosRaw, escalasRaw };
+  return { empresasRaw, cargosRaw, postosRaw, escalasRaw, supervisores };
 }
+
 
 /** Contagem de ativos por posto, usada para saber se ainda há vaga. */
 async function contarAtivosPorPosto(postoIds: number[]): Promise<Map<number, number>> {
@@ -565,8 +593,8 @@ export type ValidacaoPessoa = {
   nome: string;
   erros: string[];
   avisos: string[];
-  payload: Record<string, string | number | boolean>;
-  resolvido: { empresa?: string; cargo?: string; posto?: string; escala?: string };
+  payload: Record<string, string | number | boolean | number[]>;
+  resolvido: { empresa?: string; cargo?: string; posto?: string; escala?: string; supervisor?: string };
 };
 
 /** Monta o corpo do POST /api/persons e acusa tudo que a NEXTI recusaria. */
@@ -727,7 +755,12 @@ function montarCadastro(
     }
   }
 
-  const payload: Record<string, string | number | boolean> = {
+  const supervisor = acharOpcao(listas.supervisores, p.supervisor);
+  if (limpar(p.supervisor) && !supervisor) {
+    avisos.push(`Supervisor "${p.supervisor}" não encontrado na NEXTI — cadastro segue sem supervisor.`);
+  }
+
+  const payload: Record<string, string | number | boolean | number[]> = {
     name: nome,
     cpf,
     pis: pis.length === 11 ? pis : "00000000000",
@@ -782,6 +815,9 @@ function montarCadastro(
     ...(limpar(p.mae) ? { mothersName: limpar(p.mae).toUpperCase() } : {}),
     ...(limpar(p.pai) ? { fathersName: limpar(p.pai).toUpperCase() } : {}),
     ...(limpar(p.rg) ? { registerNumber: limpar(p.rg) } : {}),
+    ...(supervisor
+      ? { personSupervisorIds: [supervisor.id], personResponsibleId: supervisor.id }
+      : {}),
   };
 
   const resolvido: ValidacaoPessoa["resolvido"] = {};
@@ -789,6 +825,7 @@ function montarCadastro(
   if (cargo) resolvido.cargo = cargo.nome;
   if (posto) resolvido.posto = posto.nome;
   if (escala) resolvido.escala = escala.nome;
+  if (supervisor) resolvido.supervisor = supervisor.nome;
 
   return { nome: nome || "(sem nome)", erros, avisos, payload, resolvido };
 }
@@ -995,7 +1032,7 @@ const CAMPOS_DESLIGAMENTO = [
 async function atualizarPessoa(
   config: Awaited<ReturnType<typeof loadConfig>>,
   personId: number,
-  payload: Record<string, string | number | boolean>,
+  payload: Record<string, string | number | boolean | number[]>,
 ): Promise<{ ok: boolean; erro?: string }> {
   let atual: Record<string, unknown> | null = null;
   try {

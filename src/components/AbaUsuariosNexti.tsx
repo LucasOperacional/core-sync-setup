@@ -68,6 +68,7 @@ export function AbaUsuariosNexti() {
   const [busca, setBusca] = useState("");
   // Arquivos de folha não trazem a coluna de empresa; aqui ela é informada uma vez.
   const [empresaPadrao, setEmpresaPadrao] = useState("");
+  const [supervisorPadrao, setSupervisorPadrao] = useState("");
   const [colunas, setColunas] = useState<{
     reconhecidas: { rotulo: string; coluna: string }[];
     ignoradas: string[];
@@ -131,6 +132,7 @@ export function AbaUsuariosNexti() {
       const pessoas = lista.map(({ id: _i, status: _s, mensagem: _m, ...pessoa }) => ({
         ...pessoa,
         empresa: pessoa.empresa || empresaPadrao.trim(),
+        supervisor: pessoa.supervisor || supervisorPadrao.trim(),
       }));
       const res = await validar({ data: { pessoas } });
       if (!res.ok) {
@@ -219,7 +221,13 @@ export function AbaUsuariosNexti() {
       const { id: _id, status: _s, mensagem: _m, ...pessoa } = linha;
       try {
         const res = await cadastrar({
-          data: { pessoa: { ...pessoa, empresa: pessoa.empresa || empresaPadrao.trim() } },
+          data: {
+            pessoa: {
+              ...pessoa,
+              empresa: pessoa.empresa || empresaPadrao.trim(),
+              supervisor: pessoa.supervisor || supervisorPadrao.trim(),
+            },
+          },
         });
         if (res.ok) sucesso += 1;
         registrar(`${linha.nome}: ${res.mensagem}`, res.ok ? "ok" : "erro");
@@ -282,6 +290,13 @@ export function AbaUsuariosNexti() {
               onChange={(e) => setEmpresaPadrao(e.target.value)}
               aria-label="Empresa padrão do arquivo"
             />
+            <Input
+              placeholder="Supervisor (usado quando o arquivo não tiver essa coluna)"
+              value={supervisorPadrao}
+              onChange={(e) => setSupervisorPadrao(e.target.value)}
+              aria-label="Supervisor padrão do arquivo"
+            />
+
           </div>
           <Dialog open={previewAberto} onOpenChange={setPreviewAberto}>
             <DialogTrigger asChild>

@@ -95,6 +95,12 @@ export const REGRAS_COLUNAS: Regra[] = [
     exclui: ["cod"],
   },
   {
+    chave: "supervisor",
+    rotulo: "Supervisor",
+    termos: ["supervisor", "responsavel", "supervisor responsavel", "encarregado"],
+    exclui: ["cod"],
+  },
+  {
     chave: "jornada",
     rotulo: "Jornada",
     termos: ["descricao da jornada", "jornada", "horario de trabalho"],
@@ -112,7 +118,7 @@ export const REGRAS_COLUNAS: Regra[] = [
     chave: "nome",
     rotulo: "Nome",
     termos: ["nome do funcionario", "nome completo", "colaborador", "funcionario", "nome"],
-    exclui: ["mae", "pai", "funcao", "setor", "empresa", "escala", "cargo", "local"],
+    exclui: ["mae", "pai", "funcao", "setor", "empresa", "escala", "cargo", "local", "supervisor"],
   },
 ];
 
