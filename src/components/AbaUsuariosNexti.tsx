@@ -68,6 +68,7 @@ export function AbaUsuariosNexti() {
   const [busca, setBusca] = useState("");
   // Arquivos de folha não trazem a coluna de empresa; aqui ela é informada uma vez.
   const [empresaPadrao, setEmpresaPadrao] = useState("");
+  const [supervisorPadrao, setSupervisorPadrao] = useState("");
   const [colunas, setColunas] = useState<{
     reconhecidas: { rotulo: string; coluna: string }[];
     ignoradas: string[];
