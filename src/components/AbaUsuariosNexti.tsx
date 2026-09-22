@@ -282,6 +282,13 @@ export function AbaUsuariosNexti() {
               onChange={(e) => setEmpresaPadrao(e.target.value)}
               aria-label="Empresa padrão do arquivo"
             />
+            <Input
+              placeholder="Supervisor (usado quando o arquivo não tiver essa coluna)"
+              value={supervisorPadrao}
+              onChange={(e) => setSupervisorPadrao(e.target.value)}
+              aria-label="Supervisor padrão do arquivo"
+            />
+
           </div>
           <Dialog open={previewAberto} onOpenChange={setPreviewAberto}>
             <DialogTrigger asChild>
