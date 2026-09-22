@@ -15,7 +15,7 @@ const STORAGE_KEY = "ciop:navegacao-recolhida";
 export function AppShell({ children }: { children: ReactNode }) {
   const caminho = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
-  const { podeVer } = useMinhasPermissoes();
+  const { podeVer, podeVerCategoria } = useMinhasPermissoes();
   const { user } = useSessao();
   const [menuMobile, setMenuMobile] = useState(false);
   const [recolhida, setRecolhida] = useState(false);
