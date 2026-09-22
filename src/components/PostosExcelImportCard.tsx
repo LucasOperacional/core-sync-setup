@@ -296,10 +296,21 @@ export function PostosExcelImportCard() {
                   <tr key={`${d.nextiId ?? "x"}-${d.posto}`} className="border-b last:border-0">
                     <td className="px-3 py-2 font-medium">{d.posto}</td>
                     <td className="px-3 py-2">
-                      <Badge variant={d.tipo === "nao_encontrado" ? "outline" : "destructive"}>
+                      <Badge
+                        variant={
+                          d.tipo === "nao_encontrado"
+                            ? "outline"
+                            : d.tipo === "semelhante"
+                              ? "secondary"
+                              : "destructive"
+                        }
+                      >
                         <AlertTriangle className="mr-1 size-3" />
                         {rotuloTipo(d.tipo)}
                       </Badge>
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {d.postoNexti ? `${d.postoNexti} (${d.semelhanca ?? 0}%)` : "—"}
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">{d.empresaNexti ?? "—"}</td>
                     <td className="px-3 py-2">{d.empresaPlanilha}</td>
