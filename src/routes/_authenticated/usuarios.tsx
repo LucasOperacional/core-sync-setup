@@ -67,6 +67,7 @@ import {
 } from "@/lib/usuarios.functions";
 import {
   AVAILABLE_PAGES,
+  SIDEBAR_CATEGORIES,
   isSuperAdmin,
   listarTodasPermissoes,
   salvarPermissoes,
@@ -247,10 +248,16 @@ function UsuariosPage() {
           role: newRole,
           fullName: newFullName.trim(),
           department: newDepartment,
-          permissions: AVAILABLE_PAGES.map((p: (typeof AVAILABLE_PAGES)[number]) => ({
-            pageKey: p.key,
-            allowed: !!newPerms[p.key],
-          })),
+          permissions: [
+            ...AVAILABLE_PAGES.map((p: (typeof AVAILABLE_PAGES)[number]) => ({
+              pageKey: p.key as string,
+              allowed: !!newPerms[p.key],
+            })),
+            ...SIDEBAR_CATEGORIES.map((c) => ({
+              pageKey: c.key as string,
+              allowed: !!newPerms[c.key],
+            })),
+          ],
         },
       });
       toast.success("Usuário cadastrado com sucesso.");
@@ -324,6 +331,10 @@ function UsuariosPage() {
     for (const p of AVAILABLE_PAGES) {
       const found = current.find((c) => c.pageKey === p.key);
       state[p.key] = found ? found.allowed : false;
+    }
+    for (const c of SIDEBAR_CATEGORIES) {
+      const found = current.find((x) => x.pageKey === c.key);
+      state[c.key] = found ? found.allowed : true;
     }
     setPermState(state);
     setPermCategoria(""); // O dado virá do banco futuramente
@@ -636,7 +647,30 @@ function UsuariosPage() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Categorias visíveis no Menu Lateral (Sidebar)</Label>
+              <Label>Categorias do Menu Lateral (Sidebar)</Label>
+              <p className="text-xs text-muted-foreground">
+                Marque as categorias que este usuário verá no menu lateral.
+              </p>
+              <div className="grid grid-cols-1 gap-1 rounded-md border border-input p-3 sm:grid-cols-2">
+                {SIDEBAR_CATEGORIES.map((c) => (
+                  <label
+                    key={c.key}
+                    className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-accent"
+                  >
+                    <Checkbox
+                      checked={newRole === "admin" ? true : !!newPerms[c.key]}
+                      disabled={newRole === "admin"}
+                      onCheckedChange={(checked) =>
+                        setNewPerms((prev) => ({ ...prev, [c.key]: checked === true }))
+                      }
+                    />
+                    <span>{c.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label>Páginas liberadas</Label>
               <p className="text-xs text-muted-foreground">
                 {newRole === "admin"
                   ? "Administradores visualizam todas as categorias do menu."
@@ -772,13 +806,30 @@ function UsuariosPage() {
             <DialogDescription>{permUser?.email}</DialogDescription>
           </DialogHeader>
           <div className="px-1 py-1">
-            <Label className="mb-1 block">Categorias visíveis no Menu Lateral (Sidebar)</Label>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Marque somente as categorias que este usuário poderá visualizar. As categorias sem seleção não aparecerão no menu Sidebar.
+            <Label className="mb-1 block">Categorias do Menu Lateral (Sidebar)</Label>
+            <p className="mt-1 mb-3 text-xs text-muted-foreground">
+              Marque somente as categorias que este usuário poderá ver no menu lateral. As categorias sem seleção não aparecerão.
             </p>
+            <div className="grid grid-cols-1 gap-1 rounded-md border border-input p-3 sm:grid-cols-2">
+              {SIDEBAR_CATEGORIES.map((c) => (
+                <label
+                  key={c.key}
+                  className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-accent"
+                >
+                  <Checkbox
+                    checked={permUser?.role === "admin" ? true : (permState[c.key] ?? true)}
+                    disabled={permUser?.role === "admin"}
+                    onCheckedChange={(checked) =>
+                      setPermState((prev) => ({ ...prev, [c.key]: !!checked }))
+                    }
+                  />
+                  <span>{c.label}</span>
+                </label>
+              ))}
+            </div>
           </div>
           <div className="mt-4">
-            <Label className="mb-1 block">Categorias liberadas no menu</Label>
+            <Label className="mb-1 block">Páginas liberadas</Label>
             <p className="mb-3 text-xs text-muted-foreground">
               {permUser?.role === "admin"
                 ? "Administradores possuem acesso a todas as categorias do menu por padrão."
