@@ -125,6 +125,8 @@ export function CompartilharLocalizacaoCard() {
   const ultimoEnvioOkRef = useRef<number>(0);
   const [fila, setFila] = useState<number>(0);
   const [atualizando, setAtualizando] = useState(false);
+  /** Envio em segundo plano ativo (funciona fora do site). */
+  const [segundoPlano, setSegundoPlano] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const verificarChegada = useServerFn(verificarChegadaPosto);
@@ -237,6 +239,11 @@ export function CompartilharLocalizacaoCard() {
         tipo: "gps-posicao",
         estado: {
           token,
+          // Permite ao segundo plano renovar o acesso sozinho quando o app
+          // fica horas fechado, sem perder o envio do sinal.
+          refreshToken: data.session?.refresh_token ?? null,
+          supabaseUrl: import.meta.env["VITE_SUPABASE_URL"] ?? null,
+          apiKey: import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ?? null,
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
           precisaoMetros: pos.coords.accuracy ?? null,
@@ -245,6 +252,14 @@ export function CompartilharLocalizacaoCard() {
           tipoSinal: tipoSinal(),
         },
       });
+      // Pede ao navegador para acordar o worker quando a rede voltar.
+      const sync = (
+        registro as ServiceWorkerRegistration & {
+          sync?: { register: (t: string) => Promise<void> };
+        }
+      ).sync;
+      await sync?.register("gps-ping").catch(() => undefined);
+      setSegundoPlano(true);
     } catch {
       /* segue com o envio direto */
     }
@@ -417,11 +432,72 @@ export function CompartilharLocalizacaoCard() {
           }
         ).periodicSync;
         await periodico?.register("gps-ping", { minInterval: 60_000 }).catch(() => undefined);
+        // Pede a permissão do sincronismo em segundo plano (Android/Chrome).
+        try {
+          await navigator.permissions?.query({
+            name: "periodic-background-sync" as PermissionName,
+          });
+        } catch {
+          /* navegador sem esta permissão */
+        }
+        setSegundoPlano(true);
       } catch {
         /* aparelho sem suporte: segue com o envio em primeiro plano */
       }
     })();
   }, [gpsTravado, souLider]);
+
+  /**
+   * Ao sair do site, fechar a aba ou minimizar, manda a última posição direto
+   * pelo endpoint público (sendBeacon) e acorda o service worker: o sinal
+   * continua saindo mesmo fora do site.
+   */
+  useEffect(() => {
+    if (!souLider || !gpsTravado) return;
+
+    const aoSair = () => {
+      const pos = ultimaPosRef.current;
+      if (!pos) return;
+      void (async () => {
+        try {
+          await avisarServiceWorker(pos);
+          const { data } = await supabase.auth.getSession();
+          const token = data.session?.access_token;
+          if (!token) return;
+          const corpo = JSON.stringify({
+            token,
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            precisaoMetros: pos.coords.accuracy ?? null,
+            velocidade: pos.coords.speed ?? null,
+            direcao: pos.coords.heading ?? null,
+            tipoSinal: tipoSinal(),
+            capturadoEm: new Date().toISOString(),
+          });
+          navigator.sendBeacon?.(
+            "/api/public/rastreio-ping",
+            new Blob([corpo], { type: "application/json" }),
+          );
+        } catch {
+          /* sem sessão ou sem rede: o worker reenvia depois */
+        }
+      })();
+    };
+
+    const aoEsconder = () => {
+      if (document.visibilityState === "hidden") aoSair();
+    };
+
+    window.addEventListener("pagehide", aoSair);
+    window.addEventListener("beforeunload", aoSair);
+    document.addEventListener("visibilitychange", aoEsconder);
+    return () => {
+      window.removeEventListener("pagehide", aoSair);
+      window.removeEventListener("beforeunload", aoSair);
+      document.removeEventListener("visibilitychange", aoEsconder);
+    };
+  }, [souLider, gpsTravado, avisarServiceWorker]);
+
 
   // Regra: liga sozinho e permanece ligado — não há opção de desligar.
   useEffect(() => {
@@ -546,6 +622,15 @@ export function CompartilharLocalizacaoCard() {
           <span className="flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
             <Wifi className="size-3" />
             {rede}
+          </span>
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+              segundoPlano
+                ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
+                : "border border-border bg-muted text-muted-foreground"
+            }`}
+          >
+            {segundoPlano ? "Segundo plano ativo" : "Segundo plano ligando…"}
           </span>
           <button
             type="button"
