@@ -11,8 +11,10 @@ import {
   Clock, 
   CheckCircle2, 
   AlertTriangle, 
-  XCircle 
+  XCircle,
+  Trash2
 } from "lucide-react";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
