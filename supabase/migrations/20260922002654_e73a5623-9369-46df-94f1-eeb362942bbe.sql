@@ -1,0 +1,1 @@
+CREATE POLICY "Admins apagam todos os roteiros" ON public.roteiros_visita_campo FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'admin'::app_role));
