@@ -26,7 +26,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { listarRelatoriosRoteiroCoordenacao } from "@/lib/roteiro-campo.functions";
+import {
+  listarRelatoriosRoteiroCoordenacao,
+  limparRelatoriosRoteiro,
+  souAdminRoteiro,
+} from "@/lib/roteiro-campo.functions";
+
 
 function horaBr(iso: string | null, subSegundos: number = 0) {
   if (!iso) return "—";
