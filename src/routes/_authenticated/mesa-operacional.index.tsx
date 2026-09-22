@@ -707,7 +707,10 @@ function MesaOperacionalPage() {
             <Building2 className="size-4" /> Cadastre o primeiro posto de serviço acima.
           </p>
         ) : null}
+
+        <LembretesWhatsAppCard />
       </div>
+
       <FloatingNav />
     </main>
   );
