@@ -569,9 +569,20 @@ function montarCadastro(
   );
   const cargo = acharOpcao(paraOpcoes(listas.cargosRaw), p.cargo);
   let posto = acharOpcao(paraOpcoes(listas.postosRaw), p.posto);
+
+  // Regra: PORTEIRO I e PORTEIRO II sempre usam as escalas de 20 minutos
+  // (diurnas e noturnas). Quando houver escalas de 20 min na NEXTI, a busca
+  // acontece somente entre elas.
+  const porteiroNumerado = ehPorteiroNumerado(p.cargo);
+  const escalasDe20 = porteiroNumerado ? listas.escalasRaw.filter(escalaDe20Minutos) : [];
+  const escalasBusca = escalasDe20.length > 0 ? escalasDe20 : listas.escalasRaw;
+  if (porteiroNumerado && escalasDe20.length > 0) {
+    avisos.push("Cargo PORTEIRO I/II — escala buscada apenas entre as escalas de 20 minutos.");
+  }
+
   let escala =
-    acharOpcao(paraOpcoes(listas.escalasRaw), p.escala) ??
-    acharOpcao(paraOpcoes(listas.escalasRaw), p.jornada);
+    acharOpcao(paraOpcoes(escalasBusca), p.escala) ??
+    acharOpcao(paraOpcoes(escalasBusca), p.jornada);
 
   // A escala da NEXTI costuma trazer o horário no nome; por isso a jornada
   // ("09:00 as 18:00") entra junto da escala ("SEGUNDA A SABADO") na busca.
@@ -580,11 +591,11 @@ function montarCadastro(
   if (textoEscala && !escala) {
     // 0) código externo (matrícula) da escala informado direto na planilha.
     const termoEscala = normalizar(limpar(p.escala));
-    const porCodigo = listas.escalasRaw.find(
+    const porCodigo = escalasBusca.find(
       (item) => !!codigoExternoDe(item) && normalizar(codigoExternoDe(item)) === termoEscala,
     );
     // 1) horário exato; 2) escala mais compatível (horário + jornada + período + palavras).
-    const porHorario = porCodigo ? null : acharEscalaPorHorario(listas.escalasRaw, textoEscala);
+    const porHorario = porCodigo ? null : acharEscalaPorHorario(escalasBusca, textoEscala);
     const compativel = porCodigo
       ? {
           opcao: {
@@ -596,7 +607,7 @@ function montarCadastro(
         }
       : porHorario
         ? { opcao: porHorario, pontos: 99 }
-        : acharEscalaCompativel(listas.escalasRaw, textoEscala);
+        : acharEscalaCompativel(escalasBusca, textoEscala);
     if (compativel) {
       escala = compativel.opcao;
       avisos.push(
