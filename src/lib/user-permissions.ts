@@ -108,6 +108,21 @@ export const AVAILABLE_PAGES = [
 
 export type PageKey = (typeof AVAILABLE_PAGES)[number]["key"];
 
+/**
+ * Categorias do menu lateral. Cada uma vira uma permissão própria
+ * ("categoria-operacional", etc.) para liberar o menu por usuário.
+ */
+export const SIDEBAR_CATEGORIES = [
+  { key: "categoria-comercial", label: "Comercial" },
+  { key: "categoria-departamento-pessoal", label: "Departamento pessoal" },
+  { key: "categoria-financeiro", label: "Financeiro" },
+  { key: "categoria-operacional", label: "Operacional" },
+  { key: "categoria-recursos-humanos", label: "Recursos humanos" },
+  { key: "categoria-suprimentos", label: "Suprimentos" },
+] as const;
+
+export type SidebarCategoryKey = (typeof SIDEBAR_CATEGORIES)[number]["key"];
+
 export type UserPermission = {
   pageKey: string;
   allowed: boolean;
@@ -237,10 +252,13 @@ export const minhasPermissoes = createServerFn({ method: "GET" })
       if (admin) {
         const { data: userData } = await admin.auth.admin.getUserById(context.userId);
         if (userData?.user?.email && isSuperAdmin(userData.user.email)) {
-          return AVAILABLE_PAGES.map((p: (typeof AVAILABLE_PAGES)[number]) => ({
-            pageKey: p.key,
-            allowed: true,
-          }));
+          return [
+            ...AVAILABLE_PAGES.map((p: (typeof AVAILABLE_PAGES)[number]) => ({
+              pageKey: p.key as string,
+              allowed: true,
+            })),
+            ...SIDEBAR_CATEGORIES.map((c) => ({ pageKey: c.key as string, allowed: true })),
+          ];
         }
 
         // Check if user has admin role - full access
@@ -251,18 +269,27 @@ export const minhasPermissoes = createServerFn({ method: "GET" })
           .maybeSingle();
 
         if (roleData?.role === "admin") {
-          return AVAILABLE_PAGES.map((p: (typeof AVAILABLE_PAGES)[number]) => ({
-            pageKey: p.key,
-            allowed: true,
-          }));
+          return [
+            ...AVAILABLE_PAGES.map((p: (typeof AVAILABLE_PAGES)[number]) => ({
+              pageKey: p.key as string,
+              allowed: true,
+            })),
+            ...SIDEBAR_CATEGORIES.map((c) => ({ pageKey: c.key as string, allowed: true })),
+          ];
         }
 
         // Supervisor: acesso exclusivo ao card Supervisor
         if (roleData?.role === "supervisor") {
-          return AVAILABLE_PAGES.map((p: (typeof AVAILABLE_PAGES)[number]) => ({
-            pageKey: p.key,
-            allowed: p.key === "supervisor",
-          }));
+          return [
+            ...AVAILABLE_PAGES.map((p: (typeof AVAILABLE_PAGES)[number]) => ({
+              pageKey: p.key as string,
+              allowed: p.key === "supervisor",
+            })),
+            ...SIDEBAR_CATEGORIES.map((c) => ({
+              pageKey: c.key as string,
+              allowed: c.key === "categoria-operacional",
+            })),
+          ];
         }
 
         const { data: perms, error } = await admin
