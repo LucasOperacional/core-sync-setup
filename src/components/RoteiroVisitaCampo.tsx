@@ -526,8 +526,12 @@ export function RoteiroVisitaCampo() {
       }
     },
     enabled: geo.status === "ok" && geo.latitude !== null && geo.longitude !== null,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
     retry: 1,
+    // Mantém a lista anterior na tela enquanto uma nova busca acontece.
+    placeholderData: (anterior) => anterior,
+    refetchOnWindowFocus: false,
   });
 
   // Gerente de área: só pode visitar os postos vinculados à área dele.
