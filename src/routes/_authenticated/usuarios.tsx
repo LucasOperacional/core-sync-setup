@@ -118,25 +118,6 @@ function formatDate(iso: string | null) {
   });
 }
 
-function categoriasVisiveisDoMenu(
-  user: UsuarioAdmin,
-  permissions: Record<string, UserPermission[]>,
-) {
-  if (isSuperAdmin(user.email) || user.role === "admin") {
-    return AVAILABLE_PAGES.map((page) => page.label);
-  }
-
-  if (user.role === "supervisor") {
-    const supervisorPage = AVAILABLE_PAGES.find((page) => page.key === "supervisor");
-    return supervisorPage ? [supervisorPage.label] : [];
-  }
-
-  const allowedKeys = new Set(
-    (permissions[user.id] ?? []).filter((permission) => permission.allowed).map((permission) => permission.pageKey),
-  );
-
-  return AVAILABLE_PAGES.filter((page) => allowedKeys.has(page.key)).map((page) => page.label);
-}
 
 function PasswordStrengthIndicator({ password }: { password: string }) {
   const checks = useMemo(() => {
@@ -417,11 +398,10 @@ function UsuariosPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Nome</TableHead>
+                    <TableHead>Nome</TableHead>
                       <TableHead>E-mail</TableHead>
                       <TableHead>Departamento</TableHead>
                       <TableHead>Papel</TableHead>
-                      <TableHead>Categorias no Sidebar</TableHead>
                       <TableHead>Criado em</TableHead>
                       <TableHead>Último login</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
@@ -456,24 +436,6 @@ function UsuariosPage() {
                               )}
                               {u.role}
                             </Badge>
-                          </TableCell>
-                          <TableCell className="min-w-56">
-                            {(() => {
-                              const categorias = categoriasVisiveisDoMenu(u, allPermissions);
-                              return categorias.length > 0 ? (
-                                <div className="flex max-w-md flex-wrap gap-1">
-                                  {categorias.map((categoria) => (
-                                    <Badge key={categoria} variant="outline" className="text-xs">
-                                      {categoria}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-sm text-muted-foreground">
-                                  Nenhuma categoria liberada
-                                </span>
-                              );
-                            })()}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {formatDate(u.createdAt)}
