@@ -256,6 +256,37 @@ export const listarRelatoriosRoteiroCoordenacao = createServerFn({ method: "GET"
     return { ok: true, erro: "", relatorios };
   });
 
+/** Informa se o usuário logado é administrador (superadmin). */
+export const souAdminRoteiro = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    return { admin: data === true };
+  });
+
+/** Apaga TODOS os relatórios de visita de campo. Somente administradores. */
+export const limparRelatoriosRoteiro = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: ehAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (ehAdmin !== true) return { ok: false, erro: "Apenas o superadmin pode limpar." };
+
+    const { error } = await context.supabase
+      .from("roteiros_visita_campo")
+      .delete()
+      .not("id", "is", null);
+    if (error) return { ok: false, erro: error.message };
+    return { ok: true, erro: "" };
+  });
+
+
+
 /* ------------------------------------------------------------------ */
 /* Postos NEXTI próximos à posição atual do supervisor                 */
 /* ------------------------------------------------------------------ */
