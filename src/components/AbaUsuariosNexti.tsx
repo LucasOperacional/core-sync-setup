@@ -276,6 +276,12 @@ export function AbaUsuariosNexti() {
               accept=".xlsx,.xls,.csv"
               onChange={processarArquivo}
             />
+            <Input
+              placeholder="Empresa (usada quando o arquivo não tiver essa coluna)"
+              value={empresaPadrao}
+              onChange={(e) => setEmpresaPadrao(e.target.value)}
+              aria-label="Empresa padrão do arquivo"
+            />
           </div>
           <Dialog open={previewAberto} onOpenChange={setPreviewAberto}>
             <DialogTrigger asChild>
