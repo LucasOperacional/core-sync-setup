@@ -569,16 +569,22 @@ function montarCadastro(
   );
   const cargo = acharOpcao(paraOpcoes(listas.cargosRaw), p.cargo);
   let posto = acharOpcao(paraOpcoes(listas.postosRaw), p.posto);
-  let escala = acharOpcao(paraOpcoes(listas.escalasRaw), p.escala);
+  let escala =
+    acharOpcao(paraOpcoes(listas.escalasRaw), p.escala) ??
+    acharOpcao(paraOpcoes(listas.escalasRaw), p.jornada);
 
-  if (limpar(p.escala) && !escala) {
+  // A escala da NEXTI costuma trazer o horário no nome; por isso a jornada
+  // ("09:00 as 18:00") entra junto da escala ("SEGUNDA A SABADO") na busca.
+  const textoEscala = [limpar(p.escala), limpar(p.jornada)].filter(Boolean).join(" ");
+
+  if (textoEscala && !escala) {
     // 0) código externo (matrícula) da escala informado direto na planilha.
     const termoEscala = normalizar(limpar(p.escala));
     const porCodigo = listas.escalasRaw.find(
       (item) => !!codigoExternoDe(item) && normalizar(codigoExternoDe(item)) === termoEscala,
     );
     // 1) horário exato; 2) escala mais compatível (horário + jornada + período + palavras).
-    const porHorario = porCodigo ? null : acharEscalaPorHorario(listas.escalasRaw, p.escala);
+    const porHorario = porCodigo ? null : acharEscalaPorHorario(listas.escalasRaw, textoEscala);
     const compativel = porCodigo
       ? {
           opcao: {
@@ -590,11 +596,11 @@ function montarCadastro(
         }
       : porHorario
         ? { opcao: porHorario, pontos: 99 }
-        : acharEscalaCompativel(listas.escalasRaw, p.escala);
+        : acharEscalaCompativel(listas.escalasRaw, textoEscala);
     if (compativel) {
       escala = compativel.opcao;
       avisos.push(
-        `Escala "${p.escala}" não existe com esse nome — usada a mais compatível: "${compativel.opcao.nome}".`,
+        `Escala "${textoEscala}" não existe com esse nome — usada a mais compatível: "${compativel.opcao.nome}".`,
       );
     }
   }
