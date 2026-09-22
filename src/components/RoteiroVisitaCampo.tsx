@@ -540,8 +540,12 @@ export function RoteiroVisitaCampo() {
     return new Set(vinculo.postos.map((p) => normalizarNome(p.nome)));
   }, [vinculo]);
 
-  const postosProximos = (proximos?.ok ? proximos.postos : []).filter(
-    (p) => !postosPermitidos || postosPermitidos.has(normalizarNome(p.nome)),
+  const postosProximos = useMemo(
+    () =>
+      (proximos?.ok ? proximos.postos : []).filter(
+        (p) => !postosPermitidos || postosPermitidos.has(normalizarNome(p.nome)),
+      ),
+    [proximos, postosPermitidos],
   );
   const mensagemErroProximos =
     proximos && !proximos.ok
