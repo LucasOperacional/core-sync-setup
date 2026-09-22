@@ -52,6 +52,30 @@ export function RelatoriosVisitaCoordenacaoCard() {
 
   const relatorios = data?.relatorios ?? [];
 
+  const verificarAdmin = useServerFn(souAdminRoteiro);
+  const { data: adminInfo } = useQuery({
+    queryKey: ["sou-admin-roteiro"],
+    queryFn: () => verificarAdmin(),
+    staleTime: 5 * 60_000,
+  });
+  const ehAdmin = adminInfo?.admin === true;
+
+  const queryClient = useQueryClient();
+  const limpar = useServerFn(limparRelatoriosRoteiro);
+  const limparMut = useMutation({
+    mutationFn: () => limpar(),
+    onSuccess: (r) => {
+      if (!r.ok) {
+        toast.error(r.erro || "Não foi possível limpar os relatórios.");
+        return;
+      }
+      toast.success("Todos os relatórios foram apagados.");
+      void queryClient.invalidateQueries({ queryKey: ["relatorios-roteiro-coordenacao"] });
+    },
+    onError: () => toast.error("Não foi possível limpar os relatórios."),
+  });
+
+
   return (
     <Card className="shadow-lg border-border/50">
       <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
