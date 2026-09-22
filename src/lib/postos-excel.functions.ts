@@ -206,10 +206,12 @@ export const analisarPostosExcel = createServerFn({ method: "POST" })
     }
 
     const porNome = new Map<string, Rec>();
+    const nomesNexti: { nome: string; posto: Rec }[] = [];
     for (const p of postos) {
       const nome = texto(escolher(p, ["name", "nome", "description", "workplaceName"]));
       if (!nome) continue;
       porNome.set(chaveNome(nome), p);
+      nomesNexti.push({ nome, posto: p });
     }
 
     const divergencias: DivergenciaPosto[] = [];
@@ -218,6 +220,36 @@ export const analisarPostosExcel = createServerFn({ method: "POST" })
     for (const linha of linhas) {
       const alvo = porNome.get(chaveNome(linha.posto));
       if (!alvo) {
+        // Nome exato não existe: procuramos o posto mais parecido na NEXTI.
+        let melhor: { nome: string; posto: Rec; nota: number } | null = null;
+        for (const item of nomesNexti) {
+          const nota = semelhancaNome(linha.posto, item.nome);
+          if (nota >= 70 && (!melhor || nota > melhor.nota)) {
+            melhor = { nome: item.nome, posto: item.posto, nota };
+          }
+        }
+        if (melhor) {
+          const idP = Number(escolher(melhor.posto, ["id", "nextiId", "workplaceId"]));
+          const vagasBrutoP = escolher(melhor.posto, [
+            "vacantJob",
+            "vacantJobs",
+            "vagas",
+            "vacancy",
+            "vacancies",
+          ]);
+          divergencias.push({
+            posto: linha.posto,
+            nextiId: Number.isFinite(idP) ? idP : null,
+            tipo: "semelhante",
+            empresaPlanilha: linha.empresa,
+            empresaNexti: texto(escolher(melhor.posto, ["companyName", "company", "empresa"])),
+            vagasPlanilha: linha.vagas,
+            vagasNexti: Number.isFinite(Number(vagasBrutoP)) ? Number(vagasBrutoP) : 0,
+            postoNexti: melhor.nome,
+            semelhanca: melhor.nota,
+          });
+          continue;
+        }
         divergencias.push({
           posto: linha.posto,
           nextiId: null,
