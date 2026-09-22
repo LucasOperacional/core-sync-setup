@@ -128,7 +128,10 @@ export function PostosExcelImportCard() {
   const [lendo, setLendo] = useState(false);
 
   const corrigiveis = useMemo(
-    () => (divergencias ?? []).filter((d) => d.nextiId != null && d.tipo !== "nao_encontrado"),
+    () =>
+      (divergencias ?? []).filter(
+        (d) => d.nextiId != null && d.tipo !== "nao_encontrado" && d.tipo !== "semelhante",
+      ),
     [divergencias],
   );
 
