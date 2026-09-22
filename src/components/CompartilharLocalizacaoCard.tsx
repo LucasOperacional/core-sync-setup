@@ -623,6 +623,15 @@ export function CompartilharLocalizacaoCard() {
             <Wifi className="size-3" />
             {rede}
           </span>
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+              segundoPlano
+                ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
+                : "border border-border bg-muted text-muted-foreground"
+            }`}
+          >
+            {segundoPlano ? "Segundo plano ativo" : "Segundo plano ligando…"}
+          </span>
           <button
             type="button"
             onClick={() => void atualizarAgora()}
