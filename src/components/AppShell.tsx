@@ -208,7 +208,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </ul>
               )}
             </>
-          )}
+          )
         )}
 
         {podeVerCategoria("categoria-suprimentos") && (
