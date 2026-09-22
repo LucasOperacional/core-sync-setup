@@ -51,7 +51,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSearch } from "@tanstack/react-router";
 import { nomeDoUsuario, useSessao } from "@/hooks/use-sessao";
 import { evolutionGoEnviarTexto } from "@/lib/evolution-go.functions";
-import { notificarInicioControl } from "@/lib/control-notificacao.functions";
+import { notificarFimControl, notificarInicioControl } from "@/lib/control-notificacao.functions";
 
 const OPCOES: { valor: RespostaValor; label: string; icon: typeof CheckCircle2; classe: string }[] =
   [
@@ -317,6 +317,7 @@ export function RoteiroVisitaCampo() {
 
   const enviarMensagemEvolution = useServerFn(evolutionGoEnviarTexto);
   const avisarInicioControl = useServerFn(notificarInicioControl);
+  const avisarFimControl = useServerFn(notificarFimControl);
 
   /** Avisa no WhatsApp de notificação que um control foi iniciado. */
   function avisarControlIniciado(nomePosto: string, idPosto: number) {
@@ -591,6 +592,23 @@ export function RoteiroVisitaCampo() {
       }),
     onSuccess: async (resultado) => {
       toast.success("Roteiro de visita registrado.");
+      void (async () => {
+        try {
+          await avisarFimControl({
+            data: {
+              postoNome: postoNexti?.nome ?? "",
+              percentual: resumo.percentual,
+              naoConformes: resumo.naoConformes,
+              duracaoSegundos:
+                inicioPreenchimento.current === null
+                  ? null
+                  : Math.max(0, Math.round((Date.now() - inicioPreenchimento.current) / 1000)),
+            },
+          });
+        } catch {
+          // o aviso não pode atrapalhar o envio do relatório
+        }
+      })();
       const roteiroId = (resultado as { id?: string } | undefined)?.id;
       if (roteiroId) {
         try {
