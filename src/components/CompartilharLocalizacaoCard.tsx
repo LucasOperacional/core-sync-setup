@@ -125,6 +125,8 @@ export function CompartilharLocalizacaoCard() {
   const ultimoEnvioOkRef = useRef<number>(0);
   const [fila, setFila] = useState<number>(0);
   const [atualizando, setAtualizando] = useState(false);
+  /** Envio em segundo plano ativo (funciona fora do site). */
+  const [segundoPlano, setSegundoPlano] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const verificarChegada = useServerFn(verificarChegadaPosto);
