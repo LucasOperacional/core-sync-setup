@@ -28,6 +28,8 @@ export type PessoaCadastro = {
   cargo?: string;
   posto?: string;
   escala?: string;
+  /** Descrição da jornada (horário) — usada para achar a escala na NEXTI. */
+  jornada?: string;
   mae?: string;
   pai?: string;
   rg?: string;
