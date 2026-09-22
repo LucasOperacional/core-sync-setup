@@ -111,6 +111,7 @@ function rotuloTipo(t: DivergenciaPosto["tipo"]): string {
   if (t === "empresa") return "Empresa diferente";
   if (t === "vagas") return "Vagas diferentes";
   if (t === "ambos") return "Empresa e vagas";
+  if (t === "semelhante") return "Nome parecido na NEXTI";
   return "Não existe na NEXTI";
 }
 
