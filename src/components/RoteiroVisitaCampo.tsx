@@ -712,10 +712,10 @@ export function RoteiroVisitaCampo() {
 
   // LÓGICA DE GEOFENCE AUTO (DENTRO DO PRÉDIO, POSTOS DA NEXTI)
   // Entrada só bem em cima do posto (60 m) e depois de permanecer parado ali por
-  // 90 s — assim quem só passa na porta ou perto não inicia a supervisão.
+  // 2 min — assim quem só passa na porta ou perto não inicia a supervisão.
   const RAIO_ENTRADA_KM = 0.06;
   const RAIO_SAIDA_KM = 0.09;
-  const PERMANENCIA_MS = 90_000;
+  const PERMANENCIA_MS = 120_000;
   const refEstado = useRef({ iniciadoEm, respostas, fotos, mutation });
   useEffect(() => {
     refEstado.current = { iniciadoEm, respostas, fotos, mutation };
