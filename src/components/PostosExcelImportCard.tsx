@@ -32,87 +32,128 @@ function acharColuna(cabecalho: string[], termos: string[]): number {
   });
 }
 
+/** Reconhece a empresa mesmo quando o nome vem abreviado no título da aba. */
+function reconhecerEmpresa(texto: string): string | null {
+  const v = chaveNome(texto ?? "");
+  if (v.length < 8) return null;
+  for (const e of EMPRESAS_PLANILHA) {
+    const k = chaveNome(e);
+    if (k === v || k.startsWith(v) || v.startsWith(k)) return e;
+  }
+  return null;
+}
+
+const POSTOS_IGNORAR = new Set(["TOTAL", "TOTAL GERAL", "POSTO", "SOMA"]);
+
 /**
- * Varre a planilha inteira (todas as abas e linhas). Reconhece cabeçalhos em
- * qualquer ponto do arquivo e, quando não houver cabeçalho, procura o nome da
- * empresa em qualquer coluna e usa o texto mais descritivo da linha como posto.
+ * Varre a planilha inteira (todas as abas e linhas). Aceita três formatos:
+ * 1) colunas Posto + Empresa (+ Vagas);
+ * 2) matriz: coluna Posto e uma coluna por função (PORTEIRO I, VIGIA, ...),
+ *    somando as funções ou usando "Total de vagas";
+ * 3) detalhamento: Posto | Vaga original | Quantidade de vagas (soma por posto).
+ * A empresa pode vir só no título da aba (ex.: "TEKTRON ADMINISTRACAO").
  */
 function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
   let cPosto = -1;
   let cEmpresa = -1;
-  let cVagas = -1;
+  let cTotal = -1;
+  let cQtd = -1;
+  let colunasCargo: number[] = [];
+  let empresaGlobal: string | null = null;
 
-  const achados = new Map<string, LinhaPlanilhaPosto>();
-  /** Quantas vezes o posto aparece na coluna POSTO (1 linha = 1 vaga). */
+  const nomes = new Map<string, LinhaPlanilhaPosto>();
+  /** Soma das quantidades por função (formato detalhamento). */
+  const somas = new Map<string, number>();
+  /** Total informado em linha única (formato matriz). */
+  const totais = new Map<string, number>();
+  /** Quantas vezes o posto aparece (fallback: 1 linha = 1 vaga). */
   const contagem = new Map<string, number>();
 
-  const guardar = (posto: string, empresa: string, vagas: number | null) => {
-    const chave = `${chaveNome(posto)}|${chaveNome(empresa)}`;
-    contagem.set(chave, (contagem.get(chave) ?? 0) + 1);
-    const atual = achados.get(chave);
-    if (atual && (atual.vagas ?? 0) >= (vagas ?? 0)) return;
-    achados.set(chave, { posto: posto.trim(), empresa: empresa.trim(), vagas });
+  const numero = (v: string | undefined) => {
+    const limpo = (v ?? "").replace(/[^\d-]/g, "");
+    return limpo === "" || limpo === "-" ? null : Number(limpo);
   };
 
   for (const bruta of linhas) {
     const linha = bruta ?? [];
     if (linha.every((c) => !(c ?? "").trim())) continue;
 
-    // Cabeçalho pode aparecer várias vezes (uma por aba).
-    const hPosto = acharColuna(linha, ["nome do posto", "posto", "local", "unidade", "workplace"]);
-    const hEmpresa = acharColuna(linha, ["empresa", "company", "filial", "razao social"]);
-    if (hPosto >= 0 && hEmpresa >= 0) {
+    // Título com o nome da empresa em qualquer célula.
+    for (const celula of linha) {
+      const emp = reconhecerEmpresa(celula ?? "");
+      if (emp) empresaGlobal = emp;
+    }
+
+    // Cabeçalho pode aparecer várias vezes (uma por aba / bloco).
+    const hPosto = linha.findIndex((c) => {
+      const v = chaveNome(c ?? "");
+      return v === "POSTO" || v === "NOME DO POSTO" || v === "LOCAL" || v === "UNIDADE";
+    });
+    if (hPosto >= 0) {
       cPosto = hPosto;
-      cEmpresa = hEmpresa;
-      cVagas = acharColuna(linha, [
-        "vaga",
-        "vagas",
-        "vacant",
-        "quantidade",
-        "qtd",
-        "efetivo",
-        "posto de trabalho",
-      ]);
+      cEmpresa = acharColuna(linha, ["empresa", "company", "filial", "razao social"]);
+      cTotal = linha.findIndex((c) => chaveNome(c ?? "").includes("TOTAL DE VAGAS"));
+      cQtd = linha.findIndex((c) => {
+        const v = chaveNome(c ?? "");
+        return v.includes("QUANTIDADE") || v === "QTD" || v === "QTDE";
+      });
+      colunasCargo = linha
+        .map((c, i) => ({ v: chaveNome(c ?? ""), i }))
+        .filter(
+          ({ v, i }) =>
+            v.length > 1 &&
+            i !== cPosto &&
+            i !== cEmpresa &&
+            i !== cTotal &&
+            i !== cQtd &&
+            !v.includes("VAGA ORIGINAL") &&
+            !v.includes("OBSERVAC"),
+        )
+        .map(({ i }) => i);
       continue;
     }
 
-    const numero = (v: string | undefined) => {
-      const limpo = (v ?? "").replace(/\D/g, "");
-      return limpo === "" ? null : Number(limpo);
-    };
+    if (cPosto < 0) continue;
 
-    // 1) Colunas identificadas pelo cabeçalho.
-    if (cPosto >= 0 && cEmpresa >= 0) {
-      const posto = (linha[cPosto] ?? "").trim();
-      const empresa = (linha[cEmpresa] ?? "").trim();
-      if (posto && empresa && EMPRESAS_CHAVE.has(chaveNome(empresa))) {
-        guardar(posto, empresa, cVagas >= 0 ? numero(linha[cVagas]) : null);
-        continue;
+    const posto = (linha[cPosto] ?? "").trim();
+    if (!posto || POSTOS_IGNORAR.has(chaveNome(posto))) continue;
+
+    const empresa =
+      (cEmpresa >= 0 ? reconhecerEmpresa(linha[cEmpresa] ?? "") : null) ?? empresaGlobal;
+    if (!empresa) continue;
+
+    const chave = `${chaveNome(posto)}|${chaveNome(empresa)}`;
+    if (!nomes.has(chave)) nomes.set(chave, { posto, empresa, vagas: null });
+    contagem.set(chave, (contagem.get(chave) ?? 0) + 1);
+
+    if (cQtd >= 0) {
+      const q = numero(linha[cQtd]);
+      if (q != null) somas.set(chave, (somas.get(chave) ?? 0) + q);
+      continue;
+    }
+
+    let total = cTotal >= 0 ? numero(linha[cTotal]) : null;
+    if (total == null && colunasCargo.length > 0) {
+      let soma = 0;
+      let achou = false;
+      for (const i of colunasCargo) {
+        const n = numero(linha[i]);
+        if (n != null) {
+          soma += n;
+          achou = true;
+        }
       }
+      total = achou ? soma : null;
     }
-
-    // 2) Sem cabeçalho: procura a empresa em qualquer coluna da linha.
-    const idxEmpresa = linha.findIndex((c) => EMPRESAS_CHAVE.has(chaveNome(c ?? "")));
-    if (idxEmpresa < 0) continue;
-    const empresa = (linha[idxEmpresa] ?? "").trim();
-    let posto = "";
-    for (let j = 0; j < linha.length; j++) {
-      if (j === idxEmpresa) continue;
-      const valor = (linha[j] ?? "").trim();
-      if (valor.length < 3) continue;
-      if (!/[A-Za-zÀ-ÿ]/.test(valor)) continue;
-      if (EMPRESAS_CHAVE.has(chaveNome(valor))) continue;
-      if (valor.length > posto.length) posto = valor;
-    }
-    if (posto) guardar(posto, empresa, null);
+    if (total != null) totais.set(chave, Math.max(totais.get(chave) ?? 0, total));
   }
 
-  // Sem coluna de vagas: cada linha da coluna POSTO vale uma vaga.
-  return [...achados.entries()].map(([chave, item]) => ({
+  return [...nomes.entries()].map(([chave, item]) => ({
     ...item,
-    vagas: item.vagas ?? contagem.get(chave) ?? null,
+    vagas: Math.max(somas.get(chave) ?? 0, totais.get(chave) ?? 0) || contagem.get(chave) || null,
   }));
 }
+
 
 function rotuloTipo(t: DivergenciaPosto["tipo"]): string {
   if (t === "empresa") return "Empresa diferente";
