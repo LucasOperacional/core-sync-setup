@@ -636,8 +636,14 @@ function montarCadastro(
     const porCodigo = escalasBusca.find(
       (item) => !!codigoExternoDe(item) && normalizar(codigoExternoDe(item)) === termoEscala,
     );
-    // 1) horário exato; 2) escala mais compatível (horário + jornada + período + palavras).
-    const porHorario = porCodigo ? null : acharEscalaPorHorario(escalasBusca, textoEscala);
+    // 1) escala noturna 19:00 às 07:00 com intervalo de 20 minutos;
+    // 2) horário exato; 3) escala mais compatível (horário + jornada + período + palavras).
+    const noturnaIntervalo = porCodigo
+      ? null
+      : (acharEscalaNoturnaIntervalo(escalasBusca, textoEscala) ??
+        acharEscalaNoturnaIntervalo(listas.escalasRaw, textoEscala));
+    const porHorario =
+      porCodigo || noturnaIntervalo ? null : acharEscalaPorHorario(escalasBusca, textoEscala);
     const compativel = porCodigo
       ? {
           opcao: {
@@ -647,9 +653,11 @@ function montarCadastro(
           } as OpcaoNexti,
           pontos: 100,
         }
-      : porHorario
-        ? { opcao: porHorario, pontos: 99 }
-        : acharEscalaCompativel(escalasBusca, textoEscala);
+      : noturnaIntervalo
+        ? { opcao: noturnaIntervalo, pontos: 100 }
+        : porHorario
+          ? { opcao: porHorario, pontos: 99 }
+          : acharEscalaCompativel(escalasBusca, textoEscala);
     if (compativel) {
       escala = compativel.opcao;
       avisos.push(
