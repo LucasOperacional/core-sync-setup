@@ -152,6 +152,8 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
     const chave = `${chaveNome(posto)}|${chaveNome(empresa)}`;
     if (!nomes.has(chave)) nomes.set(chave, { posto, empresa, vagas: null });
     contagem.set(chave, (contagem.get(chave) ?? 0) + 1);
+    if (temVagas) comVagas.add(chave);
+
 
     if (cQtd >= 0) {
       const q = numero(linha[cQtd]);
