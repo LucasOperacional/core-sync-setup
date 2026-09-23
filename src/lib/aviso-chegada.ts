@@ -15,7 +15,7 @@ export async function pedirPermissaoAviso(): Promise<void> {
 export async function avisarNoCelular(titulo: string, texto: string): Promise<void> {
   if (typeof window === "undefined" || !("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
-  const opcoes: NotificationOptions = { body: texto, icon: "/favicon.ico", tag: "chegada-posto" };
+  const opcoes: NotificationOptions = { body: texto, tag: "chegada-posto" };
   try {
     if ("serviceWorker" in navigator) {
       const registro = await navigator.serviceWorker.ready;

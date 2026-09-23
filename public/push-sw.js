@@ -54,7 +54,6 @@ self.addEventListener("push", (evento) => {
   };
 
   if (typeof dados.icon === "string" && dados.icon.startsWith("/")) opcoes.icon = dados.icon;
-  else opcoes.icon = "/icons/icon-192.png";
   if (typeof dados.badge === "string" && dados.badge.startsWith("/")) opcoes.badge = dados.badge;
 
   evento.waitUntil(self.registration.showNotification(titulo, opcoes));
