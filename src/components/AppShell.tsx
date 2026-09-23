@@ -62,14 +62,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const navigation = (
     <>
-      <div className="flex h-20 shrink-0 items-center border-b border-sidebar-border px-4">
+      <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-4">
         <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="NXS — página inicial">
-          <span className="grid size-9 shrink-0 place-items-center rounded-md bg-sidebar-primary font-display text-sm font-bold text-sidebar-primary-foreground">N</span>
+          <span className="grid size-8 shrink-0 place-items-center rounded-md bg-sidebar-primary font-display text-sm font-bold text-sidebar-primary-foreground shadow-xs">N</span>
           {!recolhida && <span className="truncate font-display text-base font-bold text-sidebar-foreground">NXS SISTEMAS</span>}
         </Link>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Navegação principal">
-        {!recolhida && <p className="px-3 pb-2 text-[10px] font-semibold uppercase text-sidebar-foreground/45">Principal</p>}
+        {!recolhida && <p className="px-3 pb-2 text-[10px] font-semibold uppercase text-sidebar-foreground/45">Menu principal</p>}
         {inicioItem && (
           <Link
             to="/"
@@ -245,10 +245,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className={cn("app-shell min-h-screen", recolhida ? "lg:pl-16" : "lg:pl-68")}>
-      <aside className={cn("fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-sidebar-border bg-sidebar lg:flex", recolhida ? "w-16" : "w-68")}>
+    <div className={cn("app-shell min-h-screen", recolhida ? "lg:pl-16" : "lg:pl-64")}>
+      <aside className={cn("fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-sidebar-border bg-sidebar shadow-panel lg:flex", recolhida ? "w-16" : "w-64")}>
         {navigation}
-        <Button variant="ghost" size="icon" onClick={alternar} className="absolute -right-4 top-20 size-8 rounded-full border bg-background shadow-xs" title={recolhida ? "Expandir menu" : "Recolher menu"}>
+        <Button variant="ghost" size="icon" onClick={alternar} className="absolute -right-4 top-16 size-8 rounded-full border bg-background shadow-xs" title={recolhida ? "Expandir menu" : "Recolher menu"}>
           {recolhida ? <PanelLeftOpen /> : <PanelLeftClose />}
         </Button>
       </aside>

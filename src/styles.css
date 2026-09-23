@@ -72,72 +72,72 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ─── Tema claro: azul-petróleo + coral ─── */
+/* ─── Azul confiança: interface corporativa clara ─── */
 :root {
   --radius: 0.5rem;
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
 
-  --background: oklch(0.9736 0.0034 174.48);
-  --foreground: oklch(0.3034 0.0409 213.31);
+  --background: oklch(0.982 0.004 250);
+  --foreground: oklch(0.22 0.055 259);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.3034 0.0409 213.31);
+  --card-foreground: oklch(0.22 0.055 259);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.3034 0.0409 213.31);
-  --primary: oklch(0.6541 0.1763 30.28);
+  --popover-foreground: oklch(0.22 0.055 259);
+  --primary: oklch(0.52 0.105 250);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.943 0.009 197);
-  --secondary-foreground: oklch(0.3034 0.0409 213.31);
-  --muted: oklch(0.945 0.006 190);
-  --muted-foreground: oklch(0.49 0.025 213);
-  --accent: oklch(0.928 0.023 31);
-  --accent-foreground: oklch(0.48 0.14 30);
+  --secondary: oklch(0.955 0.009 250);
+  --secondary-foreground: oklch(0.28 0.06 255);
+  --muted: oklch(0.958 0.006 250);
+  --muted-foreground: oklch(0.5 0.025 250);
+  --accent: oklch(0.94 0.025 250);
+  --accent-foreground: oklch(0.34 0.075 252);
   --destructive: oklch(0.54 0.205 24);
   --destructive-foreground: oklch(1 0 0);
   --success: oklch(0.6 0.17 145);
   --success-foreground: oklch(1 0 0);
   --warning: oklch(0.62 0.15 75);
   --warning-foreground: oklch(0.2 0.03 75);
-  --info: oklch(0.55 0.1 245);
+  --info: oklch(0.52 0.105 250);
   --info-foreground: oklch(1 0 0);
-  --border: oklch(0.897 0.008 197);
-  --input: oklch(0.85 0.013 197);
-  --ring: oklch(0.3034 0.0409 213.31);
-  --chart-1: oklch(0.6541 0.1763 30.28);
-  --chart-2: oklch(0.55 0.105 197);
+  --border: oklch(0.91 0.01 250);
+  --input: oklch(0.86 0.016 250);
+  --ring: oklch(0.52 0.105 250);
+  --chart-1: oklch(0.52 0.105 250);
+  --chart-2: oklch(0.42 0.08 252);
   --chart-3: oklch(0.66 0.145 145);
   --chart-4: oklch(0.7 0.13 75);
   --chart-5: oklch(0.56 0.1 245);
-  --sidebar: oklch(0.3034 0.0409 213.31);
-  --sidebar-foreground: oklch(0.9736 0.0034 174.48);
-  --sidebar-primary: oklch(0.6541 0.1763 30.28);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.28 0.04 255);
+  --sidebar-primary: oklch(0.52 0.105 250);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.38 0.043 213);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.42 0.04 213);
-  --sidebar-ring: oklch(0.6541 0.1763 30.28);
+  --sidebar-accent: oklch(0.95 0.022 250);
+  --sidebar-accent-foreground: oklch(0.38 0.09 250);
+  --sidebar-border: oklch(0.91 0.01 250);
+  --sidebar-ring: oklch(0.52 0.105 250);
 
   --gradient-hero: var(--card);
-  --shadow-panel: 0 1px 3px oklch(0.3034 0.0409 213.31 / 0.08);
-  --shadow-glow: 0 8px 24px oklch(0.3034 0.0409 213.31 / 0.1);
+  --shadow-panel: 0 1px 3px oklch(0.22 0.055 259 / 0.08);
+  --shadow-glow: 0 8px 24px oklch(0.22 0.055 259 / 0.1);
 }
 
-/* ─── Tema escuro: preto + coral ─── */
+/* ─── Azul confiança: interface corporativa escura ─── */
 .dark {
-  --background: oklch(0.08 0 0);
-  --foreground: oklch(0.94 0 0);
-  --card: oklch(0.12 0 0);
-  --card-foreground: oklch(0.94 0 0);
-  --popover: oklch(0.14 0 0);
-  --popover-foreground: oklch(0.94 0 0);
-  --primary: oklch(0.68 0.17 30.28);
+  --background: oklch(0.16 0.025 258);
+  --foreground: oklch(0.94 0.012 250);
+  --card: oklch(0.205 0.03 258);
+  --card-foreground: oklch(0.94 0.012 250);
+  --popover: oklch(0.22 0.032 258);
+  --popover-foreground: oklch(0.94 0.012 250);
+  --primary: oklch(0.66 0.12 248);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.18 0 0);
-  --secondary-foreground: oklch(0.92 0 0);
-  --muted: oklch(0.16 0 0);
-  --muted-foreground: oklch(0.72 0 0);
-  --accent: oklch(0.34 0.05 30);
-  --accent-foreground: oklch(0.96 0.008 30);
+  --secondary: oklch(0.26 0.035 258);
+  --secondary-foreground: oklch(0.92 0.012 250);
+  --muted: oklch(0.245 0.025 258);
+  --muted-foreground: oklch(0.7 0.025 250);
+  --accent: oklch(0.31 0.06 252);
+  --accent-foreground: oklch(0.96 0.01 250);
   --destructive: oklch(0.61 0.21 24);
   --destructive-foreground: oklch(1 0 0);
   --success: oklch(0.7 0.18 145);
@@ -148,20 +148,20 @@
   --info-foreground: oklch(0.14 0.01 245);
   --border: oklch(0.25 0 0);
   --input: oklch(0.22 0 0);
-  --ring: oklch(0.68 0.17 30.28);
+  --ring: oklch(0.66 0.12 248);
   --chart-1: oklch(0.6 0.22 27);
   --chart-2: oklch(0.72 0.18 27);
   --chart-3: oklch(0.48 0.18 27);
   --chart-4: oklch(0.68 0.14 27);
   --chart-5: oklch(0.82 0.1 27);
-  --sidebar: oklch(0.08 0 0);
-  --sidebar-foreground: oklch(0.94 0 0);
-  --sidebar-primary: oklch(0.68 0.17 30.28);
+  --sidebar: oklch(0.185 0.032 258);
+  --sidebar-foreground: oklch(0.94 0.012 250);
+  --sidebar-primary: oklch(0.66 0.12 248);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.15 0 0);
-  --sidebar-accent-foreground: oklch(0.97 0 0);
-  --sidebar-border: oklch(0.25 0 0);
-  --sidebar-ring: oklch(0.68 0.17 30.28);
+  --sidebar-accent: oklch(0.27 0.048 255);
+  --sidebar-accent-foreground: oklch(0.97 0.008 250);
+  --sidebar-border: oklch(0.29 0.035 258);
+  --sidebar-ring: oklch(0.66 0.12 248);
 
   --gradient-hero: var(--card);
   --shadow-panel: 0 1px 2px oklch(0 0 0 / 0.4);
@@ -202,28 +202,6 @@
 }
 
 @layer components {
-  .usuarios-workspace {
-    --primary: oklch(0.6478 0.1309 157.91);
-    --ring: oklch(0.6478 0.1309 157.91);
-    font-family: "Manrope", var(--font-body);
-  }
-
-  .usuarios-workspace h1,
-  .usuarios-workspace h2,
-  .usuarios-workspace h3,
-  .usuarios-workspace h4,
-  .usuarios-workspace [data-slot="card-title"] {
-    font-family: "Sora", var(--font-display);
-  }
-
-  .dark .usuarios-workspace {
-    --background: oklch(0.1631 0.0077 163.85);
-    --card: oklch(0.2341 0.0139 163.48);
-    --popover: oklch(0.2341 0.0139 163.48);
-    --primary: oklch(0.6478 0.1309 157.91);
-    --ring: oklch(0.6478 0.1309 157.91);
-  }
-
   .app-shell,
   .app-shell aside,
   .app-workspace {
@@ -235,6 +213,16 @@
     min-height: 100vh;
     background-color: var(--color-background);
     padding-bottom: 3rem;
+  }
+
+  .app-workspace [data-slot="card"],
+  .app-workspace .panel {
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-panel);
+  }
+
+  .app-workspace [data-slot="card-header"] {
+    border-bottom: 1px solid var(--color-border);
   }
 
   .app-workspace > main > header,
