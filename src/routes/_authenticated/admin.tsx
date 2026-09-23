@@ -11,6 +11,7 @@ import {
   Users,
   ShieldCheck,
   ArrowRight,
+  ChevronDown,
   Trash2,
   Loader2,
   Home,
@@ -23,9 +24,6 @@ import { ImportPdfCard } from "@/components/ImportPdfCard";
 import { ImportFaltasCard } from "@/components/ImportFaltasCard";
 import { ImportAtestadosCard } from "@/components/ImportAtestadosCard";
 import { CentralArquivosDashboards } from "@/components/CentralArquivosDashboards";
-import { MonitoramentoIntegracaoCard } from "@/components/MonitoramentoIntegracaoCard";
-import { MonitorCentralCard } from "@/components/MonitorCentralCard";
-import { AtualizacaoProjetoCard } from "@/components/AtualizacaoProjetoCard";
 import { DominioEmailCard } from "@/components/DominioEmailCard";
 import { BackupCompletoCard } from "@/components/BackupCompletoCard";
 import { EmailVagasCard } from "@/components/EmailVagasCard";
@@ -303,99 +301,146 @@ function AdminPage() {
         </p>
       </header>
 
-      <div className="mx-auto max-w-6xl space-y-8 px-6 py-10">
-        {/* Botão Zerar Todos os Dados */}
-        <div className="flex items-center justify-between rounded-xl border border-destructive/30 bg-destructive/5 p-5">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">
-              Zerar Todos os Dados Importados
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Apaga todas as visitas, faltas, atestados, arquivos da Central e dados do storage.
-              Essa ação não pode ser desfeita.
-            </p>
+      <div className="mx-auto max-w-6xl space-y-10 px-6 py-10">
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Módulos
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {links.map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                className="group relative flex cursor-pointer flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+              >
+                <img
+                  src={ciopLogo}
+                  alt=""
+                  aria-hidden
+                  className="absolute right-4 top-4 size-8 opacity-70 transition-opacity group-hover:opacity-100"
+                />
+                <div className="flex size-11 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+                  <l.icon className="size-5" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-semibold text-card-foreground">{l.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{l.desc}</p>
+                </div>
+                <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+                  Acessar
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                </span>
+              </Link>
+            ))}
           </div>
-          <button
-            type="button"
-            disabled={resetting}
-            onClick={() => void handleResetAll()}
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-destructive px-5 py-2.5 text-sm font-semibold text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Comunicação e configurações
+          </h2>
+          <SecaoRecolhivel titulo="WhatsApp" descricao="Configuração do Evolution Go.">
+            <WhatsAppAdminCard />
+          </SecaoRecolhivel>
+          <SecaoRecolhivel titulo="Domínio de e-mail" descricao="Remetente e verificação.">
+            <DominioEmailCard />
+          </SecaoRecolhivel>
+          <SecaoRecolhivel titulo="E-mail de vagas" descricao="Envio das vagas aprovadas.">
+            <EmailVagasCard />
+          </SecaoRecolhivel>
+          <SecaoRecolhivel titulo="Backup completo" descricao="Cópia de segurança do sistema.">
+            <BackupCompletoCard />
+          </SecaoRecolhivel>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Importações e arquivos
+          </h2>
+          <SecaoRecolhivel titulo="Importar visitas (PDF)" descricao="Sincroniza com o Control.">
+            <ImportPdfCard onVisitsImported={handleImportedVisits} currentCount={visits.length} />
+          </SecaoRecolhivel>
+          <SecaoRecolhivel titulo="Importar faltas" descricao="Sincroniza com o painel de faltas.">
+            <ImportFaltasCard />
+          </SecaoRecolhivel>
+          <SecaoRecolhivel
+            titulo="Importar atestados"
+            descricao="Sincroniza com o painel de atestados."
           >
-            {resetting ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Apagando...
-              </>
-            ) : (
-              <>
-                <Trash2 className="size-4" />
-                Zerar Tudo
-              </>
-            )}
-          </button>
-        </div>
+            <ImportAtestadosCard />
+          </SecaoRecolhivel>
+          <SecaoRecolhivel titulo="Central de arquivos" descricao="Arquivos dos dashboards.">
+            <CentralArquivosDashboards />
+          </SecaoRecolhivel>
+        </section>
 
-        {/* WhatsApp — engloba a configuração do Evolution Go */}
-        <WhatsAppAdminCard />
-
-        {/* Backup completo do sistema */}
-        <BackupCompletoCard />
-
-        {/* Configuração do domínio de e-mail */}
-        <DominioEmailCard />
-
-        {/* Card de e-mail das vagas aprovadas */}
-        <EmailVagasCard />
-
-        {/* Recebimento de atualizações do projeto em .zip */}
-        <AtualizacaoProjetoCard />
-
-        {/* Card de Importar PDF — sincroniza com o dashboard Control */}
-        <ImportPdfCard onVisitsImported={handleImportedVisits} currentCount={visits.length} />
-
-        {/* Card de Importar Faltas — sincroniza com o Dashboard de Faltas */}
-        <ImportFaltasCard />
-
-        {/* Card de Importar Atestados — sincroniza com o Dashboard de Atestados */}
-        <ImportAtestadosCard />
-
-        {/* Central de Arquivos dos Dashboards */}
-        <CentralArquivosDashboards />
-
-        {/* Monitoramento online / token de integração */}
-        <MonitoramentoIntegracaoCard />
-
-        {/* Integração com o painel central Lovable Monitor */}
-        <MonitorCentralCard />
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {links.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition-all hover:scale-[1.02] hover:shadow-lg"
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Zona de risco
+          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+            <div>
+              <h3 className="text-base font-semibold text-foreground">
+                Zerar todos os dados importados
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Apaga todas as visitas, faltas, atestados, arquivos da Central e dados do storage.
+                Essa ação não pode ser desfeita.
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={resetting}
+              onClick={() => void handleResetAll()}
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-destructive px-5 py-2.5 text-sm font-semibold text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              <img
-                src={ciopLogo}
-                alt=""
-                aria-hidden
-                className="absolute right-4 top-4 size-8 opacity-70 transition-opacity group-hover:opacity-100"
-              />
-              <div className="flex size-11 items-center justify-center rounded-xl bg-accent text-accent-foreground">
-                <l.icon className="size-5" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-base font-semibold text-card-foreground">{l.title}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{l.desc}</p>
-              </div>
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
-                Acessar
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-              </span>
-            </Link>
-          ))}
-        </div>
+              {resetting ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Apagando...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="size-4" />
+                  Zerar tudo
+                </>
+              )}
+            </button>
+          </div>
+        </section>
       </div>
     </main>
+  );
+}
+
+function SecaoRecolhivel({
+  titulo,
+  descricao,
+  children,
+}: {
+  titulo: string;
+  descricao: string;
+  children: React.ReactNode;
+}) {
+  const [aberto, setAberto] = useState(false);
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        aria-expanded={aberto}
+        className="flex w-full cursor-pointer items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-accent/50"
+      >
+        <span>
+          <span className="block text-base font-semibold text-card-foreground">{titulo}</span>
+          <span className="mt-0.5 block text-sm text-muted-foreground">{descricao}</span>
+        </span>
+        <ChevronDown
+          className={`size-5 shrink-0 text-muted-foreground transition-transform ${aberto ? "rotate-180" : ""}`}
+        />
+      </button>
+      {aberto ? <div className="border-t border-border p-5">{children}</div> : null}
+    </div>
   );
 }
