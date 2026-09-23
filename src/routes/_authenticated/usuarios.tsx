@@ -1,7 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import {
-  Home,
   Users,
   Plus,
   Shield,
@@ -14,6 +13,9 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle2,
+  Search,
+  UserCheck,
+  CalendarPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,11 +81,15 @@ import { useSessao } from "@/hooks/use-sessao";
 export const Route = createFileRoute("/_authenticated/usuarios")({
   head: () => ({
     meta: [
-      { title: "Usuários" },
+      { title: "Usuários | NXS GESTÃO" },
       {
         name: "description",
         content: "Gerenciamento de usuários e permissões.",
       },
+      { property: "og:title", content: "Usuários | NXS GESTÃO" },
+      { property: "og:description", content: "Gerenciamento de usuários e permissões do NXS GESTÃO." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: UsuariosPage,
@@ -154,6 +160,7 @@ function UsuariosPage() {
   const [usuarios, setUsuarios] = useState<UsuarioAdmin[]>([]);
   const [allPermissions, setAllPermissions] = useState<Record<string, UserPermission[]>>({});
   const [loading, setLoading] = useState(true);
+  const [busca, setBusca] = useState("");
 
   // Create user
   const [showCreate, setShowCreate] = useState(false);
@@ -191,6 +198,30 @@ function UsuariosPage() {
   const isPasswordStrong = STRONG_PASSWORD_REGEX.test(newSenha);
   const canCreate =
     newFullName.trim().length > 0 && isEmailValid && isPasswordStrong && newDepartment.length > 0;
+
+  const usuariosFiltrados = useMemo(() => {
+    const termo = busca.trim().toLocaleLowerCase("pt-BR");
+    if (!termo) return usuarios;
+    return usuarios.filter((usuario) =>
+      [usuario.fullName, usuario.email, usuario.department, usuario.role]
+        .filter(Boolean)
+        .some((valor) => String(valor).toLocaleLowerCase("pt-BR").includes(termo)),
+    );
+  }, [busca, usuarios]);
+
+  const totalAdministradores = useMemo(
+    () => usuarios.filter((usuario) => usuario.role === "admin").length,
+    [usuarios],
+  );
+
+  const novosUltimos30Dias = useMemo(() => {
+    const limite = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    return usuarios.filter((usuario) => {
+      if (!usuario.createdAt) return false;
+      const criadoEm = new Date(usuario.createdAt).getTime();
+      return Number.isFinite(criadoEm) && criadoEm >= limite;
+    }).length;
+  }, [usuarios]);
 
   async function fetchData() {
     try {
@@ -344,46 +375,74 @@ function UsuariosPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-6 py-10">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
-            <Home className="size-4" />
-            Painel Inicial
-          </Link>
-          <Users className="size-7 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Usuários</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Gerenciamento de permissões e acessos.
-            </p>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        <SolicitacoesAcessoCard onDecidido={() => void fetchData()} />
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-xl font-semibold">Usuários cadastrados</CardTitle>
+    <main className="usuarios-workspace min-h-screen bg-background">
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-6 sm:px-6">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-3">
+              <span className="grid size-10 place-items-center rounded-md bg-primary/12 text-primary">
+                <Users className="size-5" />
+              </span>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Gestão de Usuários</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Gerencie permissões e visualize os acessos do sistema.</p>
+              </div>
+            </div>
             {souSuperAdmin && (
-              <Button
-                onClick={() => {
-                  resetCreateForm();
-                  setShowCreate(true);
-                }}
-                size="sm"
-              >
+              <Button onClick={() => { resetCreateForm(); setShowCreate(true); }} size="sm">
                 <Plus className="mr-1.5 size-4" />
                 Novo Usuário
               </Button>
             )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-md border border-border bg-background/55 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Usuários cadastrados</p>
+                <UserCheck className="size-4 text-primary" />
+              </div>
+              <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{loading ? "—" : usuarios.length}</p>
+            </div>
+            <div className="rounded-md border border-border bg-background/55 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Administradores</p>
+                <ShieldCheck className="size-4 text-primary" />
+              </div>
+              <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{loading ? "—" : totalAdministradores}</p>
+            </div>
+            <div className="rounded-md border border-border bg-primary/6 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Novos nos últimos 30 dias</p>
+                <CalendarPlus className="size-4 text-primary" />
+              </div>
+              <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{loading ? "—" : novosUltimos30Dias}</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        <SolicitacoesAcessoCard onDecidido={() => void fetchData()} />
+
+        <Card className="overflow-hidden shadow-panel">
+          <CardHeader className="flex flex-col gap-4 border-b border-border bg-muted/20 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+            <div>
+              <CardTitle className="text-base font-semibold">Usuários cadastrados</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">Consulte dados e gerencie acessos em um só lugar.</p>
+            </div>
+            <div className="relative w-full sm:max-w-sm">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={busca}
+                onChange={(event) => setBusca(event.target.value)}
+                placeholder="Buscar nome, e-mail ou departamento"
+                aria-label="Buscar usuários"
+                className="bg-background pl-9"
+              />
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="size-8 animate-spin text-muted-foreground" />
@@ -394,9 +453,9 @@ function UsuariosPage() {
                 <p className="text-sm text-muted-foreground">Nenhum usuário encontrado.</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="max-h-[62vh] overflow-auto">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
                     <TableHead>Nome</TableHead>
                       <TableHead>E-mail</TableHead>
@@ -408,11 +467,18 @@ function UsuariosPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {usuarios.map((u) => {
+                    {usuariosFiltrados.map((u) => {
                       const isSuper = isSuperAdmin(u.email);
                       return (
-                        <TableRow key={u.id}>
-                          <TableCell className="font-medium">{u.fullName || "—"}</TableCell>
+                        <TableRow key={u.id} className="transition-colors hover:bg-muted/35">
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-3">
+                              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                                {(u.fullName || u.email).trim().slice(0, 1).toUpperCase()}
+                              </span>
+                              <span>{u.fullName || "—"}</span>
+                            </div>
+                          </TableCell>
                           <TableCell>
                             {u.email}
                             {isSuper && (
@@ -493,6 +559,13 @@ function UsuariosPage() {
                         </TableRow>
                       );
                     })}
+                    {usuariosFiltrados.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="py-12 text-center text-sm text-muted-foreground">
+                          Nenhum usuário encontrado para “{busca}”.
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>

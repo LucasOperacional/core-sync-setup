@@ -71,33 +71,33 @@ export function SolicitacoesAcessoCard({ onDecidido }: Props) {
   const decididas = itens.filter((i) => i.status !== "pendente").slice(0, 5);
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+    <Card className="mb-4 overflow-hidden shadow-panel">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border bg-muted/20 py-4">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold">
           <BellRing className="size-5 text-primary" />
           Solicitações de acesso
           {pendentes.length > 0 && (
-            <Badge variant="destructive">{pendentes.length} pendente(s)</Badge>
+            <Badge variant="destructive">{pendentes.length}</Badge>
           )}
         </CardTitle>
         <Button size="sm" variant="outline" onClick={() => void carregar()} disabled={carregando}>
           Atualizar
         </Button>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 p-4">
         {carregando ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />
           </div>
         ) : pendentes.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-border bg-secondary/40 p-4 text-sm text-muted-foreground">
+          <p className="rounded-md border border-dashed border-border bg-background/45 p-3 text-sm text-muted-foreground">
             Nenhuma solicitação aguardando aprovação.
           </p>
         ) : (
           pendentes.map((item) => (
             <div
               key={item.id}
-              className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 rounded-md border border-border bg-background/45 p-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
                 <p className="truncate font-medium text-foreground">{item.nome || item.email}</p>
@@ -140,8 +140,8 @@ export function SolicitacoesAcessoCard({ onDecidido }: Props) {
         )}
 
         {decididas.length > 0 && (
-          <div className="pt-2">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="border-t border-border pt-3">
+            <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
               Últimas decisões
             </p>
             <ul className="space-y-1 text-sm text-muted-foreground">

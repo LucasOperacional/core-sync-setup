@@ -202,6 +202,28 @@
 }
 
 @layer components {
+  .usuarios-workspace {
+    --primary: oklch(0.6478 0.1309 157.91);
+    --ring: oklch(0.6478 0.1309 157.91);
+    font-family: "Manrope", var(--font-body);
+  }
+
+  .usuarios-workspace h1,
+  .usuarios-workspace h2,
+  .usuarios-workspace h3,
+  .usuarios-workspace h4,
+  .usuarios-workspace [data-slot="card-title"] {
+    font-family: "Sora", var(--font-display);
+  }
+
+  .dark .usuarios-workspace {
+    --background: oklch(0.1631 0.0077 163.85);
+    --card: oklch(0.2341 0.0139 163.48);
+    --popover: oklch(0.2341 0.0139 163.48);
+    --primary: oklch(0.6478 0.1309 157.91);
+    --ring: oklch(0.6478 0.1309 157.91);
+  }
+
   .app-shell,
   .app-shell aside,
   .app-workspace {
