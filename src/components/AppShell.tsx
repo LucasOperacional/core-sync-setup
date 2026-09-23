@@ -185,6 +185,33 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
         )}
 
+        {podeVerCategoria("categoria-departamento-pessoal") && dpAberta && podeVer("/ponto") && (
+          <ul className="mt-1 space-y-0.5">
+            {itensPonto.map((item) => {
+              const selecionado = caminho === item.to;
+              return (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    title={recolhida ? item.label : undefined}
+                    aria-current={selecionado ? "page" : undefined}
+                    className={cn(
+                      "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
+                      selecionado
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                    )}
+                  >
+                    <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
+                    {!recolhida && <span className="truncate">{item.label}</span>}
+                    {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
         {podeVerCategoria("categoria-financeiro") && (
           <button
             type="button"
