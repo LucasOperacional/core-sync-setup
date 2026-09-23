@@ -72,7 +72,10 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
   let cTotal = -1;
   let cQtd = -1;
   let colunasCargo: number[] = [];
+  /** A planilha atual traz informação de vagas? (listas de contratos não trazem) */
+  let temVagas = false;
   let empresaGlobal: string | null = null;
+
 
   const nomes = new Map<string, LinhaPlanilhaPosto>();
   /** Soma das quantidades por função (formato detalhamento). */
