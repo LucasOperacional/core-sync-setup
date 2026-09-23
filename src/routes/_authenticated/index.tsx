@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Clock3 } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Clock3, ShieldCheck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -69,8 +70,9 @@ function HomePage() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto grid min-h-24 max-w-[88rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-5 sm:px-6 lg:px-8">
           <div className="min-w-0">
-            <h1 className="truncate font-display text-2xl font-bold">Visão Geral</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Bem-vindo, {userName}</p>
+            <p className="mb-1 text-[10px] font-semibold uppercase text-primary">NXS / Visão geral</p>
+            <h1 className="truncate font-display text-2xl">Bom dia, {userName.split(" ")[0]}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Sua central de trabalho está pronta.</p>
           </div>
           <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
             <Clock3 className="size-4" />
@@ -80,15 +82,37 @@ function HomePage() {
         </div>
       </header>
       <section className="mx-auto w-full max-w-[88rem] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="panel flex min-h-44 items-center overflow-hidden">
-          <div className="h-full w-1 self-stretch bg-primary" />
-          <div className="px-6 py-8 sm:px-8">
+        <div className="grid gap-8 border-b border-border pb-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(18rem,.7fr)] lg:items-end">
+          <div>
             <p className="text-xs font-semibold uppercase text-primary">Central integrada</p>
-            <h2 className="mt-2 font-display text-2xl font-bold text-foreground">NXS Gestão Empresarial</h2>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-              Selecione uma categoria no menu lateral para acessar as ferramentas disponíveis.
-            </p>
+            <h2 className="mt-3 max-w-3xl font-display text-3xl leading-tight text-foreground sm:text-4xl">Gestão empresarial, sem ruído.</h2>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">Acesse as áreas da operação pelo índice lateral. Cada setor reúne somente as ferramentas autorizadas para o seu perfil.</p>
           </div>
+          <div className="border-l-2 border-primary pl-5">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Ambiente</p>
+            <p className="mt-2 text-lg font-semibold text-foreground">NXS Gestão Empresarial</p>
+            <p className="mt-1 text-sm text-muted-foreground">Sessão protegida e ativa</p>
+          </div>
+        </div>
+        <div className="grid gap-px overflow-hidden border border-border bg-border md:grid-cols-3">
+          <Link to="/comercial-clientes" preload="intent" className="group bg-card p-6 transition-colors hover:bg-accent/35">
+            <BriefcaseBusiness className="size-5 text-primary" />
+            <p className="mt-8 text-xs font-semibold uppercase text-muted-foreground">Área 01</p>
+            <h3 className="mt-1 text-lg font-semibold text-foreground">Comercial</h3>
+            <span className="mt-4 flex items-center gap-2 text-sm text-primary">Abrir área <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></span>
+          </Link>
+          <Link to="/ponto" preload="intent" className="group bg-card p-6 transition-colors hover:bg-accent/35">
+            <Clock3 className="size-5 text-primary" />
+            <p className="mt-8 text-xs font-semibold uppercase text-muted-foreground">Área 02</p>
+            <h3 className="mt-1 text-lg font-semibold text-foreground">Departamento pessoal</h3>
+            <span className="mt-4 flex items-center gap-2 text-sm text-primary">Abrir área <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></span>
+          </Link>
+          <Link to="/control" preload="intent" className="group bg-card p-6 transition-colors hover:bg-accent/35">
+            <ShieldCheck className="size-5 text-primary" />
+            <p className="mt-8 text-xs font-semibold uppercase text-muted-foreground">Área 03</p>
+            <h3 className="mt-1 text-lg font-semibold text-foreground">Operacional</h3>
+            <span className="mt-4 flex items-center gap-2 text-sm text-primary">Abrir área <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></span>
+          </Link>
         </div>
       </section>
     </main>
