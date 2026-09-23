@@ -1,3 +1,4 @@
+/// <reference types="google.maps" />
 /** Carrega a API do Google Maps (JavaScript) uma única vez, de forma assíncrona. */
 let promessa: Promise<typeof google.maps> | null = null;
 
