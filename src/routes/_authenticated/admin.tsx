@@ -313,12 +313,6 @@ function AdminPage() {
                 to={l.to}
                 className="group relative flex cursor-pointer flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
               >
-                <img
-                  src={ciopLogo}
-                  alt=""
-                  aria-hidden
-                  className="absolute right-4 top-4 size-8 opacity-70 transition-opacity group-hover:opacity-100"
-                />
                 <div className="flex size-11 items-center justify-center rounded-xl bg-accent text-accent-foreground">
                   <l.icon className="size-5" />
                 </div>
