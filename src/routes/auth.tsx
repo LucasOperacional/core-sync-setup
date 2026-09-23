@@ -13,6 +13,7 @@ import loginBgDarkAsset from "@/assets/login-bg.mp4.asset.json";
 import loginBgLightAsset from "@/assets/login-bg-light.mp4.asset.json";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Acesso | NXS GESTÃO" },
