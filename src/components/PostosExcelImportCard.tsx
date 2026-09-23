@@ -43,7 +43,20 @@ function reconhecerEmpresa(texto: string): string | null {
   return null;
 }
 
-const POSTOS_IGNORAR = new Set(["TOTAL", "TOTAL GERAL", "POSTO", "SOMA"]);
+const POSTOS_IGNORAR = new Set([
+  "TOTAL",
+  "TOTAL GERAL",
+  "POSTO",
+  "SOMA",
+  "NOME DO CONTRATO",
+  "CONTRATO",
+]);
+
+/** Colunas que são só numeração da lista (Nº, item) e nunca contam vagas. */
+function ehColunaNumeracao(v: string): boolean {
+  return v === "N" || v === "NO" || v === "NUM" || v === "ITEM" || v === "ORDEM";
+}
+
 
 /**
  * Varre a planilha inteira (todas as abas e linhas). Aceita três formatos:
