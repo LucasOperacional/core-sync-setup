@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { BriefcaseBusiness, ChevronDown, Download, LogOut, MapPin, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { BarChart3, BriefcaseBusiness, CalendarDays, ChevronDown, Download, FileText, LayoutDashboard, LogOut, MapPin, Menu, PanelLeftClose, PanelLeftOpen, Target, Users, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { operacionalNavItems, rhNavItems } from "@/components/FloatingNav";
@@ -11,6 +11,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "ciop:navegacao-recolhida";
+
+const itensComercial = [
+  { to: "/comercial", label: "Visão geral", icon: LayoutDashboard },
+  { to: "/comercial-clientes", label: "Clientes", icon: Users },
+  { to: "/comercial-funil", label: "Funil", icon: Target },
+  { to: "/comercial-propostas", label: "Propostas", icon: FileText },
+  { to: "/comercial-agenda", label: "Agenda", icon: CalendarDays },
+  { to: "/comercial-contratos", label: "Contratos", icon: BriefcaseBusiness },
+  { to: "/comercial-relatorios", label: "Relatórios", icon: BarChart3 },
+] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const caminho = useRouterState({ select: (state) => state.location.pathname });
@@ -103,25 +113,29 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {podeVerCategoria("categoria-comercial") && comercialAberta && (
           <ul className="mt-1 space-y-0.5">
-            {podeVer("/comercial") && (
-              <li>
-                <Link
-                  to="/comercial"
-                  title={recolhida ? "Departamento Comercial" : undefined}
-                  aria-current={ativo("/comercial") ? "page" : undefined}
-                  className={cn(
-                    "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                    ativo("/comercial")
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                  )}
-                >
-                  <BriefcaseBusiness className={cn("size-4 shrink-0", ativo("/comercial") && "text-primary")} />
-                  {!recolhida && <span className="truncate">Departamento Comercial</span>}
-                  {ativo("/comercial") && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                </Link>
-              </li>
-            )}
+            {podeVer("/comercial") &&
+              itensComercial.map((item) => {
+                const selecionado = caminho === item.to;
+                return (
+                  <li key={item.to}>
+                    <Link
+                      to={item.to}
+                      title={recolhida ? item.label : undefined}
+                      aria-current={selecionado ? "page" : undefined}
+                      className={cn(
+                        "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
+                        selecionado
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                      )}
+                    >
+                      <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
+                      {!recolhida && <span className="truncate">{item.label}</span>}
+                      {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
+                    </Link>
+                  </li>
+                );
+              })}
             <li>
               <Link
                 to="/prospeccao-maps"
