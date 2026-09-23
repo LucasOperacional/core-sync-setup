@@ -103,25 +103,29 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {podeVerCategoria("categoria-comercial") && comercialAberta && (
           <ul className="mt-1 space-y-0.5">
-            {podeVer("/comercial") && (
-              <li>
-                <Link
-                  to="/comercial"
-                  title={recolhida ? "Departamento Comercial" : undefined}
-                  aria-current={ativo("/comercial") ? "page" : undefined}
-                  className={cn(
-                    "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                    ativo("/comercial")
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                  )}
-                >
-                  <BriefcaseBusiness className={cn("size-4 shrink-0", ativo("/comercial") && "text-primary")} />
-                  {!recolhida && <span className="truncate">Departamento Comercial</span>}
-                  {ativo("/comercial") && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                </Link>
-              </li>
-            )}
+            {podeVer("/comercial") &&
+              itensComercial.map((item) => {
+                const selecionado = caminho === item.to;
+                return (
+                  <li key={item.to}>
+                    <Link
+                      to={item.to}
+                      title={recolhida ? item.label : undefined}
+                      aria-current={selecionado ? "page" : undefined}
+                      className={cn(
+                        "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
+                        selecionado
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                      )}
+                    >
+                      <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
+                      {!recolhida && <span className="truncate">{item.label}</span>}
+                      {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
+                    </Link>
+                  </li>
+                );
+              })}
             <li>
               <Link
                 to="/prospeccao-maps"
