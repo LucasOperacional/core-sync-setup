@@ -19,7 +19,7 @@ export function ComercialNav({ atual }: { atual: string }) {
         {itens.map((item) => {
           const ativo = atual === item.to;
           return (
-            <Link key={item.to} to={item.to} className={cn("flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors", ativo ? "bg-red-600 text-neutral-50" : "text-neutral-400 hover:bg-neutral-900 hover:text-neutral-50")}>
+            <Link key={item.to} to={item.to} preload="intent" preloadDelay={0} className={cn("flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors", ativo ? "bg-red-600 text-neutral-50" : "text-neutral-400 hover:bg-neutral-900 hover:text-neutral-50")}>
               <item.icon className="size-4" />{item.label}
             </Link>
           );
