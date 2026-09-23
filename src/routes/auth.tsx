@@ -8,9 +8,7 @@ import { Label } from "@/components/ui/label";
 import { cadastrarConta, type CadastroRole } from "@/lib/cadastro.functions";
 import { entrarComUsuario } from "@/lib/auth.functions";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import type { Tema } from "@/hooks/use-tema";
-import loginBgDarkAsset from "@/assets/login-bg.mp4.asset.json";
-import loginBgLightAsset from "@/assets/login-bg-light.mp4.asset.json";
+import loginBgAsset from "@/assets/video-autenticacao.webm.asset.json";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -35,31 +33,15 @@ export const Route = createFileRoute("/auth")({
 });
 
 function ThemedBackgroundVideo() {
-  const [tema, setTema] = useState<Tema>(() =>
-    document.documentElement.classList.contains("dark") ? "escuro" : "claro",
-  );
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const observer = new MutationObserver(() => {
-      setTema(root.classList.contains("dark") ? "escuro" : "claro");
-    });
-    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
-
-  const asset = tema === "claro" ? loginBgLightAsset : loginBgDarkAsset;
-
   return (
     <video
-      key={asset.url}
       autoPlay
       muted
       loop
       playsInline
       preload="auto"
       className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover"
-      src={asset.url}
+      src={loginBgAsset.url}
       aria-hidden="true"
     />
   );
