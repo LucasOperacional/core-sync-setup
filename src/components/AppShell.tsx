@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronDown, Download, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { ChevronDown, Download, LogOut, MapPin, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { operacionalNavItems, rhNavItems } from "@/components/FloatingNav";
