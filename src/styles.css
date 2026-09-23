@@ -164,8 +164,8 @@
   --sidebar-ring: oklch(0.66 0.12 248);
 
   --gradient-hero: var(--card);
-  --shadow-panel: 0 1px 2px oklch(0 0 0 / 0.4);
-  --shadow-glow: 0 1px 2px oklch(0 0 0 / 0.45);
+  --shadow-panel: 0 1px 2px oklch(0 0 0 / 0.28);
+  --shadow-glow: 0 6px 18px oklch(0 0 0 / 0.35);
 }
 
 @layer base {
