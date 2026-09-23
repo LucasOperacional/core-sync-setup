@@ -931,7 +931,7 @@ async function buscarPessoaExistente(
   config: Awaited<ReturnType<typeof loadConfig>>,
   cpf: string,
   matricula: string,
-): Promise<{ id: number; nome: string } | null> {
+): Promise<{ id: number; nome: string; empresaId: number; matricula: string } | null> {
   const tentativas: string[] = [];
   if (cpf) tentativas.push(`/api/persons/cpf/${cpf}`, `/api/persons/document/${cpf}`);
   if (matricula)
@@ -982,7 +982,12 @@ async function buscarPessoaExistente(
         if (!isRec(c)) continue;
         const id = Number(c["id"] ?? 0);
         if (id > 0 && corresponde(c)) {
-          return { id, nome: String(c["name"] ?? c["nome"] ?? "") };
+          return {
+            id,
+            nome: String(c["name"] ?? c["nome"] ?? ""),
+            empresaId: Number(c["companyId"] ?? 0),
+            matricula: limpar(String(c["enrolment"] ?? c["externalId"] ?? "")),
+          };
         }
       }
     } catch {
@@ -1007,7 +1012,13 @@ async function buscarPessoaExistente(
       for (const c of candidatos) {
         if (!isRec(c) || !corresponde(c)) continue;
         const id = Number(c["id"] ?? 0);
-        if (id > 0) return { id, nome: String(c["name"] ?? c["nome"] ?? "") };
+        if (id > 0)
+          return {
+            id,
+            nome: String(c["name"] ?? c["nome"] ?? ""),
+            empresaId: Number(c["companyId"] ?? 0),
+            matricula: limpar(String(c["enrolment"] ?? c["externalId"] ?? "")),
+          };
       }
     } catch {
       /* tenta o próximo filtro */
