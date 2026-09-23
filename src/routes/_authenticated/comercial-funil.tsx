@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { ComercialWorkspace } from "@/components/comercial/ComercialWorkspace";
+export const Route = createFileRoute("/_authenticated/comercial-funil")({ head: () => ({ meta: [{ title: "Funil | Comercial NXS" }, { name: "description", content: "Funil visual de oportunidades comerciais." }, { property: "og:title", content: "Funil | Comercial NXS" }, { property: "og:description", content: "Funil visual de oportunidades comerciais." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: () => <ComercialWorkspace modo="funil" /> });

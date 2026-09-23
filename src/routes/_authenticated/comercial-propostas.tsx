@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { ComercialWorkspace } from "@/components/comercial/ComercialWorkspace";
+export const Route = createFileRoute("/_authenticated/comercial-propostas")({ head: () => ({ meta: [{ title: "Propostas | Comercial NXS" }, { name: "description", content: "Propostas e versões de serviços terceirizados." }, { property: "og:title", content: "Propostas | Comercial NXS" }, { property: "og:description", content: "Propostas e versões de serviços terceirizados." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: () => <ComercialWorkspace modo="propostas" /> });

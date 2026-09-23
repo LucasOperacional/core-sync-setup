@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { ComercialWorkspace } from "@/components/comercial/ComercialWorkspace";
+export const Route = createFileRoute("/_authenticated/comercial-agenda")({ head: () => ({ meta: [{ title: "Agenda | Comercial NXS" }, { name: "description", content: "Atividades e lembretes do departamento Comercial." }, { property: "og:title", content: "Agenda | Comercial NXS" }, { property: "og:description", content: "Atividades e lembretes do departamento Comercial." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: () => <ComercialWorkspace modo="agenda" /> });
