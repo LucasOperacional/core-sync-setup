@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { BarChart3, BriefcaseBusiness, CalendarDays, ChevronDown, Download, FileText, LayoutDashboard, LogOut, MapPin, Menu, PanelLeftClose, PanelLeftOpen, Target, Users, X } from "lucide-react";
+import { BarChart3, BriefcaseBusiness, CalendarDays, ChevronDown, Download, FileText, LogOut, MapPin, Menu, PanelLeftClose, PanelLeftOpen, Target, Users, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { operacionalNavItems, rhNavItems } from "@/components/FloatingNav";
@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 const STORAGE_KEY = "ciop:navegacao-recolhida";
 
 const itensComercial = [
-  { to: "/comercial", label: "Visão geral", icon: LayoutDashboard },
   { to: "/comercial-clientes", label: "Clientes", icon: Users },
   { to: "/comercial-funil", label: "Funil", icon: Target },
   { to: "/comercial-propostas", label: "Propostas", icon: FileText },
