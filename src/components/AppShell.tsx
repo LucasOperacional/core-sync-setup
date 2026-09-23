@@ -90,27 +90,28 @@ export function AppShell({ children }: { children: ReactNode }) {
     <>
       <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-4">
         <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="NXS — página inicial">
-          <span className="grid size-8 shrink-0 place-items-center rounded-md bg-sidebar-primary font-display text-sm font-bold text-sidebar-primary-foreground shadow-xs">N</span>
-          {!recolhida && <span className="truncate font-display text-base font-bold text-sidebar-foreground">NXS SISTEMAS</span>}
+          <span className="grid size-8 shrink-0 place-items-center rounded-md bg-sidebar-primary font-display text-xs text-sidebar-primary-foreground shadow-xs">N</span>
+          {!recolhida && <span className="truncate font-display text-sm text-sidebar-foreground">NXS</span>}
+          {!recolhida && <span className="border-l border-sidebar-border pl-3 text-[10px] font-semibold uppercase text-sidebar-foreground/55">Sistemas</span>}
         </Link>
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Navegação principal">
-        {!recolhida && <p className="px-3 pb-2 text-[10px] font-semibold uppercase text-sidebar-foreground/45">Menu principal</p>}
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5" aria-label="Navegação principal">
+        {!recolhida && <p className="px-3 pb-3 text-[10px] font-semibold uppercase text-sidebar-foreground/45">Índice de áreas</p>}
         {inicioItem && (
           <Link
             to="/"
             title={recolhida ? inicioItem.label : undefined}
             aria-current={ativo("/") ? "page" : undefined}
             className={cn(
-              "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
+              "group flex h-10 min-w-0 items-center gap-3 rounded-md border-l-2 px-3 text-sm font-medium transition-colors duration-150",
               ativo("/")
-                ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                ? "border-sidebar-primary bg-sidebar-accent text-sidebar-accent-foreground"
+                : "border-transparent text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
             )}
           >
             <inicioItem.icon className={cn("size-4 shrink-0", ativo("/") && "text-primary")} />
             {!recolhida && <span className="truncate">{inicioItem.label}</span>}
-            {ativo("/") && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
+            {ativo("/") && <span className="ml-auto text-[9px] font-semibold text-sidebar-foreground/55">01</span>}
           </Link>
         )}
 
@@ -362,9 +363,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       <div className="min-w-0">
-        <div className="sticky top-0 z-30 flex h-14 items-center border-b border-border bg-background/95 px-4 lg:hidden">
+        <div className="sticky top-0 z-30 flex h-16 items-center border-b border-border bg-card/95 px-4 backdrop-blur lg:hidden">
           <Button variant="ghost" size="icon" onClick={() => setMenuMobile(true)} aria-label="Abrir menu"><Menu /></Button>
-          <span className="ml-3 truncate font-display text-sm font-semibold">NXS SISTEMAS</span>
+          <span className="ml-3 grid size-8 place-items-center rounded-md bg-primary font-display text-xs text-primary-foreground">N</span>
+          <span className="ml-2 truncate font-display text-sm">NXS</span>
+          <span className="ml-2 border-l border-border pl-2 text-[10px] font-semibold uppercase text-muted-foreground">Sistemas</span>
         </div>
         <div className="app-workspace min-w-0">{children}</div>
       </div>

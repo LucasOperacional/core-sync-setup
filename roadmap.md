@@ -5,3 +5,4 @@
 - [x] Adicionar movimentação de posto em lote pela NEXTI na opção Folhas
 - [x] Buscar colaboradores na NEXTI e validar cargo, vaga e efetivo do posto de destino
 - [x] Criar o departamento Comercial completo: dashboard, clientes, funil, propostas, agenda, contratos, relatórios, permissões e auditoria
+- [x] Tornar o layout mais autoral e corporativo, preservando todas as funções

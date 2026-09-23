@@ -74,24 +74,24 @@
 
 /* ─── Azul confiança: interface corporativa clara ─── */
 :root {
-  --radius: 0.75rem;
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --radius: 0.625rem;
+  --font-display: "Archivo Black", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Hind", ui-sans-serif, system-ui, sans-serif;
 
-  --background: oklch(0.982 0.004 250);
-  --foreground: oklch(0.22 0.055 259);
+  --background: oklch(0.9722 0.0034 247.86);
+  --foreground: oklch(0.2595 0.052 264.33);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.22 0.055 259);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.055 259);
-  --primary: oklch(0.52 0.105 250);
+  --primary: oklch(0.4685 0.092 250.84);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.955 0.009 250);
-  --secondary-foreground: oklch(0.28 0.06 255);
-  --muted: oklch(0.958 0.006 250);
-  --muted-foreground: oklch(0.5 0.025 250);
-  --accent: oklch(0.94 0.025 250);
-  --accent-foreground: oklch(0.34 0.075 252);
+  --secondary: oklch(0.945 0.008 248);
+  --secondary-foreground: oklch(0.2595 0.052 264.33);
+  --muted: oklch(0.948 0.006 248);
+  --muted-foreground: oklch(0.48 0.025 251);
+  --accent: oklch(0.918 0.018 249);
+  --accent-foreground: oklch(0.31 0.065 252);
   --destructive: oklch(0.54 0.205 24);
   --destructive-foreground: oklch(1 0 0);
   --success: oklch(0.6 0.17 145);
@@ -100,26 +100,26 @@
   --warning-foreground: oklch(0.2 0.03 75);
   --info: oklch(0.52 0.105 250);
   --info-foreground: oklch(1 0 0);
-  --border: oklch(0.91 0.01 250);
-  --input: oklch(0.86 0.016 250);
-  --ring: oklch(0.52 0.105 250);
+  --border: oklch(0.9034 0.0122 247.96);
+  --input: oklch(0.855 0.017 248);
+  --ring: oklch(0.4685 0.092 250.84);
   --chart-1: oklch(0.52 0.105 250);
   --chart-2: oklch(0.42 0.08 252);
   --chart-3: oklch(0.66 0.145 145);
   --chart-4: oklch(0.7 0.13 75);
   --chart-5: oklch(0.56 0.1 245);
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.28 0.04 255);
-  --sidebar-primary: oklch(0.52 0.105 250);
+  --sidebar: oklch(0.2595 0.052 264.33);
+  --sidebar-foreground: oklch(0.94 0.012 248);
+  --sidebar-primary: oklch(0.61 0.11 249);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.95 0.022 250);
-  --sidebar-accent-foreground: oklch(0.38 0.09 250);
-  --sidebar-border: oklch(0.91 0.01 250);
-  --sidebar-ring: oklch(0.52 0.105 250);
+  --sidebar-accent: oklch(0.335 0.059 260);
+  --sidebar-accent-foreground: oklch(0.98 0.004 248);
+  --sidebar-border: oklch(0.34 0.048 260);
+  --sidebar-ring: oklch(0.67 0.095 248);
 
   --gradient-hero: var(--card);
-  --shadow-panel: 0 1px 2px oklch(0.22 0.055 259 / 0.05), 0 1px 3px oklch(0.22 0.055 259 / 0.04);
-  --shadow-glow: 0 6px 18px oklch(0.22 0.055 259 / 0.08);
+  --shadow-panel: 0 1px 2px oklch(0.2595 0.052 264.33 / 0.04), 0 6px 16px oklch(0.2595 0.052 264.33 / 0.035);
+  --shadow-glow: 0 12px 28px oklch(0.2595 0.052 264.33 / 0.09);
 }
 
 /* ─── Azul confiança: interface corporativa escura ─── */
@@ -187,6 +187,7 @@
   h4 {
     font-family: var(--font-display);
     letter-spacing: 0;
+    font-weight: 400;
   }
 }
 
@@ -258,9 +259,9 @@
   }
 
   .app-workspace h1 {
-    font-size: clamp(1.5rem, 2vw, 2rem);
+    font-size: clamp(1.5rem, 2vw, 2.15rem);
     line-height: 1.2;
-    font-weight: 650;
+    font-weight: 400;
     text-transform: none;
   }
 
