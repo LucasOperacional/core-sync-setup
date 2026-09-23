@@ -312,8 +312,6 @@ export async function dispararNotificacao(
       target_url: targetUrl ?? "/notificacoes",
       notification_id: registro.id,
       tag: pedido.deduplicationKey ?? `${pedido.category}:${registro.id}`,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
     });
 
     let enviados = 0;
