@@ -1,0 +1,10 @@
+REVOKE EXECUTE ON FUNCTION public.pnt_papel_do_usuario(uuid) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.pnt_eh_admin(uuid) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.pnt_eh_gestor(uuid) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.pnt_meu_funcionario(uuid) FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.pnt_pode_ver_funcionario(uuid, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.pnt_papel_do_usuario(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.pnt_eh_admin(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.pnt_eh_gestor(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.pnt_meu_funcionario(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.pnt_pode_ver_funcionario(uuid, uuid) TO authenticated, service_role;
