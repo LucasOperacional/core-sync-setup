@@ -100,6 +100,11 @@ export const AVAILABLE_PAGES = [
     description: "Postos importados da NEXTI com as vagas disponíveis em cada posto",
   },
   {
+    key: "comercial",
+    label: "Departamento Comercial",
+    description: "Dashboard, clientes, funil, propostas, agenda, contratos e relatórios comerciais",
+  },
+  {
     key: "indicadores",
     label: "Indicadores",
     description: "Tempo de execução dos relatórios de campo e das fichas de avaliação",

@@ -1,12 +1,11 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import {
-  AlertTriangle, ArrowRight, BarChart3, BriefcaseBusiness, CalendarDays, CheckCircle2,
-  Clock3, Download, FileText, Filter, Loader2, Plus, Search, Target, TrendingUp, Users,
+  AlertTriangle, BarChart3, CalendarDays, CheckCircle2,
+  Download, FileText, Filter, Loader2, Plus, Search, Target, TrendingUp, Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -179,20 +178,22 @@ function Relatorios(props: { dados: ComercialDados; busca: string; setBusca: (v:
 
 function Formularios({ dialogo, fechar, dados, salvar, salvando }: { dialogo: null | "cliente" | "oportunidade" | "proposta" | "atividade" | "contrato"; fechar: () => void; dados: ComercialDados; salvar: (v: { tabela: string; valores: Record<string, unknown>; auditoria: string; entidade: string }) => void; salvando: boolean }) {
   const [itens, setItens] = useState([{ funcao: "", quantidade: 1, jornada: "", escala: "", local: "", custo: 0 }]);
-  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const submit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault(); const form = new FormData(e.currentTarget); const v = Object.fromEntries(form.entries());
     if (dialogo === "cliente") salvar({ tabela: "com_clientes", entidade: "cliente", auditoria: "criou", valores: { ...v, cnpj: String(v["cnpj"]).replace(/\D/g, "") || null } });
     if (dialogo === "oportunidade") { const etapa = dados.etapas.find((x) => x.id === v["etapa_id"]); salvar({ tabela: "com_oportunidades", entidade: "oportunidade", auditoria: "criou", valores: { ...v, valor_previsto: Number(v["valor_previsto"]), probabilidade: etapa?.probabilidade ?? 0 } }); }
     if (dialogo === "atividade") salvar({ tabela: "com_atividades", entidade: "atividade", auditoria: "criou", valores: v });
     if (dialogo === "contrato") salvar({ tabela: "com_contratos", entidade: "contrato", auditoria: "criou", valores: { ...v, valor_mensal: Number(v["valor_mensal"]) } });
     if (dialogo === "proposta") {
-      const { data: auth } = await supabase.auth.getUser(); if (!auth.user) return toast.error("Sua sessão expirou.");
+      const { data: auth } = await supabase.auth.getUser(); if (!auth.user) { toast.error("Sua sessão expirou."); return; }
       const custo = itens.reduce((s, i) => s + Number(i.custo) * Number(i.quantidade), 0); const margem = Number(v["margem_percentual"]); const impostos = Number(v["impostos_percentual"]); const valor = custo * (1 + margem / 100 + impostos / 100);
       const { data: proposta, error } = await banco.from("com_propostas").insert({ oportunidade_id: v["oportunidade_id"], numero: v["numero"], valor_mensal: valor, prazo_meses: Number(v["prazo_meses"]), validade_ate: v["validade_ate"] || null, responsavel_id: auth.user.id, created_by: auth.user.id }).select("id").single();
       if (error) { toast.error(error.message); return; }
       const { error: versaoErro } = await banco.from("com_proposta_versoes").insert({ proposta_id: proposta.id, versao: 1, itens, custo_total: custo, margem_percentual: margem, impostos_percentual: impostos, valor_mensal: valor, observacoes: v["observacoes"], criado_por: auth.user.id });
       if (versaoErro) { toast.error(versaoErro.message); return; } await registrarAuditoria("criou_versao", "proposta", proposta.id, { versao: 1 }); fechar(); window.location.reload();
+      return;
     }
+    return;
   };
   return <Dialog open={!!dialogo} onOpenChange={(o) => !o && fechar()}><DialogContent className="max-w-3xl border-neutral-800 bg-neutral-950 text-neutral-100"><DialogHeader><DialogTitle>Novo {dialogo}</DialogTitle><DialogDescription>Preencha os dados do registro comercial.</DialogDescription></DialogHeader><form onSubmit={submit} className="grid gap-4"><div className="grid gap-3 sm:grid-cols-2">{dialogo === "cliente" && <><Campo rotulo="Razão social"><Input name="razao_social" required /></Campo><Campo rotulo="Nome fantasia"><Input name="nome_fantasia" /></Campo><Campo rotulo="CNPJ"><Input name="cnpj" inputMode="numeric" /></Campo><Campo rotulo="Tipo"><Select name="tipo" defaultValue="potencial"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="potencial">Potencial cliente</SelectItem><SelectItem value="cliente">Cliente</SelectItem></SelectContent></Select></Campo><Campo rotulo="Telefone"><Input name="telefone" /></Campo><Campo rotulo="E-mail"><Input name="email" type="email" /></Campo><Campo rotulo="Segmento"><Input name="segmento" /></Campo><Campo rotulo="Origem do lead"><Input name="origem_lead" placeholder="Indicação, Google Maps..." /></Campo><Campo rotulo="Endereço"><Input name="endereco" /></Campo><Campo rotulo="Cidade"><Input name="cidade" /></Campo><Campo rotulo="UF"><Input name="uf" maxLength={2} /></Campo></>}
       {dialogo === "oportunidade" && <><Campo rotulo="Título"><Input name="titulo" required /></Campo><Campo rotulo="Cliente"><Select name="cliente_id" required><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{dados.clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome_fantasia || c.razao_social}</SelectItem>)}</SelectContent></Select></Campo><Campo rotulo="Etapa">{dados.etapas[0] && <Select name="etapa_id" defaultValue={dados.etapas[0].id}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{dados.etapas.map((e) => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}</SelectContent></Select>}</Campo><Campo rotulo="Valor previsto"><Input name="valor_previsto" type="number" min="0" step="0.01" required /></Campo><Campo rotulo="Previsão de fechamento"><Input name="previsao_fechamento" type="date" /></Campo></>}
