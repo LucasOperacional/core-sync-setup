@@ -16,7 +16,12 @@ export type PostoServicoMesa = {
   /** Relatório do dia consultado (quando existir). */
   relatorio: string | null;
   relatorioEm: string | null;
+  /** Último relatório registrado em dias anteriores (histórico que fica guardado). */
+  ultimoRelatorio: string | null;
+  ultimoRelatorioEm: string | null;
+  ultimoRelatorioData: string | null;
 };
+
 
 export type ListarMesaResultado = {
   ok: boolean;
