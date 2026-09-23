@@ -182,7 +182,10 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
 
   return [...nomes.entries()].map(([chave, item]) => ({
     ...item,
-    vagas: Math.max(somas.get(chave) ?? 0, totais.get(chave) ?? 0) || contagem.get(chave) || null,
+    // Lista só de contratos/postos (sem coluna de vagas): não compara vagas.
+    vagas: comVagas.has(chave)
+      ? Math.max(somas.get(chave) ?? 0, totais.get(chave) ?? 0) || contagem.get(chave) || null
+      : null,
   }));
 }
 
