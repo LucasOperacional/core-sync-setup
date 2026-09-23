@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { BarChart3, BriefcaseBusiness, CalendarDays, ChevronDown, Download, FileText, LogOut, MapPin, Menu, PanelLeftClose, PanelLeftOpen, Target, Users, X } from "lucide-react";
+import { AlarmClock, BarChart3, BriefcaseBusiness, Building2, CalendarDays, CheckCircle2, ChevronDown, Clock, Download, FileText, LogOut, MapPin, Menu, PanelLeftClose, PanelLeftOpen, PencilLine, Settings, ShieldCheck, Target, Users, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { operacionalNavItems, rhNavItems } from "@/components/FloatingNav";
