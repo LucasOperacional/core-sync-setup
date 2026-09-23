@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 const STORAGE_KEY = "ciop:navegacao-recolhida";
 
 const itensComercial = [
-  { to: "/comercial", label: "Visão geral", icon: LayoutDashboard },
   { to: "/comercial-clientes", label: "Clientes", icon: Users },
   { to: "/comercial-funil", label: "Funil", icon: Target },
   { to: "/comercial-propostas", label: "Propostas", icon: FileText },
