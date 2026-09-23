@@ -100,7 +100,15 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
     // Cabeçalho pode aparecer várias vezes (uma por aba / bloco).
     const hPosto = linha.findIndex((c) => {
       const v = chaveNome(c ?? "");
-      return v === "POSTO" || v === "NOME DO POSTO" || v === "LOCAL" || v === "UNIDADE";
+      return (
+        v === "POSTO" ||
+        v === "NOME DO POSTO" ||
+        v === "LOCAL" ||
+        v === "UNIDADE" ||
+        v === "NOME DO CONTRATO" ||
+        v === "CONTRATO" ||
+        v === "NOME DO POSTO DE SERVICO"
+      );
     });
     if (hPosto >= 0) {
       cPosto = hPosto;
@@ -119,12 +127,15 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
             i !== cEmpresa &&
             i !== cTotal &&
             i !== cQtd &&
+            !ehColunaNumeracao(v) &&
             !v.includes("VAGA ORIGINAL") &&
             !v.includes("OBSERVAC"),
         )
         .map(({ i }) => i);
+      temVagas = cTotal >= 0 || cQtd >= 0 || colunasCargo.length > 0;
       continue;
     }
+
 
     if (cPosto < 0) continue;
 
