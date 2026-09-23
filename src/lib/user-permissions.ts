@@ -109,6 +109,12 @@ export const AVAILABLE_PAGES = [
     label: "Indicadores",
     description: "Tempo de execução dos relatórios de campo e das fichas de avaliação",
   },
+  {
+    key: "ponto",
+    label: "Controle de Ponto",
+    description:
+      "Registro de ponto, espelho, ajustes, escalas, banco de horas, fechamento e relatórios",
+  },
 ] as const;
 
 export type PageKey = (typeof AVAILABLE_PAGES)[number]["key"];
