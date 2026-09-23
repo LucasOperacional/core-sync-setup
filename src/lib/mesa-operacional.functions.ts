@@ -16,7 +16,12 @@ export type PostoServicoMesa = {
   /** Relatório do dia consultado (quando existir). */
   relatorio: string | null;
   relatorioEm: string | null;
+  /** Último relatório registrado em dias anteriores (histórico que fica guardado). */
+  ultimoRelatorio: string | null;
+  ultimoRelatorioEm: string | null;
+  ultimoRelatorioData: string | null;
 };
+
 
 export type ListarMesaResultado = {
   ok: boolean;
@@ -85,12 +90,33 @@ export const listarPostosMesa = createServerFn({ method: "GET" })
 
     const mapaRel = new Map((relatorios ?? []).map((r) => [r.posto_id, r]));
 
+    // Histórico: último relatório registrado antes do dia consultado, para que
+    // nada se perca ao virar o dia.
+    const { data: anteriores } = await context.supabase
+      .from("mesa_relatorios")
+      .select("posto_id, relatorio, registrado_em, data")
+      .not("posto_id", "is", null)
+      .lt("data", dia)
+      .order("data", { ascending: false })
+      .limit(2000);
+
+    const mapaUltimo = new Map<string, { relatorio: string; registrado_em: string | null; data: string }>();
+    for (const r of anteriores ?? []) {
+      if (!r.posto_id || mapaUltimo.has(r.posto_id)) continue;
+      mapaUltimo.set(r.posto_id, {
+        relatorio: r.relatorio,
+        registrado_em: r.registrado_em,
+        data: r.data,
+      });
+    }
+
     return {
       ok: true,
       data: dia,
       postos: (postos ?? []).map((p) => {
         const c = mapa.get(p.id);
         const r = mapaRel.get(p.id);
+        const u = mapaUltimo.get(p.id);
         return {
           id: p.id,
           nome: p.nome,
@@ -103,10 +129,14 @@ export const listarPostosMesa = createServerFn({ method: "GET" })
           checkEm: c?.registrado_em ?? null,
           relatorio: r?.relatorio ?? null,
           relatorioEm: r?.registrado_em ?? null,
+          ultimoRelatorio: u?.relatorio ?? null,
+          ultimoRelatorioEm: u?.registrado_em ?? null,
+          ultimoRelatorioData: u?.data ?? null,
         };
       }),
     };
   });
+
 
 const relatorioSchema = z.object({
   postoId: z.string().uuid(),
@@ -156,7 +186,13 @@ export const limparRelatorioMesa = createServerFn({ method: "POST" })
 // Relatório geral do gerente (por dia, sem vínculo com posto)
 // ---------------------------------------------------------------------------
 
-export type RelatorioGeral = { relatorio: string | null; registradoEm: string | null };
+export type RelatorioGeral = {
+  relatorio: string | null;
+  registradoEm: string | null;
+  ultimoRelatorio: string | null;
+  ultimoRelatorioEm: string | null;
+  ultimoRelatorioData: string | null;
+};
 
 const relatorioGeralSchema = z.object({
   gerenteNome: z.string().min(2),
@@ -170,15 +206,34 @@ export const buscarRelatorioGeralMesa = createServerFn({ method: "GET" })
     z.object({ gerenteNome: z.string().min(2), data: z.string() }).parse(input),
   )
   .handler(async ({ context, data }): Promise<RelatorioGeral> => {
+    const gerente = data.gerenteNome.trim();
     const { data: row } = await context.supabase
       .from("mesa_relatorios")
       .select("relatorio, registrado_em")
       .is("posto_id", null)
-      .eq("gerente_nome", data.gerenteNome.trim())
+      .eq("gerente_nome", gerente)
       .eq("data", data.data)
       .maybeSingle();
-    return { relatorio: row?.relatorio ?? null, registradoEm: row?.registrado_em ?? null };
+
+    const { data: anterior } = await context.supabase
+      .from("mesa_relatorios")
+      .select("relatorio, registrado_em, data")
+      .is("posto_id", null)
+      .eq("gerente_nome", gerente)
+      .lt("data", data.data)
+      .order("data", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return {
+      relatorio: row?.relatorio ?? null,
+      registradoEm: row?.registrado_em ?? null,
+      ultimoRelatorio: anterior?.relatorio ?? null,
+      ultimoRelatorioEm: anterior?.registrado_em ?? null,
+      ultimoRelatorioData: anterior?.data ?? null,
+    };
   });
+
 
 /** Salva (ou atualiza) o relatório geral do gerente na data, registrando data e hora. */
 export const salvarRelatorioGeralMesa = createServerFn({ method: "POST" })

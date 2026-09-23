@@ -418,6 +418,8 @@ function GerentePostosPage() {
                     postoId={posto.id}
                     relatorio={posto.relatorio}
                     relatorioEm={posto.relatorioEm}
+                    ultimoRelatorio={posto.ultimoRelatorio}
+                    ultimoRelatorioData={posto.ultimoRelatorioData}
                     salvando={relatorioMut.isPending}
                     limpando={limparRelatorioMut.isPending}
                     onSalvar={(texto) =>
@@ -425,6 +427,7 @@ function GerentePostosPage() {
                     }
                     onLimpar={() => limparRelatorioMut.mutate(posto.id)}
                   />
+
                 </div>
                 <button
                   type="button"
@@ -519,6 +522,18 @@ function RelatorioGeralCard({ gerente, dia }: { gerente: string; dia: string }) 
           </p>
         )}
 
+        {!temRelatorio && data?.ultimoRelatorio ? (
+          <div className="rounded-lg border border-border bg-muted/40 p-3">
+            <p className="text-xs font-semibold text-muted-foreground">
+              Último relatório salvo
+              {data.ultimoRelatorioData
+                ? ` em ${data.ultimoRelatorioData.split("-").reverse().join("/")}`
+                : ""}
+            </p>
+            <p className="whitespace-pre-wrap text-sm text-foreground">{data.ultimoRelatorio}</p>
+          </div>
+        ) : null}
+
         {temRelatorio && !editando ? (
           <p className="whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-3 text-sm">
             {data?.relatorio}
@@ -528,7 +543,7 @@ function RelatorioGeralCard({ gerente, dia }: { gerente: string; dia: string }) 
         {editando || !temRelatorio ? (
           <div className="space-y-2">
             <Textarea
-              value={texto || data?.relatorio || ""}
+              value={texto || data?.relatorio || data?.ultimoRelatorio || ""}
               onChange={(e) => setTexto(e.target.value)}
               placeholder="Escreva o relatório geral do dia deste gerente..."
               rows={4}
@@ -537,9 +552,15 @@ function RelatorioGeralCard({ gerente, dia }: { gerente: string; dia: string }) 
             <div className="flex gap-2">
               <Button
                 size="sm"
-                disabled={salvarMut.isPending || (texto || data?.relatorio || "").trim().length === 0}
-                onClick={() => salvarMut.mutate(texto || data?.relatorio || "")}
+                disabled={
+                  salvarMut.isPending ||
+                  (texto || data?.relatorio || data?.ultimoRelatorio || "").trim().length === 0
+                }
+                onClick={() =>
+                  salvarMut.mutate(texto || data?.relatorio || data?.ultimoRelatorio || "")
+                }
               >
+
                 {salvarMut.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
                 Salvar relatório geral
               </Button>
@@ -613,6 +634,8 @@ function RelatorioPosto({
   postoId,
   relatorio,
   relatorioEm,
+  ultimoRelatorio,
+  ultimoRelatorioData,
   salvando,
   limpando,
   onSalvar,
@@ -621,13 +644,15 @@ function RelatorioPosto({
   postoId: string;
   relatorio: string | null;
   relatorioEm: string | null;
+  ultimoRelatorio: string | null;
+  ultimoRelatorioData: string | null;
   salvando: boolean;
   limpando: boolean;
   onSalvar: (texto: string) => void;
   onLimpar: () => void;
 }) {
   const [aberto, setAberto] = useState(false);
-  const [texto, setTexto] = useState(relatorio ?? "");
+  const [texto, setTexto] = useState(relatorio ?? ultimoRelatorio ?? "");
 
   return (
     <div className="mt-1.5">
@@ -653,9 +678,21 @@ function RelatorioPosto({
           })}
         </p>
       ) : null}
+      {!relatorio && ultimoRelatorio ? (
+        <div className="mt-1 rounded-md border border-border bg-muted/40 p-2">
+          <p className="text-[11px] font-semibold text-muted-foreground">
+            Último registro salvo
+            {ultimoRelatorioData
+              ? ` em ${ultimoRelatorioData.split("-").reverse().join("/")}`
+              : ""}
+          </p>
+          <p className="whitespace-pre-wrap text-[11px] text-foreground">{ultimoRelatorio}</p>
+        </div>
+      ) : null}
       {aberto ? (
         <div className="mt-1.5 space-y-1.5">
           <Textarea
+
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
             placeholder="Escreva o relatório deste posto..."
