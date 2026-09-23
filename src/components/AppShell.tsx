@@ -21,6 +21,23 @@ const itensComercial = [
   { to: "/comercial-relatorios", label: "Relatórios", icon: BarChart3 },
 ] as const;
 
+const itensPonto = [
+  { to: "/ponto", label: "Registro de ponto", icon: Clock },
+  { to: "/ponto-espelho", label: "Meu espelho", icon: FileText },
+  { to: "/ponto-ajustes", label: "Solicitar ajuste", icon: PencilLine },
+  { to: "/ponto-painel", label: "Painel do ponto", icon: BarChart3 },
+  { to: "/ponto-aprovacoes", label: "Aprovações", icon: CheckCircle2 },
+  { to: "/ponto-funcionarios", label: "Funcionários", icon: Users },
+  { to: "/ponto-empresas", label: "Empresas e postos", icon: Building2 },
+  { to: "/ponto-escalas", label: "Escalas", icon: CalendarDays },
+  { to: "/ponto-banco-horas", label: "Banco de horas", icon: AlarmClock },
+  { to: "/ponto-faltas", label: "Faltas", icon: CalendarDays },
+  { to: "/ponto-fechamento", label: "Fechamento", icon: BriefcaseBusiness },
+  { to: "/ponto-relatorios", label: "Relatórios do ponto", icon: BarChart3 },
+  { to: "/ponto-configuracoes", label: "Configurações", icon: Settings },
+  { to: "/ponto-auditoria", label: "Auditoria", icon: ShieldCheck },
+] as const;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const caminho = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
