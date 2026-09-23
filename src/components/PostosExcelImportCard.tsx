@@ -84,6 +84,9 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
   const totais = new Map<string, number>();
   /** Quantas vezes o posto aparece (fallback: 1 linha = 1 vaga). */
   const contagem = new Map<string, number>();
+  /** Postos cuja planilha realmente informa vagas. */
+  const comVagas = new Set<string>();
+
 
   const numero = (v: string | undefined) => {
     const limpo = (v ?? "").replace(/[^\d-]/g, "");
