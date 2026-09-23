@@ -1,22 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import type { PosicaoRastreio } from "@/lib/rastreamento.functions";
 import type { PostoMapa } from "@/lib/nexti-postos-mapa.functions";
 import { corDoUsuario } from "@/lib/cores-rastreio";
+import { carregarGoogleMaps, ESTILO_CLARO, ESTILO_ESCURO } from "@/lib/google-maps-loader";
 
-const TEMAS = {
-  claro: {
-    url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution: "© OpenStreetMap",
-  },
-  escuro: {
-    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-    attribution: "© OpenStreetMap · © CARTO",
-  },
-} as const;
-
-type TemaMapa = keyof typeof TEMAS;
+type TemaMapa = "claro" | "escuro";
 
 interface Props {
   posicoes: PosicaoRastreio[];
@@ -34,7 +22,18 @@ function escapar(texto: string) {
   );
 }
 
-/** Mapa (Leaflet + OpenStreetMap) com pessoas monitoradas e postos de serviço. */
+function icone(cor: string, tamanho: number): google.maps.Symbol {
+  return {
+    path: google.maps.SymbolPath.CIRCLE,
+    scale: tamanho,
+    fillColor: cor,
+    fillOpacity: 0.85,
+    strokeColor: "#ffffff",
+    strokeWeight: 2,
+  };
+}
+
+/** Mapa (Google Maps) com pessoas monitoradas e postos de serviço. */
 export default function RastreioMapa({
   posicoes,
   focoUserId,
@@ -43,10 +42,12 @@ export default function RastreioMapa({
   altura = "h-[420px]",
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapaRef = useRef<L.Map | null>(null);
-  const marcadoresRef = useRef<Map<string, L.CircleMarker>>(new Map());
-  const postosRef = useRef<Map<number, L.CircleMarker>>(new Map());
-  const camadaRef = useRef<L.TileLayer | null>(null);
+  const mapaRef = useRef<google.maps.Map | null>(null);
+  const infoRef = useRef<google.maps.InfoWindow | null>(null);
+  const marcadoresRef = useRef<Map<string, google.maps.Marker>>(new Map());
+  const postosRef = useRef<Map<number, google.maps.Marker>>(new Map());
+  const [pronto, setPronto] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const [tema, setTema] = useState<TemaMapa>(() => {
     if (typeof window === "undefined") return "claro";
     const salvo = window.localStorage.getItem("mapa_tema");
@@ -54,39 +55,48 @@ export default function RastreioMapa({
   });
 
   useEffect(() => {
-    if (!containerRef.current || mapaRef.current) return;
-    const mapa = L.map(containerRef.current, { center: [-23.55, -46.63], zoom: 11 });
-    mapaRef.current = mapa;
+    let cancelado = false;
     const marcadores = marcadoresRef.current;
     const postosMarcadores = postosRef.current;
+    carregarGoogleMaps()
+      .then((maps) => {
+        if (cancelado || !containerRef.current || mapaRef.current) return;
+        mapaRef.current = new maps.Map(containerRef.current, {
+          center: { lat: -23.55, lng: -46.63 },
+          zoom: 11,
+          clickableIcons: false,
+          mapTypeControl: false,
+          streetViewControl: true,
+          fullscreenControl: true,
+        });
+        infoRef.current = new maps.InfoWindow();
+        setPronto(true);
+      })
+      .catch((e: Error) => {
+        if (!cancelado) setErro(e.message);
+      });
     return () => {
-      mapa.remove();
-      mapaRef.current = null;
-      camadaRef.current = null;
+      cancelado = true;
+      for (const m of marcadores.values()) m.setMap(null);
+      for (const m of postosMarcadores.values()) m.setMap(null);
       marcadores.clear();
       postosMarcadores.clear();
+      mapaRef.current = null;
+      infoRef.current = null;
     };
   }, []);
 
-  // Camada de fundo conforme o tema escolhido (claro/escuro).
+  // Tema claro/escuro do mapa.
   useEffect(() => {
     const mapa = mapaRef.current;
     if (!mapa) return;
-    if (camadaRef.current) {
-      mapa.removeLayer(camadaRef.current);
-      camadaRef.current = null;
-    }
-    const cfg = TEMAS[tema];
-    const camada = L.tileLayer(cfg.url, { maxZoom: 19, attribution: cfg.attribution });
-    camada.addTo(mapa);
-    camada.bringToBack();
-    camadaRef.current = camada;
+    mapa.setOptions({ styles: tema === "escuro" ? ESTILO_ESCURO : ESTILO_CLARO });
     try {
       window.localStorage.setItem("mapa_tema", tema);
     } catch {
       /* armazenamento indisponível */
     }
-  }, [tema]);
+  }, [tema, pronto]);
 
   // Marcadores dos postos de serviço (NEXTI).
   useEffect(() => {
@@ -105,27 +115,29 @@ export default function RastreioMapa({
         p.cliente ? `<br/>${escapar(p.cliente)}` : ""
       }${p.enderecoCompleto ? `<br/>${escapar(p.enderecoCompleto)}` : ""}${
         p.telefone ? `<br/>Tel.: ${escapar(p.telefone)}` : ""
-      }<br/><a href="${streetView}" target="_blank" rel="noopener noreferrer" style="color:#f59e0b;font-weight:600">Abrir Street View</a>`;
+      }<br/><a href="${streetView}" target="_blank" rel="noopener noreferrer" style="color:#b45309;font-weight:600">Abrir Street View</a>`;
       const existente = postosRef.current.get(p.id);
       if (existente) {
-        existente.setLatLng([lat, lng]);
-        existente.setPopupContent(rotulo);
+        existente.setPosition({ lat, lng });
+        existente.set("rotulo", rotulo);
       } else {
-        const marcador = L.circleMarker([lat, lng], {
-          radius: 7,
-          color: "#f59e0b",
-          fillColor: "#f59e0b",
-          fillOpacity: 0.8,
-          weight: 2,
-        })
-          .addTo(mapa)
-          .bindPopup(rotulo);
+        const marcador = new google.maps.Marker({
+          position: { lat, lng },
+          map: mapa,
+          icon: icone("#f59e0b", 7),
+          title: p.nome,
+        });
+        marcador.set("rotulo", rotulo);
+        marcador.addListener("click", () => {
+          infoRef.current?.setContent(String(marcador.get("rotulo") ?? ""));
+          infoRef.current?.open({ map: mapa, anchor: marcador });
+        });
         postosRef.current.set(p.id, marcador);
       }
     }
     for (const [id, marcador] of postosRef.current) {
       if (!vistos.has(id)) {
-        marcador.remove();
+        marcador.setMap(null);
         postosRef.current.delete(id);
       }
     }
@@ -133,20 +145,26 @@ export default function RastreioMapa({
     if (focoPostoId) {
       const foco = comGeo.find((p) => p.id === focoPostoId);
       if (foco) {
-        mapa.setView([foco.latitude as number, foco.longitude as number], 17);
-        postosRef.current.get(foco.id)?.openPopup();
+        mapa.setCenter({ lat: foco.latitude as number, lng: foco.longitude as number });
+        mapa.setZoom(17);
+        const marcador = postosRef.current.get(foco.id);
+        if (marcador) {
+          infoRef.current?.setContent(String(marcador.get("rotulo") ?? ""));
+          infoRef.current?.open({ map: mapa, anchor: marcador });
+        }
         return;
       }
     }
     if (posicoes.length === 0 && comGeo.length > 0) {
-      mapa.fitBounds(
-        L.latLngBounds(
-          comGeo.map((p) => [p.latitude as number, p.longitude as number] as [number, number]),
-        ),
-        { padding: [40, 40], maxZoom: 14 },
-      );
+      const limites = new google.maps.LatLngBounds();
+      for (const p of comGeo) {
+        limites.extend({ lat: p.latitude as number, lng: p.longitude as number });
+      }
+      mapa.fitBounds(limites, 40);
+      const zoom = mapa.getZoom();
+      if (typeof zoom === "number" && zoom > 14) mapa.setZoom(14);
     }
-  }, [postos, focoPostoId, posicoes.length]);
+  }, [postos, focoPostoId, posicoes.length, pronto]);
 
   useEffect(() => {
     const mapa = mapaRef.current;
@@ -156,34 +174,36 @@ export default function RastreioMapa({
     for (const p of posicoes) {
       vistos.add(p.userId);
       const streetView = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.latitude},${p.longitude}`;
-      const rotulo = `<strong style="color:${corDoUsuario(p.userId)}">●</strong> <strong>${p.nome}</strong><br/>${new Date(
+      const cor = corDoUsuario(p.userId);
+      const rotulo = `<strong style="color:${cor}">●</strong> <strong>${escapar(p.nome)}</strong><br/>${new Date(
         p.capturadoEm,
       ).toLocaleString(
         "pt-BR",
-      )}${p.tipoSinal ? `<br/>Sinal: ${p.tipoSinal.toUpperCase()}` : ""}<br/><a href="${streetView}" target="_blank" rel="noopener noreferrer" style="color:#0ea5e9;font-weight:600">Abrir Street View</a>`;
-      const cor = corDoUsuario(p.userId);
+      )}${p.tipoSinal ? `<br/>Sinal: ${escapar(p.tipoSinal.toUpperCase())}` : ""}<br/><a href="${streetView}" target="_blank" rel="noopener noreferrer" style="color:#0ea5e9;font-weight:600">Abrir Street View</a>`;
       const existente = marcadoresRef.current.get(p.userId);
       if (existente) {
-        existente.setLatLng([p.latitude, p.longitude]);
-        existente.setPopupContent(rotulo);
-        existente.setStyle({ color: cor, fillColor: cor });
+        existente.setPosition({ lat: p.latitude, lng: p.longitude });
+        existente.setIcon(icone(cor, 9));
+        existente.set("rotulo", rotulo);
       } else {
-        const marcador = L.circleMarker([p.latitude, p.longitude], {
-          radius: 9,
-          color: cor,
-          fillColor: cor,
-          fillOpacity: 0.85,
-          weight: 2,
-        })
-          .addTo(mapa)
-          .bindPopup(rotulo);
+        const marcador = new google.maps.Marker({
+          position: { lat: p.latitude, lng: p.longitude },
+          map: mapa,
+          icon: icone(cor, 9),
+          title: p.nome,
+        });
+        marcador.set("rotulo", rotulo);
+        marcador.addListener("click", () => {
+          infoRef.current?.setContent(String(marcador.get("rotulo") ?? ""));
+          infoRef.current?.open({ map: mapa, anchor: marcador });
+        });
         marcadoresRef.current.set(p.userId, marcador);
       }
     }
 
     for (const [id, marcador] of marcadoresRef.current) {
       if (!vistos.has(id)) {
-        marcador.remove();
+        marcador.setMap(null);
         marcadoresRef.current.delete(id);
       }
     }
@@ -191,20 +211,31 @@ export default function RastreioMapa({
     if (posicoes.length > 0) {
       const foco = focoUserId ? posicoes.find((p) => p.userId === focoUserId) : null;
       if (foco) {
-        mapa.setView([foco.latitude, foco.longitude], 16);
-        marcadoresRef.current.get(foco.userId)?.openPopup();
+        mapa.setCenter({ lat: foco.latitude, lng: foco.longitude });
+        mapa.setZoom(16);
+        const marcador = marcadoresRef.current.get(foco.userId);
+        if (marcador) {
+          infoRef.current?.setContent(String(marcador.get("rotulo") ?? ""));
+          infoRef.current?.open({ map: mapa, anchor: marcador });
+        }
       } else {
-        mapa.fitBounds(
-          L.latLngBounds(posicoes.map((p) => [p.latitude, p.longitude] as [number, number])),
-          { padding: [40, 40], maxZoom: 15 },
-        );
+        const limites = new google.maps.LatLngBounds();
+        for (const p of posicoes) limites.extend({ lat: p.latitude, lng: p.longitude });
+        mapa.fitBounds(limites, 40);
+        const zoom = mapa.getZoom();
+        if (typeof zoom === "number" && zoom > 15) mapa.setZoom(15);
       }
     }
-  }, [posicoes, focoUserId]);
+  }, [posicoes, focoUserId, pronto]);
 
   return (
     <div className="relative">
-      <div ref={containerRef} className={`${altura} w-full rounded-xl`} />
+      <div ref={containerRef} className={`${altura} w-full overflow-hidden rounded-xl bg-muted`} />
+      {erro ? (
+        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-muted/80 p-4 text-center text-sm text-muted-foreground">
+          {erro}
+        </div>
+      ) : null}
       <div className="absolute right-3 top-3 z-[500] flex overflow-hidden rounded-lg border border-border bg-card shadow-md">
         {(["claro", "escuro"] as TemaMapa[]).map((opcao) => (
           <button
