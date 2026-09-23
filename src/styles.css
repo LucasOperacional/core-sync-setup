@@ -380,6 +380,11 @@
       touch-action: manipulation;
     }
 
+    button:not([data-slot="card"] button[aria-expanded]),
+    [role="button"] {
+      min-height: 44px;
+    }
+
     input,
     select,
     textarea {
