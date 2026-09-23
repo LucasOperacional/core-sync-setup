@@ -20,7 +20,6 @@ import {
   carregarComercial, moeda, nomeCliente, registrarAuditoria,
   type ComercialDados, type ComercialModo, type EtapaComercial,
 } from "@/lib/comercial";
-import { ComercialNav } from "./ComercialNav";
 
 const banco = supabase as any;
 const rotaPorModo: Record<ComercialModo, string> = {
