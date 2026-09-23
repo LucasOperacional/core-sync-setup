@@ -616,6 +616,8 @@ function RelatorioPosto({
   postoId,
   relatorio,
   relatorioEm,
+  ultimoRelatorio,
+  ultimoRelatorioData,
   salvando,
   limpando,
   onSalvar,
@@ -624,13 +626,15 @@ function RelatorioPosto({
   postoId: string;
   relatorio: string | null;
   relatorioEm: string | null;
+  ultimoRelatorio: string | null;
+  ultimoRelatorioData: string | null;
   salvando: boolean;
   limpando: boolean;
   onSalvar: (texto: string) => void;
   onLimpar: () => void;
 }) {
   const [aberto, setAberto] = useState(false);
-  const [texto, setTexto] = useState(relatorio ?? "");
+  const [texto, setTexto] = useState(relatorio ?? ultimoRelatorio ?? "");
 
   return (
     <div className="mt-1.5">
@@ -656,9 +660,21 @@ function RelatorioPosto({
           })}
         </p>
       ) : null}
+      {!relatorio && ultimoRelatorio ? (
+        <div className="mt-1 rounded-md border border-border bg-muted/40 p-2">
+          <p className="text-[11px] font-semibold text-muted-foreground">
+            Último registro salvo
+            {ultimoRelatorioData
+              ? ` em ${ultimoRelatorioData.split("-").reverse().join("/")}`
+              : ""}
+          </p>
+          <p className="whitespace-pre-wrap text-[11px] text-foreground">{ultimoRelatorio}</p>
+        </div>
+      ) : null}
       {aberto ? (
         <div className="mt-1.5 space-y-1.5">
           <Textarea
+
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
             placeholder="Escreva o relatório deste posto..."
