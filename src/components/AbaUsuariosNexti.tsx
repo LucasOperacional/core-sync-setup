@@ -376,7 +376,11 @@ export function AbaUsuariosNexti() {
                             </TableCell>
                             {CAMPOS.map((c) => {
                               const resolvido =
-                                c.chave === "empresa" || c.chave === "cargo" || c.chave === "posto" || c.chave === "escala"
+                                c.chave === "empresa" ||
+                                c.chave === "cargo" ||
+                                c.chave === "posto" ||
+                                c.chave === "escala" ||
+                                c.chave === "supervisor"
                                   ? v?.resolvido[c.chave]
                                   : undefined;
                               return (
