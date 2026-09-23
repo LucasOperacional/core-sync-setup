@@ -4471,6 +4471,1206 @@ export type Database = {
         }
         Relationships: []
       }
+      pnt_absences: {
+        Row: {
+          anexo_path: string | null
+          created_at: string
+          data: string
+          employee_id: string
+          id: string
+          justificada: boolean
+          motivo: string | null
+          organization_id: string
+          registrado_por: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          anexo_path?: string | null
+          created_at?: string
+          data: string
+          employee_id: string
+          id?: string
+          justificada?: boolean
+          motivo?: string | null
+          organization_id: string
+          registrado_por?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          anexo_path?: string | null
+          created_at?: string
+          data?: string
+          employee_id?: string
+          id?: string
+          justificada?: boolean
+          motivo?: string | null
+          organization_id?: string
+          registrado_por?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_absences_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_absences_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_approval_history: {
+        Row: {
+          acao: string
+          created_at: string
+          id: string
+          justificativa: string | null
+          organization_id: string
+          referencia: string
+          referencia_id: string | null
+          responsavel: string | null
+          updated_at: string
+          valor_anterior: Json | null
+          valor_novo: Json | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          id?: string
+          justificativa?: string | null
+          organization_id: string
+          referencia: string
+          referencia_id?: string | null
+          responsavel?: string | null
+          updated_at?: string
+          valor_anterior?: Json | null
+          valor_novo?: Json | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          id?: string
+          justificativa?: string | null
+          organization_id?: string
+          referencia?: string
+          referencia_id?: string | null
+          responsavel?: string | null
+          updated_at?: string
+          valor_anterior?: Json | null
+          valor_novo?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_approval_history_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_audit_logs: {
+        Row: {
+          acao: string
+          created_at: string
+          detalhes: Json
+          id: string
+          ip: string | null
+          organization_id: string | null
+          recurso: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          detalhes?: Json
+          id?: string
+          ip?: string | null
+          organization_id?: string | null
+          recurso: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          detalhes?: Json
+          id?: string
+          ip?: string | null
+          organization_id?: string | null
+          recurso?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_audit_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_authorized_devices: {
+        Row: {
+          autorizado: boolean
+          created_at: string
+          descricao: string | null
+          device_hash: string
+          employee_id: string
+          id: string
+          organization_id: string
+          ultimo_uso: string | null
+          updated_at: string
+        }
+        Insert: {
+          autorizado?: boolean
+          created_at?: string
+          descricao?: string | null
+          device_hash: string
+          employee_id: string
+          id?: string
+          organization_id: string
+          ultimo_uso?: string | null
+          updated_at?: string
+        }
+        Update: {
+          autorizado?: boolean
+          created_at?: string
+          descricao?: string | null
+          device_hash?: string
+          employee_id?: string
+          id?: string
+          organization_id?: string
+          ultimo_uso?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_authorized_devices_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_authorized_devices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_companies: {
+        Row: {
+          ativo: boolean
+          cnpj: string | null
+          created_at: string
+          exige_geolocalizacao: boolean
+          exige_selfie: boolean
+          id: string
+          nome: string
+          organization_id: string
+          tolerancia_min: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cnpj?: string | null
+          created_at?: string
+          exige_geolocalizacao?: boolean
+          exige_selfie?: boolean
+          id?: string
+          nome: string
+          organization_id: string
+          tolerancia_min?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cnpj?: string | null
+          created_at?: string
+          exige_geolocalizacao?: boolean
+          exige_selfie?: boolean
+          id?: string
+          nome?: string
+          organization_id?: string
+          tolerancia_min?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_companies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_daily_summaries: {
+        Row: {
+          atraso_min: number
+          calculado_em: string
+          created_at: string
+          data: string
+          employee_id: string
+          extra_min: number
+          id: string
+          intervalo_min: number
+          noturno_min: number
+          organization_id: string
+          previsto_min: number
+          regra: Json
+          saida_antecipada_min: number
+          saldo_min: number
+          situacao: string
+          trabalhado_min: number
+          updated_at: string
+        }
+        Insert: {
+          atraso_min?: number
+          calculado_em?: string
+          created_at?: string
+          data: string
+          employee_id: string
+          extra_min?: number
+          id?: string
+          intervalo_min?: number
+          noturno_min?: number
+          organization_id: string
+          previsto_min?: number
+          regra?: Json
+          saida_antecipada_min?: number
+          saldo_min?: number
+          situacao?: string
+          trabalhado_min?: number
+          updated_at?: string
+        }
+        Update: {
+          atraso_min?: number
+          calculado_em?: string
+          created_at?: string
+          data?: string
+          employee_id?: string
+          extra_min?: number
+          id?: string
+          intervalo_min?: number
+          noturno_min?: number
+          organization_id?: string
+          previsto_min?: number
+          regra?: Json
+          saida_antecipada_min?: number
+          saldo_min?: number
+          situacao?: string
+          trabalhado_min?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_daily_summaries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_daily_summaries_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_employees: {
+        Row: {
+          admissao: string | null
+          ativo: boolean
+          cargo: string | null
+          company_id: string | null
+          cpf: string | null
+          created_at: string
+          id: string
+          matricula: string | null
+          nome: string
+          organization_id: string
+          supervisor_user_id: string | null
+          unit_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admissao?: string | null
+          ativo?: boolean
+          cargo?: string | null
+          company_id?: string | null
+          cpf?: string | null
+          created_at?: string
+          id?: string
+          matricula?: string | null
+          nome: string
+          organization_id: string
+          supervisor_user_id?: string | null
+          unit_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admissao?: string | null
+          ativo?: boolean
+          cargo?: string | null
+          company_id?: string | null
+          cpf?: string | null
+          created_at?: string
+          id?: string
+          matricula?: string | null
+          nome?: string
+          organization_id?: string
+          supervisor_user_id?: string | null
+          unit_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_employees_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_employees_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_employment_contracts: {
+        Row: {
+          carga_semanal_min: number
+          created_at: string
+          employee_id: string
+          fim: string | null
+          id: string
+          inicio: string
+          organization_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          carga_semanal_min?: number
+          created_at?: string
+          employee_id: string
+          fim?: string | null
+          id?: string
+          inicio: string
+          organization_id: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          carga_semanal_min?: number
+          created_at?: string
+          employee_id?: string
+          fim?: string | null
+          id?: string
+          inicio?: string
+          organization_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_employment_contracts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_employment_contracts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_geofences: {
+        Row: {
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          nome: string
+          organization_id: string
+          raio_metros: number
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          latitude: number
+          longitude: number
+          nome: string
+          organization_id: string
+          raio_metros?: number
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          nome?: string
+          organization_id?: string
+          raio_metros?: number
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_geofences_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_geofences_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_holidays: {
+        Row: {
+          abrangencia: string
+          created_at: string
+          data: string
+          id: string
+          nome: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          abrangencia?: string
+          created_at?: string
+          data: string
+          id?: string
+          nome: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          abrangencia?: string
+          created_at?: string
+          data?: string
+          id?: string
+          nome?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_holidays_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_hour_bank_entries: {
+        Row: {
+          created_at: string
+          data: string
+          descricao: string | null
+          employee_id: string
+          id: string
+          minutos: number
+          organization_id: string
+          origem: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data: string
+          descricao?: string | null
+          employee_id: string
+          id?: string
+          minutos: number
+          organization_id: string
+          origem?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          employee_id?: string
+          id?: string
+          minutos?: number
+          organization_id?: string
+          origem?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_hour_bank_entries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_hour_bank_entries_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_members: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          papel: Database["public"]["Enums"]["pnt_papel"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          papel?: Database["public"]["Enums"]["pnt_papel"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          papel?: Database["public"]["Enums"]["pnt_papel"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_organizations: {
+        Row: {
+          created_at: string
+          fuso: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fuso?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fuso?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pnt_payroll_periods: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          fechado_em: string | null
+          fechado_por: string | null
+          fim: string
+          id: string
+          inicio: string
+          organization_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          fechado_em?: string | null
+          fechado_por?: string | null
+          fim: string
+          id?: string
+          inicio: string
+          organization_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          fechado_em?: string | null
+          fechado_por?: string | null
+          fim?: string
+          id?: string
+          inicio?: string
+          organization_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_payroll_periods_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_payroll_periods_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_schedule_assignments: {
+        Row: {
+          created_at: string
+          employee_id: string
+          fim: string | null
+          id: string
+          inicio: string
+          organization_id: string
+          schedule_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          fim?: string | null
+          id?: string
+          inicio?: string
+          organization_id: string
+          schedule_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          fim?: string | null
+          id?: string
+          inicio?: string
+          organization_id?: string
+          schedule_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_schedule_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_schedule_assignments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_schedule_assignments_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_work_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_settings: {
+        Row: {
+          banco_horas: boolean
+          created_at: string
+          exige_geolocalizacao: boolean
+          exige_selfie: boolean
+          id: string
+          integracoes: Json
+          limite_extra_diario_min: number
+          organization_id: string
+          raio_padrao_m: number
+          retencao_dias: number
+          tolerancia_min: number
+          updated_at: string
+        }
+        Insert: {
+          banco_horas?: boolean
+          created_at?: string
+          exige_geolocalizacao?: boolean
+          exige_selfie?: boolean
+          id?: string
+          integracoes?: Json
+          limite_extra_diario_min?: number
+          organization_id: string
+          raio_padrao_m?: number
+          retencao_dias?: number
+          tolerancia_min?: number
+          updated_at?: string
+        }
+        Update: {
+          banco_horas?: boolean
+          created_at?: string
+          exige_geolocalizacao?: boolean
+          exige_selfie?: boolean
+          id?: string
+          integracoes?: Json
+          limite_extra_diario_min?: number
+          organization_id?: string
+          raio_padrao_m?: number
+          retencao_dias?: number
+          tolerancia_min?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_time_adjustment_requests: {
+        Row: {
+          anexo_path: string | null
+          created_at: string
+          data_ref: string
+          decidido_em: string | null
+          decidido_por: string | null
+          employee_id: string
+          entry_id: string | null
+          horario_correto: string
+          id: string
+          justificativa_decisao: string | null
+          motivo: string
+          organization_id: string
+          solicitado_por: string | null
+          status: Database["public"]["Enums"]["pnt_status_solicitacao"]
+          tipo: Database["public"]["Enums"]["pnt_tipo_marcacao"]
+          updated_at: string
+        }
+        Insert: {
+          anexo_path?: string | null
+          created_at?: string
+          data_ref: string
+          decidido_em?: string | null
+          decidido_por?: string | null
+          employee_id: string
+          entry_id?: string | null
+          horario_correto: string
+          id?: string
+          justificativa_decisao?: string | null
+          motivo: string
+          organization_id: string
+          solicitado_por?: string | null
+          status?: Database["public"]["Enums"]["pnt_status_solicitacao"]
+          tipo: Database["public"]["Enums"]["pnt_tipo_marcacao"]
+          updated_at?: string
+        }
+        Update: {
+          anexo_path?: string | null
+          created_at?: string
+          data_ref?: string
+          decidido_em?: string | null
+          decidido_por?: string | null
+          employee_id?: string
+          entry_id?: string | null
+          horario_correto?: string
+          id?: string
+          justificativa_decisao?: string | null
+          motivo?: string
+          organization_id?: string
+          solicitado_por?: string | null
+          status?: Database["public"]["Enums"]["pnt_status_solicitacao"]
+          tipo?: Database["public"]["Enums"]["pnt_tipo_marcacao"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_time_adjustment_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_time_adjustment_requests_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_time_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_time_adjustment_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_time_adjustments: {
+        Row: {
+          aplicado_em: string
+          aplicado_por: string | null
+          created_at: string
+          employee_id: string
+          entry_id: string | null
+          id: string
+          organization_id: string
+          request_id: string | null
+          updated_at: string
+          valor_anterior: Json | null
+          valor_novo: Json | null
+        }
+        Insert: {
+          aplicado_em?: string
+          aplicado_por?: string | null
+          created_at?: string
+          employee_id: string
+          entry_id?: string | null
+          id?: string
+          organization_id: string
+          request_id?: string | null
+          updated_at?: string
+          valor_anterior?: Json | null
+          valor_novo?: Json | null
+        }
+        Update: {
+          aplicado_em?: string
+          aplicado_por?: string | null
+          created_at?: string
+          employee_id?: string
+          entry_id?: string | null
+          id?: string
+          organization_id?: string
+          request_id?: string | null
+          updated_at?: string
+          valor_anterior?: Json | null
+          valor_novo?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_time_adjustments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_time_adjustments_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_time_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_time_adjustments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_time_adjustments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_time_adjustment_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_time_entries: {
+        Row: {
+          company_id: string | null
+          comprovante: string
+          created_at: string
+          criado_por: string | null
+          data_ref: string
+          dispositivo_em: string | null
+          distancia_m: number | null
+          employee_id: string
+          endereco: string | null
+          id: string
+          idempotency_key: string
+          ip: string | null
+          latitude: number | null
+          longitude: number | null
+          observacao: string | null
+          organization_id: string
+          origem: string
+          precisao_m: number | null
+          registrado_em: string
+          selfie_path: string | null
+          status: Database["public"]["Enums"]["pnt_status_marcacao"]
+          tipo: Database["public"]["Enums"]["pnt_tipo_marcacao"]
+          unit_id: string | null
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          comprovante: string
+          created_at?: string
+          criado_por?: string | null
+          data_ref?: string
+          dispositivo_em?: string | null
+          distancia_m?: number | null
+          employee_id: string
+          endereco?: string | null
+          id?: string
+          idempotency_key: string
+          ip?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          observacao?: string | null
+          organization_id: string
+          origem?: string
+          precisao_m?: number | null
+          registrado_em?: string
+          selfie_path?: string | null
+          status?: Database["public"]["Enums"]["pnt_status_marcacao"]
+          tipo: Database["public"]["Enums"]["pnt_tipo_marcacao"]
+          unit_id?: string | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          comprovante?: string
+          created_at?: string
+          criado_por?: string | null
+          data_ref?: string
+          dispositivo_em?: string | null
+          distancia_m?: number | null
+          employee_id?: string
+          endereco?: string | null
+          id?: string
+          idempotency_key?: string
+          ip?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          observacao?: string | null
+          organization_id?: string
+          origem?: string
+          precisao_m?: number | null
+          registrado_em?: string
+          selfie_path?: string | null
+          status?: Database["public"]["Enums"]["pnt_status_marcacao"]
+          tipo?: Database["public"]["Enums"]["pnt_tipo_marcacao"]
+          unit_id?: string | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_time_entries_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_time_entries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_time_entries_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_time_entries_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_units: {
+        Row: {
+          ativo: boolean
+          company_id: string
+          created_at: string
+          endereco: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          nome: string
+          organization_id: string
+          raio_metros: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          company_id: string
+          created_at?: string
+          endereco?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nome: string
+          organization_id: string
+          raio_metros?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          company_id?: string
+          created_at?: string
+          endereco?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nome?: string
+          organization_id?: string
+          raio_metros?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_units_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pnt_units_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pnt_work_schedules: {
+        Row: {
+          ativo: boolean
+          banco_horas: boolean
+          carga_diaria_min: number
+          carga_semanal_min: number
+          created_at: string
+          dias_semana: number[]
+          entrada: string | null
+          id: string
+          intervalo_minutos: number
+          limite_extra_diario_min: number
+          nome: string
+          noturno: boolean
+          organization_id: string
+          regras: Json
+          saida: string | null
+          tipo: string
+          tolerancia_min: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          banco_horas?: boolean
+          carga_diaria_min?: number
+          carga_semanal_min?: number
+          created_at?: string
+          dias_semana?: number[]
+          entrada?: string | null
+          id?: string
+          intervalo_minutos?: number
+          limite_extra_diario_min?: number
+          nome: string
+          noturno?: boolean
+          organization_id: string
+          regras?: Json
+          saida?: string | null
+          tipo?: string
+          tolerancia_min?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          banco_horas?: boolean
+          carga_diaria_min?: number
+          carga_semanal_min?: number
+          created_at?: string
+          dias_semana?: number[]
+          entrada?: string | null
+          id?: string
+          intervalo_minutos?: number
+          limite_extra_diario_min?: number
+          nome?: string
+          noturno?: boolean
+          organization_id?: string
+          regras?: Json
+          saida?: string | null
+          tipo?: string
+          tolerancia_min?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pnt_work_schedules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -5912,6 +7112,14 @@ export type Database = {
         Returns: boolean
       }
       owns_protocolo_path: { Args: { _name: string }; Returns: boolean }
+      pnt_eh_admin: { Args: { _user_id: string }; Returns: boolean }
+      pnt_eh_gestor: { Args: { _user_id: string }; Returns: boolean }
+      pnt_meu_funcionario: { Args: { _user_id: string }; Returns: string }
+      pnt_papel_do_usuario: { Args: { _user_id: string }; Returns: string }
+      pnt_pode_ver_funcionario: {
+        Args: { _employee_id: string; _user_id: string }
+        Returns: boolean
+      }
       pode_autorizar_movimentacao: {
         Args: { _user_id: string }
         Returns: boolean
@@ -5978,6 +7186,20 @@ export type Database = {
         | "colaborador"
         | "cliente"
         | "gestor"
+      pnt_papel: "funcionario" | "supervisor" | "rh" | "admin"
+      pnt_status_marcacao:
+        | "valido"
+        | "fora_area"
+        | "pendente"
+        | "corrigido"
+        | "rejeitado"
+      pnt_status_solicitacao: "pendente" | "aprovada" | "rejeitada"
+      pnt_tipo_marcacao:
+        | "entrada"
+        | "intervalo_inicio"
+        | "intervalo_fim"
+        | "saida"
+        | "saida_extraordinaria"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -6132,6 +7354,22 @@ export const Constants = {
         "colaborador",
         "cliente",
         "gestor",
+      ],
+      pnt_papel: ["funcionario", "supervisor", "rh", "admin"],
+      pnt_status_marcacao: [
+        "valido",
+        "fora_area",
+        "pendente",
+        "corrigido",
+        "rejeitado",
+      ],
+      pnt_status_solicitacao: ["pendente", "aprovada", "rejeitada"],
+      pnt_tipo_marcacao: [
+        "entrada",
+        "intervalo_inicio",
+        "intervalo_fim",
+        "saida",
+        "saida_extraordinaria",
       ],
     },
   },
