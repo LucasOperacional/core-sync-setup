@@ -209,6 +209,7 @@ export function PostosExcelImportCard() {
   const [divergencias, setDivergencias] = useState<DivergenciaPosto[] | null>(null);
   const [conferidos, setConferidos] = useState(0);
   const [lendo, setLendo] = useState(false);
+  const [autoEmpresa, setAutoEmpresa] = useState(false);
 
   const corrigiveis = useMemo(
     () =>
@@ -217,6 +218,18 @@ export function PostosExcelImportCard() {
       ),
     [divergencias],
   );
+
+  /** Agrupa o que pode ser corrigido pela empresa informada na planilha. */
+  const porEmpresa = useMemo(() => {
+    const mapa = new Map<string, DivergenciaPosto[]>();
+    for (const d of corrigiveis) {
+      const chave = d.empresaPlanilha || "Sem empresa";
+      const atual = mapa.get(chave) ?? [];
+      atual.push(d);
+      mapa.set(chave, atual);
+    }
+    return [...mapa.entries()].sort((a, b) => b[1].length - a[1].length);
+  }, [corrigiveis]);
 
   const previa = useMutation({
     mutationFn: (lista: LinhaPlanilhaPosto[]) => analisar({ data: { linhas: lista } }),
