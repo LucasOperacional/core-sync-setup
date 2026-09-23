@@ -26,6 +26,13 @@ import { Route as AuthenticatedCanaisRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedChatIaRouteImport } from './routes/_authenticated/chat-ia'
 import { Route as AuthenticatedChatInternoRouteImport } from './routes/_authenticated/chat-interno'
 import { Route as AuthenticatedChecklistAutomaticoRouteImport } from './routes/_authenticated/checklist-automatico'
+import { Route as AuthenticatedComercialRouteImport } from './routes/_authenticated/comercial'
+import { Route as AuthenticatedComercialAgendaRouteImport } from './routes/_authenticated/comercial-agenda'
+import { Route as AuthenticatedComercialClientesRouteImport } from './routes/_authenticated/comercial-clientes'
+import { Route as AuthenticatedComercialContratosRouteImport } from './routes/_authenticated/comercial-contratos'
+import { Route as AuthenticatedComercialFunilRouteImport } from './routes/_authenticated/comercial-funil'
+import { Route as AuthenticatedComercialPropostasRouteImport } from './routes/_authenticated/comercial-propostas'
+import { Route as AuthenticatedComercialRelatoriosRouteImport } from './routes/_authenticated/comercial-relatorios'
 import { Route as AuthenticatedControlRouteImport } from './routes/_authenticated/control'
 import { Route as AuthenticatedCoordenacaoRouteImport } from './routes/_authenticated/coordenacao'
 import { Route as AuthenticatedCoordenacaoCrtRouteImport } from './routes/_authenticated/coordenacao-crt'
@@ -176,6 +183,47 @@ const AuthenticatedChecklistAutomaticoRoute =
   AuthenticatedChecklistAutomaticoRouteImport.update({
     id: '/checklist-automatico',
     path: '/checklist-automatico',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedComercialRoute = AuthenticatedComercialRouteImport.update({
+  id: '/comercial',
+  path: '/comercial',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedComercialAgendaRoute =
+  AuthenticatedComercialAgendaRouteImport.update({
+    id: '/comercial-agenda',
+    path: '/comercial-agenda',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedComercialClientesRoute =
+  AuthenticatedComercialClientesRouteImport.update({
+    id: '/comercial-clientes',
+    path: '/comercial-clientes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedComercialContratosRoute =
+  AuthenticatedComercialContratosRouteImport.update({
+    id: '/comercial-contratos',
+    path: '/comercial-contratos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedComercialFunilRoute =
+  AuthenticatedComercialFunilRouteImport.update({
+    id: '/comercial-funil',
+    path: '/comercial-funil',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedComercialPropostasRoute =
+  AuthenticatedComercialPropostasRouteImport.update({
+    id: '/comercial-propostas',
+    path: '/comercial-propostas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedComercialRelatoriosRoute =
+  AuthenticatedComercialRelatoriosRouteImport.update({
+    id: '/comercial-relatorios',
+    path: '/comercial-relatorios',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedControlRoute = AuthenticatedControlRouteImport.update({
@@ -550,6 +598,13 @@ export interface FileRoutesByFullPath {
   '/chat-ia': typeof AuthenticatedChatIaRoute
   '/chat-interno': typeof AuthenticatedChatInternoRoute
   '/checklist-automatico': typeof AuthenticatedChecklistAutomaticoRoute
+  '/comercial': typeof AuthenticatedComercialRoute
+  '/comercial-agenda': typeof AuthenticatedComercialAgendaRoute
+  '/comercial-clientes': typeof AuthenticatedComercialClientesRoute
+  '/comercial-contratos': typeof AuthenticatedComercialContratosRoute
+  '/comercial-funil': typeof AuthenticatedComercialFunilRoute
+  '/comercial-propostas': typeof AuthenticatedComercialPropostasRoute
+  '/comercial-relatorios': typeof AuthenticatedComercialRelatoriosRoute
   '/control': typeof AuthenticatedControlRoute
   '/coordenacao': typeof AuthenticatedCoordenacaoRoute
   '/coordenacao-crt': typeof AuthenticatedCoordenacaoCrtRoute
@@ -629,6 +684,13 @@ export interface FileRoutesByTo {
   '/chat-ia': typeof AuthenticatedChatIaRoute
   '/chat-interno': typeof AuthenticatedChatInternoRoute
   '/checklist-automatico': typeof AuthenticatedChecklistAutomaticoRoute
+  '/comercial': typeof AuthenticatedComercialRoute
+  '/comercial-agenda': typeof AuthenticatedComercialAgendaRoute
+  '/comercial-clientes': typeof AuthenticatedComercialClientesRoute
+  '/comercial-contratos': typeof AuthenticatedComercialContratosRoute
+  '/comercial-funil': typeof AuthenticatedComercialFunilRoute
+  '/comercial-propostas': typeof AuthenticatedComercialPropostasRoute
+  '/comercial-relatorios': typeof AuthenticatedComercialRelatoriosRoute
   '/control': typeof AuthenticatedControlRoute
   '/coordenacao': typeof AuthenticatedCoordenacaoRoute
   '/coordenacao-crt': typeof AuthenticatedCoordenacaoCrtRoute
@@ -711,6 +773,13 @@ export interface FileRoutesById {
   '/_authenticated/chat-ia': typeof AuthenticatedChatIaRoute
   '/_authenticated/chat-interno': typeof AuthenticatedChatInternoRoute
   '/_authenticated/checklist-automatico': typeof AuthenticatedChecklistAutomaticoRoute
+  '/_authenticated/comercial': typeof AuthenticatedComercialRoute
+  '/_authenticated/comercial-agenda': typeof AuthenticatedComercialAgendaRoute
+  '/_authenticated/comercial-clientes': typeof AuthenticatedComercialClientesRoute
+  '/_authenticated/comercial-contratos': typeof AuthenticatedComercialContratosRoute
+  '/_authenticated/comercial-funil': typeof AuthenticatedComercialFunilRoute
+  '/_authenticated/comercial-propostas': typeof AuthenticatedComercialPropostasRoute
+  '/_authenticated/comercial-relatorios': typeof AuthenticatedComercialRelatoriosRoute
   '/_authenticated/control': typeof AuthenticatedControlRoute
   '/_authenticated/coordenacao': typeof AuthenticatedCoordenacaoRoute
   '/_authenticated/coordenacao-crt': typeof AuthenticatedCoordenacaoCrtRoute
@@ -794,6 +863,13 @@ export interface FileRouteTypes {
     | '/chat-ia'
     | '/chat-interno'
     | '/checklist-automatico'
+    | '/comercial'
+    | '/comercial-agenda'
+    | '/comercial-clientes'
+    | '/comercial-contratos'
+    | '/comercial-funil'
+    | '/comercial-propostas'
+    | '/comercial-relatorios'
     | '/control'
     | '/coordenacao'
     | '/coordenacao-crt'
@@ -873,6 +949,13 @@ export interface FileRouteTypes {
     | '/chat-ia'
     | '/chat-interno'
     | '/checklist-automatico'
+    | '/comercial'
+    | '/comercial-agenda'
+    | '/comercial-clientes'
+    | '/comercial-contratos'
+    | '/comercial-funil'
+    | '/comercial-propostas'
+    | '/comercial-relatorios'
     | '/control'
     | '/coordenacao'
     | '/coordenacao-crt'
@@ -954,6 +1037,13 @@ export interface FileRouteTypes {
     | '/_authenticated/chat-ia'
     | '/_authenticated/chat-interno'
     | '/_authenticated/checklist-automatico'
+    | '/_authenticated/comercial'
+    | '/_authenticated/comercial-agenda'
+    | '/_authenticated/comercial-clientes'
+    | '/_authenticated/comercial-contratos'
+    | '/_authenticated/comercial-funil'
+    | '/_authenticated/comercial-propostas'
+    | '/_authenticated/comercial-relatorios'
     | '/_authenticated/control'
     | '/_authenticated/coordenacao'
     | '/_authenticated/coordenacao-crt'
@@ -1170,6 +1260,55 @@ declare module '@tanstack/react-router' {
       path: '/checklist-automatico'
       fullPath: '/checklist-automatico'
       preLoaderRoute: typeof AuthenticatedChecklistAutomaticoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comercial': {
+      id: '/_authenticated/comercial'
+      path: '/comercial'
+      fullPath: '/comercial'
+      preLoaderRoute: typeof AuthenticatedComercialRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comercial-agenda': {
+      id: '/_authenticated/comercial-agenda'
+      path: '/comercial-agenda'
+      fullPath: '/comercial-agenda'
+      preLoaderRoute: typeof AuthenticatedComercialAgendaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comercial-clientes': {
+      id: '/_authenticated/comercial-clientes'
+      path: '/comercial-clientes'
+      fullPath: '/comercial-clientes'
+      preLoaderRoute: typeof AuthenticatedComercialClientesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comercial-contratos': {
+      id: '/_authenticated/comercial-contratos'
+      path: '/comercial-contratos'
+      fullPath: '/comercial-contratos'
+      preLoaderRoute: typeof AuthenticatedComercialContratosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comercial-funil': {
+      id: '/_authenticated/comercial-funil'
+      path: '/comercial-funil'
+      fullPath: '/comercial-funil'
+      preLoaderRoute: typeof AuthenticatedComercialFunilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comercial-propostas': {
+      id: '/_authenticated/comercial-propostas'
+      path: '/comercial-propostas'
+      fullPath: '/comercial-propostas'
+      preLoaderRoute: typeof AuthenticatedComercialPropostasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comercial-relatorios': {
+      id: '/_authenticated/comercial-relatorios'
+      path: '/comercial-relatorios'
+      fullPath: '/comercial-relatorios'
+      preLoaderRoute: typeof AuthenticatedComercialRelatoriosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/control': {
@@ -1620,6 +1759,13 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChatIaRoute: typeof AuthenticatedChatIaRoute
   AuthenticatedChatInternoRoute: typeof AuthenticatedChatInternoRoute
   AuthenticatedChecklistAutomaticoRoute: typeof AuthenticatedChecklistAutomaticoRoute
+  AuthenticatedComercialRoute: typeof AuthenticatedComercialRoute
+  AuthenticatedComercialAgendaRoute: typeof AuthenticatedComercialAgendaRoute
+  AuthenticatedComercialClientesRoute: typeof AuthenticatedComercialClientesRoute
+  AuthenticatedComercialContratosRoute: typeof AuthenticatedComercialContratosRoute
+  AuthenticatedComercialFunilRoute: typeof AuthenticatedComercialFunilRoute
+  AuthenticatedComercialPropostasRoute: typeof AuthenticatedComercialPropostasRoute
+  AuthenticatedComercialRelatoriosRoute: typeof AuthenticatedComercialRelatoriosRoute
   AuthenticatedControlRoute: typeof AuthenticatedControlRoute
   AuthenticatedCoordenacaoRoute: typeof AuthenticatedCoordenacaoRoute
   AuthenticatedCoordenacaoCrtRoute: typeof AuthenticatedCoordenacaoCrtRoute
@@ -1674,6 +1820,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatIaRoute: AuthenticatedChatIaRoute,
   AuthenticatedChatInternoRoute: AuthenticatedChatInternoRoute,
   AuthenticatedChecklistAutomaticoRoute: AuthenticatedChecklistAutomaticoRoute,
+  AuthenticatedComercialRoute: AuthenticatedComercialRoute,
+  AuthenticatedComercialAgendaRoute: AuthenticatedComercialAgendaRoute,
+  AuthenticatedComercialClientesRoute: AuthenticatedComercialClientesRoute,
+  AuthenticatedComercialContratosRoute: AuthenticatedComercialContratosRoute,
+  AuthenticatedComercialFunilRoute: AuthenticatedComercialFunilRoute,
+  AuthenticatedComercialPropostasRoute: AuthenticatedComercialPropostasRoute,
+  AuthenticatedComercialRelatoriosRoute: AuthenticatedComercialRelatoriosRoute,
   AuthenticatedControlRoute: AuthenticatedControlRoute,
   AuthenticatedCoordenacaoRoute: AuthenticatedCoordenacaoRoute,
   AuthenticatedCoordenacaoCrtRoute: AuthenticatedCoordenacaoCrtRoute,

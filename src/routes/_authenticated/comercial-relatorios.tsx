@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { ComercialWorkspace } from "@/components/comercial/ComercialWorkspace";
+export const Route = createFileRoute("/_authenticated/comercial-relatorios")({ head: () => ({ meta: [{ title: "Relatórios | Comercial NXS" }, { name: "description", content: "Relatórios de desempenho comercial para PDF e Excel." }, { property: "og:title", content: "Relatórios | Comercial NXS" }, { property: "og:description", content: "Relatórios de desempenho comercial para PDF e Excel." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: () => <ComercialWorkspace modo="relatorios" /> });
