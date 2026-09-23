@@ -347,7 +347,7 @@ export function PostosExcelImportCard() {
                     `Corrigir ${corrigiveis.length} posto(s) na NEXTI usando a planilha como referência?`,
                   )
                 )
-                  correcao.mutate();
+                  correcao.mutate({ itens: corrigiveis, rotulo: "todas as empresas" });
               }}
             >
               {correcao.isPending ? (
