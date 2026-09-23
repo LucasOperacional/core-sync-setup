@@ -29,7 +29,7 @@ export interface NavItem {
 
 export const allNavItems: NavItem[] = [
   { to: "/", icon: Home, label: "Início", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
-  { to: "/control", icon: BarChart3, label: "ISO", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
+  { to: "/control", icon: BarChart3, label: "Control", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
   { to: "/faltas", icon: CalendarX2, label: "Faltas", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
   { to: "/atestados", icon: ClipboardCheck, label: "Atestados", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
   { to: "/protocolo-folhas-ponto", icon: FileSignature, label: "Folhas", color: "text-muted-foreground", activeColor: "text-primary", activeBg: "bg-accent" },
