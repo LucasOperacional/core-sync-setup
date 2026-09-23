@@ -366,11 +366,50 @@ export function PostosExcelImportCard() {
           {EMPRESAS_PLANILHA.join(" · ")}. Nada é alterado antes de você conferir a prévia.
         </p>
 
+        <label className="flex w-fit cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-xs">
+          <input
+            type="checkbox"
+            className="size-4 accent-primary"
+            checked={autoEmpresa}
+            onChange={(e) => setAutoEmpresa(e.target.checked)}
+          />
+          Corrigir a empresa automaticamente ao ler a planilha
+        </label>
+
         {arquivo ? (
           <p className="text-sm">
             <strong>{arquivo}</strong> · {linhas.length} posto(s) na planilha
             {divergencias ? ` · ${conferidos} conferidos na NEXTI` : ""}
           </p>
+        ) : null}
+
+        {porEmpresa.length > 0 ? (
+          <div className="space-y-2 rounded-md border p-3">
+            <p className="text-xs font-medium uppercase text-muted-foreground">
+              Atualizar por empresa
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {porEmpresa.map(([empresa, itens]) => (
+                <Button
+                  key={empresa}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  disabled={correcao.isPending}
+                  onClick={() => correcao.mutate({ itens, rotulo: empresa })}
+                >
+                  {correcao.isPending && correcao.variables?.rotulo === empresa ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="size-4" />
+                  )}
+                  {empresa}
+                  <Badge variant="secondary">{itens.length}</Badge>
+                </Button>
+              ))}
+            </div>
+          </div>
         ) : null}
 
         {divergencias && divergencias.length === 0 ? (
