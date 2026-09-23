@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronDown, Download, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { ChevronDown, Download, LogOut, MapPin, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { operacionalNavItems, rhNavItems } from "@/components/FloatingNav";
@@ -99,6 +99,28 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="truncate">{recolhida ? "COM" : "Comercial"}</span>
             <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", comercialAberta && "rotate-180")} />
           </button>
+        )}
+
+        {podeVerCategoria("categoria-comercial") && comercialAberta && (
+          <ul className="mt-1 space-y-0.5">
+            <li>
+              <Link
+                to="/prospeccao-maps"
+                title={recolhida ? "Prospecção Google Maps" : undefined}
+                aria-current={ativo("/prospeccao-maps") ? "page" : undefined}
+                className={cn(
+                  "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
+                  ativo("/prospeccao-maps")
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                )}
+              >
+                <MapPin className={cn("size-4 shrink-0", ativo("/prospeccao-maps") && "text-primary")} />
+                {!recolhida && <span className="truncate">Prospecção Google Maps</span>}
+                {ativo("/prospeccao-maps") && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
+              </Link>
+            </li>
+          </ul>
         )}
 
         {podeVerCategoria("categoria-departamento-pessoal") && (

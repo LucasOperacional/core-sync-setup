@@ -44,6 +44,7 @@ import { Route as AuthenticatedPainelNextiRouteImport } from './routes/_authenti
 import { Route as AuthenticatedPesquisaColaboradorNextiRouteImport } from './routes/_authenticated/pesquisa-colaborador-nexti'
 import { Route as AuthenticatedPesquisaFaltasRouteImport } from './routes/_authenticated/pesquisa-faltas'
 import { Route as AuthenticatedPostosRouteImport } from './routes/_authenticated/postos'
+import { Route as AuthenticatedProspeccaoMapsRouteImport } from './routes/_authenticated/prospeccao-maps'
 import { Route as AuthenticatedProtocoloFolhasPontoRouteImport } from './routes/_authenticated/protocolo-folhas-ponto'
 import { Route as AuthenticatedProtocoloLimpezaGeralRouteImport } from './routes/_authenticated/protocolo-limpeza-geral'
 import { Route as AuthenticatedQualidadeTempoRouteImport } from './routes/_authenticated/qualidade-tempo'
@@ -279,6 +280,12 @@ const AuthenticatedPostosRoute = AuthenticatedPostosRouteImport.update({
   path: '/postos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProspeccaoMapsRoute =
+  AuthenticatedProspeccaoMapsRouteImport.update({
+    id: '/prospeccao-maps',
+    path: '/prospeccao-maps',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProtocoloFolhasPontoRoute =
   AuthenticatedProtocoloFolhasPontoRouteImport.update({
     id: '/protocolo-folhas-ponto',
@@ -561,6 +568,7 @@ export interface FileRoutesByFullPath {
   '/pesquisa-colaborador-nexti': typeof AuthenticatedPesquisaColaboradorNextiRoute
   '/pesquisa-faltas': typeof AuthenticatedPesquisaFaltasRoute
   '/postos': typeof AuthenticatedPostosRoute
+  '/prospeccao-maps': typeof AuthenticatedProspeccaoMapsRoute
   '/protocolo-folhas-ponto': typeof AuthenticatedProtocoloFolhasPontoRoute
   '/protocolo-limpeza-geral': typeof AuthenticatedProtocoloLimpezaGeralRoute
   '/qualidade-tempo': typeof AuthenticatedQualidadeTempoRoute
@@ -639,6 +647,7 @@ export interface FileRoutesByTo {
   '/pesquisa-colaborador-nexti': typeof AuthenticatedPesquisaColaboradorNextiRoute
   '/pesquisa-faltas': typeof AuthenticatedPesquisaFaltasRoute
   '/postos': typeof AuthenticatedPostosRoute
+  '/prospeccao-maps': typeof AuthenticatedProspeccaoMapsRoute
   '/protocolo-folhas-ponto': typeof AuthenticatedProtocoloFolhasPontoRoute
   '/protocolo-limpeza-geral': typeof AuthenticatedProtocoloLimpezaGeralRoute
   '/qualidade-tempo': typeof AuthenticatedQualidadeTempoRoute
@@ -720,6 +729,7 @@ export interface FileRoutesById {
   '/_authenticated/pesquisa-colaborador-nexti': typeof AuthenticatedPesquisaColaboradorNextiRoute
   '/_authenticated/pesquisa-faltas': typeof AuthenticatedPesquisaFaltasRoute
   '/_authenticated/postos': typeof AuthenticatedPostosRoute
+  '/_authenticated/prospeccao-maps': typeof AuthenticatedProspeccaoMapsRoute
   '/_authenticated/protocolo-folhas-ponto': typeof AuthenticatedProtocoloFolhasPontoRoute
   '/_authenticated/protocolo-limpeza-geral': typeof AuthenticatedProtocoloLimpezaGeralRoute
   '/_authenticated/qualidade-tempo': typeof AuthenticatedQualidadeTempoRoute
@@ -802,6 +812,7 @@ export interface FileRouteTypes {
     | '/pesquisa-colaborador-nexti'
     | '/pesquisa-faltas'
     | '/postos'
+    | '/prospeccao-maps'
     | '/protocolo-folhas-ponto'
     | '/protocolo-limpeza-geral'
     | '/qualidade-tempo'
@@ -880,6 +891,7 @@ export interface FileRouteTypes {
     | '/pesquisa-colaborador-nexti'
     | '/pesquisa-faltas'
     | '/postos'
+    | '/prospeccao-maps'
     | '/protocolo-folhas-ponto'
     | '/protocolo-limpeza-geral'
     | '/qualidade-tempo'
@@ -960,6 +972,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pesquisa-colaborador-nexti'
     | '/_authenticated/pesquisa-faltas'
     | '/_authenticated/postos'
+    | '/_authenticated/prospeccao-maps'
     | '/_authenticated/protocolo-folhas-ponto'
     | '/_authenticated/protocolo-limpeza-geral'
     | '/_authenticated/qualidade-tempo'
@@ -1283,6 +1296,13 @@ declare module '@tanstack/react-router' {
       path: '/postos'
       fullPath: '/postos'
       preLoaderRoute: typeof AuthenticatedPostosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/prospeccao-maps': {
+      id: '/_authenticated/prospeccao-maps'
+      path: '/prospeccao-maps'
+      fullPath: '/prospeccao-maps'
+      preLoaderRoute: typeof AuthenticatedProspeccaoMapsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/protocolo-folhas-ponto': {
@@ -1618,6 +1638,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPesquisaColaboradorNextiRoute: typeof AuthenticatedPesquisaColaboradorNextiRoute
   AuthenticatedPesquisaFaltasRoute: typeof AuthenticatedPesquisaFaltasRoute
   AuthenticatedPostosRoute: typeof AuthenticatedPostosRoute
+  AuthenticatedProspeccaoMapsRoute: typeof AuthenticatedProspeccaoMapsRoute
   AuthenticatedProtocoloFolhasPontoRoute: typeof AuthenticatedProtocoloFolhasPontoRoute
   AuthenticatedProtocoloLimpezaGeralRoute: typeof AuthenticatedProtocoloLimpezaGeralRoute
   AuthenticatedQualidadeTempoRoute: typeof AuthenticatedQualidadeTempoRoute
@@ -1673,6 +1694,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedPesquisaColaboradorNextiRoute,
   AuthenticatedPesquisaFaltasRoute: AuthenticatedPesquisaFaltasRoute,
   AuthenticatedPostosRoute: AuthenticatedPostosRoute,
+  AuthenticatedProspeccaoMapsRoute: AuthenticatedProspeccaoMapsRoute,
   AuthenticatedProtocoloFolhasPontoRoute:
     AuthenticatedProtocoloFolhasPontoRoute,
   AuthenticatedProtocoloLimpezaGeralRoute:
