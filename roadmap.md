@@ -6,3 +6,4 @@
 - [x] Buscar colaboradores na NEXTI e validar cargo, vaga e efetivo do posto de destino
 - [x] Criar o departamento Comercial completo: dashboard, clientes, funil, propostas, agenda, contratos, relatórios, permissões e auditoria
 - [x] Tornar o layout mais autoral e corporativo, preservando todas as funções
+- [ ] Substituir o vídeo da página de autenticação pelo arquivo enviado
