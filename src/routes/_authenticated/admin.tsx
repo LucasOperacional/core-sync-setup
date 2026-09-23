@@ -30,7 +30,6 @@ import { EmailVagasCard } from "@/components/EmailVagasCard";
 import { WhatsAppAdminCard } from "@/components/WhatsAppAdminCard";
 
 import { notificarCentralArquivos } from "@/lib/central-arquivos-db";
-import ciopLogo from "@/assets/ciop-logo.png";
 
 import { type Visit } from "@/lib/report-parser";
 import { listVisitas, resetTudo } from "@/lib/visitas-db";
