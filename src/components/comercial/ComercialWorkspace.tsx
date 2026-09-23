@@ -20,7 +20,6 @@ import {
   carregarComercial, moeda, nomeCliente, registrarAuditoria,
   type ComercialDados, type ComercialModo, type EtapaComercial,
 } from "@/lib/comercial";
-import { ComercialNav } from "./ComercialNav";
 
 const banco = supabase as any;
 const rotaPorModo: Record<ComercialModo, string> = {
@@ -112,7 +111,6 @@ export function ComercialWorkspace({ modo }: { modo: ComercialModo }) {
           <Acoes modo={modo} abrir={setDialogo} />
         </div>
       </header>
-      <ComercialNav atual={rotaPorModo[modo]} />
       <section className="mx-auto max-w-[88rem] space-y-5 px-4 py-5 sm:px-6 lg:px-8">
         {query.isLoading ? <div className="grid min-h-72 place-items-center"><Loader2 className="size-7 animate-spin text-primary" /></div> : query.isError ? <Vazio texto={(query.error as Error).message} /> : <Conteudo modo={modo} dados={dados} busca={busca} setBusca={setBusca} inicio={inicio} setInicio={setInicio} fim={fim} setFim={setFim} mover={mover.mutate} concluir={concluir} />}
       </section>
