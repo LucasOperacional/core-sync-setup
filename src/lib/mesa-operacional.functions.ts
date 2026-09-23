@@ -90,12 +90,33 @@ export const listarPostosMesa = createServerFn({ method: "GET" })
 
     const mapaRel = new Map((relatorios ?? []).map((r) => [r.posto_id, r]));
 
+    // Histórico: último relatório registrado antes do dia consultado, para que
+    // nada se perca ao virar o dia.
+    const { data: anteriores } = await context.supabase
+      .from("mesa_relatorios")
+      .select("posto_id, relatorio, registrado_em, data")
+      .not("posto_id", "is", null)
+      .lt("data", dia)
+      .order("data", { ascending: false })
+      .limit(2000);
+
+    const mapaUltimo = new Map<string, { relatorio: string; registrado_em: string | null; data: string }>();
+    for (const r of anteriores ?? []) {
+      if (!r.posto_id || mapaUltimo.has(r.posto_id)) continue;
+      mapaUltimo.set(r.posto_id, {
+        relatorio: r.relatorio,
+        registrado_em: r.registrado_em,
+        data: r.data,
+      });
+    }
+
     return {
       ok: true,
       data: dia,
       postos: (postos ?? []).map((p) => {
         const c = mapa.get(p.id);
         const r = mapaRel.get(p.id);
+        const u = mapaUltimo.get(p.id);
         return {
           id: p.id,
           nome: p.nome,
@@ -108,10 +129,14 @@ export const listarPostosMesa = createServerFn({ method: "GET" })
           checkEm: c?.registrado_em ?? null,
           relatorio: r?.relatorio ?? null,
           relatorioEm: r?.registrado_em ?? null,
+          ultimoRelatorio: u?.relatorio ?? null,
+          ultimoRelatorioEm: u?.registrado_em ?? null,
+          ultimoRelatorioData: u?.data ?? null,
         };
       }),
     };
   });
+
 
 const relatorioSchema = z.object({
   postoId: z.string().uuid(),
