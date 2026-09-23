@@ -43,7 +43,20 @@ function reconhecerEmpresa(texto: string): string | null {
   return null;
 }
 
-const POSTOS_IGNORAR = new Set(["TOTAL", "TOTAL GERAL", "POSTO", "SOMA"]);
+const POSTOS_IGNORAR = new Set([
+  "TOTAL",
+  "TOTAL GERAL",
+  "POSTO",
+  "SOMA",
+  "NOME DO CONTRATO",
+  "CONTRATO",
+]);
+
+/** Colunas que são só numeração da lista (Nº, item) e nunca contam vagas. */
+function ehColunaNumeracao(v: string): boolean {
+  return v === "N" || v === "NO" || v === "NUM" || v === "ITEM" || v === "ORDEM";
+}
+
 
 /**
  * Varre a planilha inteira (todas as abas e linhas). Aceita três formatos:
@@ -59,7 +72,10 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
   let cTotal = -1;
   let cQtd = -1;
   let colunasCargo: number[] = [];
+  /** A planilha atual traz informação de vagas? (listas de contratos não trazem) */
+  let temVagas = false;
   let empresaGlobal: string | null = null;
+
 
   const nomes = new Map<string, LinhaPlanilhaPosto>();
   /** Soma das quantidades por função (formato detalhamento). */
@@ -68,6 +84,9 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
   const totais = new Map<string, number>();
   /** Quantas vezes o posto aparece (fallback: 1 linha = 1 vaga). */
   const contagem = new Map<string, number>();
+  /** Postos cuja planilha realmente informa vagas. */
+  const comVagas = new Set<string>();
+
 
   const numero = (v: string | undefined) => {
     const limpo = (v ?? "").replace(/[^\d-]/g, "");
@@ -87,7 +106,15 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
     // Cabeçalho pode aparecer várias vezes (uma por aba / bloco).
     const hPosto = linha.findIndex((c) => {
       const v = chaveNome(c ?? "");
-      return v === "POSTO" || v === "NOME DO POSTO" || v === "LOCAL" || v === "UNIDADE";
+      return (
+        v === "POSTO" ||
+        v === "NOME DO POSTO" ||
+        v === "LOCAL" ||
+        v === "UNIDADE" ||
+        v === "NOME DO CONTRATO" ||
+        v === "CONTRATO" ||
+        v === "NOME DO POSTO DE SERVICO"
+      );
     });
     if (hPosto >= 0) {
       cPosto = hPosto;
@@ -106,12 +133,15 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
             i !== cEmpresa &&
             i !== cTotal &&
             i !== cQtd &&
+            !ehColunaNumeracao(v) &&
             !v.includes("VAGA ORIGINAL") &&
             !v.includes("OBSERVAC"),
         )
         .map(({ i }) => i);
+      temVagas = cTotal >= 0 || cQtd >= 0 || colunasCargo.length > 0;
       continue;
     }
+
 
     if (cPosto < 0) continue;
 
@@ -125,6 +155,8 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
     const chave = `${chaveNome(posto)}|${chaveNome(empresa)}`;
     if (!nomes.has(chave)) nomes.set(chave, { posto, empresa, vagas: null });
     contagem.set(chave, (contagem.get(chave) ?? 0) + 1);
+    if (temVagas) comVagas.add(chave);
+
 
     if (cQtd >= 0) {
       const q = numero(linha[cQtd]);
@@ -150,7 +182,10 @@ function extrairLinhas(linhas: string[][]): LinhaPlanilhaPosto[] {
 
   return [...nomes.entries()].map(([chave, item]) => ({
     ...item,
-    vagas: Math.max(somas.get(chave) ?? 0, totais.get(chave) ?? 0) || contagem.get(chave) || null,
+    // Lista só de contratos/postos (sem coluna de vagas): não compara vagas.
+    vagas: comVagas.has(chave)
+      ? Math.max(somas.get(chave) ?? 0, totais.get(chave) ?? 0) || contagem.get(chave) || null
+      : null,
   }));
 }
 

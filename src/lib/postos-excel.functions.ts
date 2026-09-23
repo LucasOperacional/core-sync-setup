@@ -205,6 +205,25 @@ export const analisarPostosExcel = createServerFn({ method: "POST" })
       };
     }
 
+    // A NEXTI só devolve `companyId` no posto; o nome da empresa vem da lista
+    // de empresas. Sem esse mapa a comparação usaria o nome do cliente.
+    const empresasNexti = await buscarTudo(config, [
+      "/api/companies/all",
+      "/companies/all",
+      "/api/company/all",
+    ]);
+    const empresaPorId = new Map<number, string>();
+    for (const e of empresasNexti) {
+      const id = Number(escolher(e, ["id", "companyId", "nextiId"]));
+      const nome = texto(escolher(e, ["companyName", "name", "razaoSocial", "fantasyName"]));
+      if (Number.isFinite(id) && nome) empresaPorId.set(id, nome);
+    }
+    const empresaDoPosto = (p: Rec): string | null => {
+      const cid = Number(escolher(p, ["companyId"]));
+      if (Number.isFinite(cid) && empresaPorId.has(cid)) return empresaPorId.get(cid) ?? null;
+      return texto(escolher(p, ["companyName", "company", "empresa"]));
+    };
+
     const porNome = new Map<string, Rec>();
     const nomesNexti: { nome: string; posto: Rec }[] = [];
     for (const p of postos) {
@@ -213,6 +232,7 @@ export const analisarPostosExcel = createServerFn({ method: "POST" })
       porNome.set(chaveNome(nome), p);
       nomesNexti.push({ nome, posto: p });
     }
+
 
     const divergencias: DivergenciaPosto[] = [];
     let conferidos = 0;
@@ -242,7 +262,7 @@ export const analisarPostosExcel = createServerFn({ method: "POST" })
             nextiId: Number.isFinite(idP) ? idP : null,
             tipo: "semelhante",
             empresaPlanilha: linha.empresa,
-            empresaNexti: texto(escolher(melhor.posto, ["companyName", "company", "empresa"])),
+            empresaNexti: empresaDoPosto(melhor.posto),
             vagasPlanilha: linha.vagas,
             vagasNexti: Number.isFinite(Number(vagasBrutoP)) ? Number(vagasBrutoP) : 0,
             postoNexti: melhor.nome,
@@ -263,7 +283,7 @@ export const analisarPostosExcel = createServerFn({ method: "POST" })
       }
       conferidos += 1;
       const id = Number(escolher(alvo, ["id", "nextiId", "workplaceId"]));
-      const empresaNexti = texto(escolher(alvo, ["companyName", "company", "empresa"]));
+      const empresaNexti = empresaDoPosto(alvo);
       const vagasBruto = escolher(alvo, ["vacantJob", "vacantJobs", "vagas", "vacancy", "vacancies"]);
       const vagasNexti = Number.isFinite(Number(vagasBruto)) ? Number(vagasBruto) : 0;
 
