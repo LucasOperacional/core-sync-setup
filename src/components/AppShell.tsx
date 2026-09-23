@@ -12,6 +12,16 @@ import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "ciop:navegacao-recolhida";
 
+const itensComercial = [
+  { to: "/comercial", label: "Visão geral", icon: LayoutDashboard },
+  { to: "/comercial-clientes", label: "Clientes", icon: Users },
+  { to: "/comercial-funil", label: "Funil", icon: Target },
+  { to: "/comercial-propostas", label: "Propostas", icon: FileText },
+  { to: "/comercial-agenda", label: "Agenda", icon: CalendarDays },
+  { to: "/comercial-contratos", label: "Contratos", icon: BriefcaseBusiness },
+  { to: "/comercial-relatorios", label: "Relatórios", icon: BarChart3 },
+] as const;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const caminho = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
