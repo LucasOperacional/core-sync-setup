@@ -47,8 +47,9 @@ function Vazio({ texto }: { texto: string }) {
   return <div className="grid min-h-40 place-items-center border border-dashed border-border bg-background/40 p-6 text-center text-sm text-muted-foreground">{texto}</div>;
 }
 
-function Kpi({ titulo, valor, detalhe, icon: Icon }: { titulo: string; valor: string | number; detalhe: string; icon: React.ElementType }) {
-  return <Card className="border-border bg-background text-foreground"><CardContent className="flex items-start justify-between p-4"><div><p className="text-xs font-medium uppercase text-foreground0">{titulo}</p><p className="mt-2 text-2xl font-bold">{valor}</p><p className="mt-1 text-xs text-foreground0">{detalhe}</p></div><span className="grid size-9 place-items-center rounded-md bg-primary/15 text-primary"><Icon className="size-4" /></span></CardContent></Card>;
+function Kpi({ titulo, valor, detalhe, icon: Icon, para }: { titulo: string; valor: string | number; detalhe: string; icon: React.ElementType; para?: string }) {
+  const card = <Card className="border-border bg-background text-foreground transition-colors hover:border-primary/50"><CardContent className="flex items-start justify-between p-4"><div><p className="text-xs font-medium uppercase text-foreground0">{titulo}</p><p className="mt-2 text-2xl font-bold">{valor}</p><p className="mt-1 text-xs text-foreground0">{detalhe}</p></div><span className="grid size-9 place-items-center rounded-md bg-primary/15 text-primary"><Icon className="size-4" /></span></CardContent></Card>;
+  return para ? <Link to={para} preload="intent" className="block">{card}</Link> : card;
 }
 
 export function ComercialWorkspace({ modo }: { modo: ComercialModo }) {
