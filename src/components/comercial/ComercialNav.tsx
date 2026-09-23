@@ -14,12 +14,12 @@ const itens = [
 
 export function ComercialNav({ atual }: { atual: string }) {
   return (
-    <nav className="overflow-x-auto border-b border-red-950 bg-neutral-950 px-4 sm:px-6 lg:px-8" aria-label="Seções do Comercial">
+    <nav className="overflow-x-auto border-b border-primary/20 bg-background px-4 sm:px-6 lg:px-8" aria-label="Seções do Comercial">
       <div className="mx-auto flex max-w-[88rem] min-w-max gap-1 py-2">
         {itens.map((item) => {
           const ativo = atual === item.to;
           return (
-            <Link key={item.to} to={item.to} preload="intent" preloadDelay={0} className={cn("flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors", ativo ? "bg-red-600 text-neutral-50" : "text-neutral-400 hover:bg-neutral-900 hover:text-neutral-50")}>
+            <Link key={item.to} to={item.to} preload="intent" preloadDelay={0} className={cn("flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors", ativo ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground")}>
               <item.icon className="size-4" />{item.label}
             </Link>
           );
