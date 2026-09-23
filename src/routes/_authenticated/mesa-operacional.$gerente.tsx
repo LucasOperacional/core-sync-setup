@@ -418,6 +418,8 @@ function GerentePostosPage() {
                     postoId={posto.id}
                     relatorio={posto.relatorio}
                     relatorioEm={posto.relatorioEm}
+                    ultimoRelatorio={posto.ultimoRelatorio}
+                    ultimoRelatorioData={posto.ultimoRelatorioData}
                     salvando={relatorioMut.isPending}
                     limpando={limparRelatorioMut.isPending}
                     onSalvar={(texto) =>
@@ -425,6 +427,7 @@ function GerentePostosPage() {
                     }
                     onLimpar={() => limparRelatorioMut.mutate(posto.id)}
                   />
+
                 </div>
                 <button
                   type="button"
