@@ -325,11 +325,21 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
 
-      <div className="space-y-1 border-t border-sidebar-border p-2">
-        <Button asChild variant="ghost" size={recolhida ? "icon" : "sm"} className={cn("w-full", !recolhida && "justify-start")}>
+      <div className="space-y-2 border-t border-sidebar-border p-2">
+        <Button
+          asChild
+          variant="ghost"
+          size={recolhida ? "icon" : "sm"}
+          className={cn(
+            "w-full border border-sidebar-border bg-sidebar-accent/55 text-sidebar-foreground shadow-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            !recolhida && "justify-start",
+          )}
+        >
           <Link to="/instalar" title="Instalar aplicativo"><Download />{!recolhida && "Instalar aplicativo"}</Link>
         </Button>
-        {!recolhida && <ThemeToggle className="h-8 w-full justify-start border-0 bg-transparent px-3 text-xs shadow-none" />}
+        {!recolhida && (
+          <ThemeToggle className="h-9 w-full justify-start border-sidebar-border bg-sidebar-accent/55 px-3 text-xs text-sidebar-foreground shadow-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
+        )}
         <Button variant="ghost" size={recolhida ? "icon" : "sm"} className={cn("w-full text-destructive hover:bg-destructive/10 hover:text-destructive", !recolhida && "justify-start")} onClick={sair} title="Sair">
           <LogOut />{!recolhida && "Sair"}
         </Button>
