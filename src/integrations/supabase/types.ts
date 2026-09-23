@@ -5879,12 +5879,6 @@ export type Database = {
           nome: string
         }[]
       }
-      com_eh_admin: { Args: { _user_id: string }; Returns: boolean }
-      com_eh_gestor: { Args: { _user_id: string }; Returns: boolean }
-      com_pode_ver_responsavel: {
-        Args: { _responsavel_id: string; _user_id: string }
-        Returns: boolean
-      }
       eh_membro_sala: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
