@@ -186,7 +186,13 @@ export const limparRelatorioMesa = createServerFn({ method: "POST" })
 // Relatório geral do gerente (por dia, sem vínculo com posto)
 // ---------------------------------------------------------------------------
 
-export type RelatorioGeral = { relatorio: string | null; registradoEm: string | null };
+export type RelatorioGeral = {
+  relatorio: string | null;
+  registradoEm: string | null;
+  ultimoRelatorio: string | null;
+  ultimoRelatorioEm: string | null;
+  ultimoRelatorioData: string | null;
+};
 
 const relatorioGeralSchema = z.object({
   gerenteNome: z.string().min(2),
@@ -200,15 +206,34 @@ export const buscarRelatorioGeralMesa = createServerFn({ method: "GET" })
     z.object({ gerenteNome: z.string().min(2), data: z.string() }).parse(input),
   )
   .handler(async ({ context, data }): Promise<RelatorioGeral> => {
+    const gerente = data.gerenteNome.trim();
     const { data: row } = await context.supabase
       .from("mesa_relatorios")
       .select("relatorio, registrado_em")
       .is("posto_id", null)
-      .eq("gerente_nome", data.gerenteNome.trim())
+      .eq("gerente_nome", gerente)
       .eq("data", data.data)
       .maybeSingle();
-    return { relatorio: row?.relatorio ?? null, registradoEm: row?.registrado_em ?? null };
+
+    const { data: anterior } = await context.supabase
+      .from("mesa_relatorios")
+      .select("relatorio, registrado_em, data")
+      .is("posto_id", null)
+      .eq("gerente_nome", gerente)
+      .lt("data", data.data)
+      .order("data", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return {
+      relatorio: row?.relatorio ?? null,
+      registradoEm: row?.registrado_em ?? null,
+      ultimoRelatorio: anterior?.relatorio ?? null,
+      ultimoRelatorioEm: anterior?.registrado_em ?? null,
+      ultimoRelatorioData: anterior?.data ?? null,
+    };
   });
+
 
 /** Salva (ou atualiza) o relatório geral do gerente na data, registrando data e hora. */
 export const salvarRelatorioGeralMesa = createServerFn({ method: "POST" })
