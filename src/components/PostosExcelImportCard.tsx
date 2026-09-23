@@ -245,15 +245,21 @@ export function PostosExcelImportCard() {
           ? "Tudo certo: a NEXTI está igual à planilha."
           : `${r.divergencias.length} posto(s) com diferença em relação à planilha.`,
       );
+      if (autoEmpresa) {
+        const lista = r.divergencias.filter(
+          (d) => d.nextiId != null && d.tipo !== "nao_encontrado" && d.tipo !== "semelhante",
+        );
+        if (lista.length > 0) correcao.mutate({ itens: lista, rotulo: "todas as empresas" });
+      }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
   });
 
   const correcao = useMutation({
-    mutationFn: () =>
+    mutationFn: ({ itens }: { itens: DivergenciaPosto[]; rotulo: string }) =>
       corrigir({
         data: {
-          itens: corrigiveis.map((d) => ({
+          itens: itens.map((d) => ({
             nextiId: d.nextiId as number,
             posto: d.posto,
             ...(d.tipo === "empresa" || d.tipo === "ambos" ? { empresa: d.empresaPlanilha } : {}),
