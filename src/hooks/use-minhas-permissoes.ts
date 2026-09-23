@@ -60,6 +60,12 @@ const ALIASES: Record<string, string> = {
   "movimentacao-posto": "supervisor",
   "coordenacao-movimentacoes": "vagas",
   "coordenacao-crt": "vagas",
+  "comercial-clientes": "comercial",
+  "comercial-funil": "comercial",
+  "comercial-propostas": "comercial",
+  "comercial-agenda": "comercial",
+  "comercial-contratos": "comercial",
+  "comercial-relatorios": "comercial",
 };
 
 /** Converte um caminho de rota ("/control") na chave da página ("control"). */
