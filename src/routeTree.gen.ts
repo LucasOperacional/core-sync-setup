@@ -50,6 +50,20 @@ import { Route as AuthenticatedNxsControlRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPainelNextiRouteImport } from './routes/_authenticated/painel-nexti'
 import { Route as AuthenticatedPesquisaColaboradorNextiRouteImport } from './routes/_authenticated/pesquisa-colaborador-nexti'
 import { Route as AuthenticatedPesquisaFaltasRouteImport } from './routes/_authenticated/pesquisa-faltas'
+import { Route as AuthenticatedPontoRouteImport } from './routes/_authenticated/ponto'
+import { Route as AuthenticatedPontoAjustesRouteImport } from './routes/_authenticated/ponto-ajustes'
+import { Route as AuthenticatedPontoAprovacoesRouteImport } from './routes/_authenticated/ponto-aprovacoes'
+import { Route as AuthenticatedPontoAuditoriaRouteImport } from './routes/_authenticated/ponto-auditoria'
+import { Route as AuthenticatedPontoBancoHorasRouteImport } from './routes/_authenticated/ponto-banco-horas'
+import { Route as AuthenticatedPontoConfiguracoesRouteImport } from './routes/_authenticated/ponto-configuracoes'
+import { Route as AuthenticatedPontoEmpresasRouteImport } from './routes/_authenticated/ponto-empresas'
+import { Route as AuthenticatedPontoEscalasRouteImport } from './routes/_authenticated/ponto-escalas'
+import { Route as AuthenticatedPontoEspelhoRouteImport } from './routes/_authenticated/ponto-espelho'
+import { Route as AuthenticatedPontoFaltasRouteImport } from './routes/_authenticated/ponto-faltas'
+import { Route as AuthenticatedPontoFechamentoRouteImport } from './routes/_authenticated/ponto-fechamento'
+import { Route as AuthenticatedPontoFuncionariosRouteImport } from './routes/_authenticated/ponto-funcionarios'
+import { Route as AuthenticatedPontoPainelRouteImport } from './routes/_authenticated/ponto-painel'
+import { Route as AuthenticatedPontoRelatoriosRouteImport } from './routes/_authenticated/ponto-relatorios'
 import { Route as AuthenticatedPostosRouteImport } from './routes/_authenticated/postos'
 import { Route as AuthenticatedProspeccaoMapsRouteImport } from './routes/_authenticated/prospeccao-maps'
 import { Route as AuthenticatedProtocoloFolhasPontoRouteImport } from './routes/_authenticated/protocolo-folhas-ponto'
@@ -321,6 +335,89 @@ const AuthenticatedPesquisaFaltasRoute =
   AuthenticatedPesquisaFaltasRouteImport.update({
     id: '/pesquisa-faltas',
     path: '/pesquisa-faltas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoRoute = AuthenticatedPontoRouteImport.update({
+  id: '/ponto',
+  path: '/ponto',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPontoAjustesRoute =
+  AuthenticatedPontoAjustesRouteImport.update({
+    id: '/ponto-ajustes',
+    path: '/ponto-ajustes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoAprovacoesRoute =
+  AuthenticatedPontoAprovacoesRouteImport.update({
+    id: '/ponto-aprovacoes',
+    path: '/ponto-aprovacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoAuditoriaRoute =
+  AuthenticatedPontoAuditoriaRouteImport.update({
+    id: '/ponto-auditoria',
+    path: '/ponto-auditoria',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoBancoHorasRoute =
+  AuthenticatedPontoBancoHorasRouteImport.update({
+    id: '/ponto-banco-horas',
+    path: '/ponto-banco-horas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoConfiguracoesRoute =
+  AuthenticatedPontoConfiguracoesRouteImport.update({
+    id: '/ponto-configuracoes',
+    path: '/ponto-configuracoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoEmpresasRoute =
+  AuthenticatedPontoEmpresasRouteImport.update({
+    id: '/ponto-empresas',
+    path: '/ponto-empresas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoEscalasRoute =
+  AuthenticatedPontoEscalasRouteImport.update({
+    id: '/ponto-escalas',
+    path: '/ponto-escalas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoEspelhoRoute =
+  AuthenticatedPontoEspelhoRouteImport.update({
+    id: '/ponto-espelho',
+    path: '/ponto-espelho',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoFaltasRoute =
+  AuthenticatedPontoFaltasRouteImport.update({
+    id: '/ponto-faltas',
+    path: '/ponto-faltas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoFechamentoRoute =
+  AuthenticatedPontoFechamentoRouteImport.update({
+    id: '/ponto-fechamento',
+    path: '/ponto-fechamento',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoFuncionariosRoute =
+  AuthenticatedPontoFuncionariosRouteImport.update({
+    id: '/ponto-funcionarios',
+    path: '/ponto-funcionarios',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoPainelRoute =
+  AuthenticatedPontoPainelRouteImport.update({
+    id: '/ponto-painel',
+    path: '/ponto-painel',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPontoRelatoriosRoute =
+  AuthenticatedPontoRelatoriosRouteImport.update({
+    id: '/ponto-relatorios',
+    path: '/ponto-relatorios',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPostosRoute = AuthenticatedPostosRouteImport.update({
@@ -622,6 +719,20 @@ export interface FileRoutesByFullPath {
   '/painel-nexti': typeof AuthenticatedPainelNextiRoute
   '/pesquisa-colaborador-nexti': typeof AuthenticatedPesquisaColaboradorNextiRoute
   '/pesquisa-faltas': typeof AuthenticatedPesquisaFaltasRoute
+  '/ponto': typeof AuthenticatedPontoRoute
+  '/ponto-ajustes': typeof AuthenticatedPontoAjustesRoute
+  '/ponto-aprovacoes': typeof AuthenticatedPontoAprovacoesRoute
+  '/ponto-auditoria': typeof AuthenticatedPontoAuditoriaRoute
+  '/ponto-banco-horas': typeof AuthenticatedPontoBancoHorasRoute
+  '/ponto-configuracoes': typeof AuthenticatedPontoConfiguracoesRoute
+  '/ponto-empresas': typeof AuthenticatedPontoEmpresasRoute
+  '/ponto-escalas': typeof AuthenticatedPontoEscalasRoute
+  '/ponto-espelho': typeof AuthenticatedPontoEspelhoRoute
+  '/ponto-faltas': typeof AuthenticatedPontoFaltasRoute
+  '/ponto-fechamento': typeof AuthenticatedPontoFechamentoRoute
+  '/ponto-funcionarios': typeof AuthenticatedPontoFuncionariosRoute
+  '/ponto-painel': typeof AuthenticatedPontoPainelRoute
+  '/ponto-relatorios': typeof AuthenticatedPontoRelatoriosRoute
   '/postos': typeof AuthenticatedPostosRoute
   '/prospeccao-maps': typeof AuthenticatedProspeccaoMapsRoute
   '/protocolo-folhas-ponto': typeof AuthenticatedProtocoloFolhasPontoRoute
@@ -708,6 +819,20 @@ export interface FileRoutesByTo {
   '/painel-nexti': typeof AuthenticatedPainelNextiRoute
   '/pesquisa-colaborador-nexti': typeof AuthenticatedPesquisaColaboradorNextiRoute
   '/pesquisa-faltas': typeof AuthenticatedPesquisaFaltasRoute
+  '/ponto': typeof AuthenticatedPontoRoute
+  '/ponto-ajustes': typeof AuthenticatedPontoAjustesRoute
+  '/ponto-aprovacoes': typeof AuthenticatedPontoAprovacoesRoute
+  '/ponto-auditoria': typeof AuthenticatedPontoAuditoriaRoute
+  '/ponto-banco-horas': typeof AuthenticatedPontoBancoHorasRoute
+  '/ponto-configuracoes': typeof AuthenticatedPontoConfiguracoesRoute
+  '/ponto-empresas': typeof AuthenticatedPontoEmpresasRoute
+  '/ponto-escalas': typeof AuthenticatedPontoEscalasRoute
+  '/ponto-espelho': typeof AuthenticatedPontoEspelhoRoute
+  '/ponto-faltas': typeof AuthenticatedPontoFaltasRoute
+  '/ponto-fechamento': typeof AuthenticatedPontoFechamentoRoute
+  '/ponto-funcionarios': typeof AuthenticatedPontoFuncionariosRoute
+  '/ponto-painel': typeof AuthenticatedPontoPainelRoute
+  '/ponto-relatorios': typeof AuthenticatedPontoRelatoriosRoute
   '/postos': typeof AuthenticatedPostosRoute
   '/prospeccao-maps': typeof AuthenticatedProspeccaoMapsRoute
   '/protocolo-folhas-ponto': typeof AuthenticatedProtocoloFolhasPontoRoute
@@ -797,6 +922,20 @@ export interface FileRoutesById {
   '/_authenticated/painel-nexti': typeof AuthenticatedPainelNextiRoute
   '/_authenticated/pesquisa-colaborador-nexti': typeof AuthenticatedPesquisaColaboradorNextiRoute
   '/_authenticated/pesquisa-faltas': typeof AuthenticatedPesquisaFaltasRoute
+  '/_authenticated/ponto': typeof AuthenticatedPontoRoute
+  '/_authenticated/ponto-ajustes': typeof AuthenticatedPontoAjustesRoute
+  '/_authenticated/ponto-aprovacoes': typeof AuthenticatedPontoAprovacoesRoute
+  '/_authenticated/ponto-auditoria': typeof AuthenticatedPontoAuditoriaRoute
+  '/_authenticated/ponto-banco-horas': typeof AuthenticatedPontoBancoHorasRoute
+  '/_authenticated/ponto-configuracoes': typeof AuthenticatedPontoConfiguracoesRoute
+  '/_authenticated/ponto-empresas': typeof AuthenticatedPontoEmpresasRoute
+  '/_authenticated/ponto-escalas': typeof AuthenticatedPontoEscalasRoute
+  '/_authenticated/ponto-espelho': typeof AuthenticatedPontoEspelhoRoute
+  '/_authenticated/ponto-faltas': typeof AuthenticatedPontoFaltasRoute
+  '/_authenticated/ponto-fechamento': typeof AuthenticatedPontoFechamentoRoute
+  '/_authenticated/ponto-funcionarios': typeof AuthenticatedPontoFuncionariosRoute
+  '/_authenticated/ponto-painel': typeof AuthenticatedPontoPainelRoute
+  '/_authenticated/ponto-relatorios': typeof AuthenticatedPontoRelatoriosRoute
   '/_authenticated/postos': typeof AuthenticatedPostosRoute
   '/_authenticated/prospeccao-maps': typeof AuthenticatedProspeccaoMapsRoute
   '/_authenticated/protocolo-folhas-ponto': typeof AuthenticatedProtocoloFolhasPontoRoute
@@ -887,6 +1026,20 @@ export interface FileRouteTypes {
     | '/painel-nexti'
     | '/pesquisa-colaborador-nexti'
     | '/pesquisa-faltas'
+    | '/ponto'
+    | '/ponto-ajustes'
+    | '/ponto-aprovacoes'
+    | '/ponto-auditoria'
+    | '/ponto-banco-horas'
+    | '/ponto-configuracoes'
+    | '/ponto-empresas'
+    | '/ponto-escalas'
+    | '/ponto-espelho'
+    | '/ponto-faltas'
+    | '/ponto-fechamento'
+    | '/ponto-funcionarios'
+    | '/ponto-painel'
+    | '/ponto-relatorios'
     | '/postos'
     | '/prospeccao-maps'
     | '/protocolo-folhas-ponto'
@@ -973,6 +1126,20 @@ export interface FileRouteTypes {
     | '/painel-nexti'
     | '/pesquisa-colaborador-nexti'
     | '/pesquisa-faltas'
+    | '/ponto'
+    | '/ponto-ajustes'
+    | '/ponto-aprovacoes'
+    | '/ponto-auditoria'
+    | '/ponto-banco-horas'
+    | '/ponto-configuracoes'
+    | '/ponto-empresas'
+    | '/ponto-escalas'
+    | '/ponto-espelho'
+    | '/ponto-faltas'
+    | '/ponto-fechamento'
+    | '/ponto-funcionarios'
+    | '/ponto-painel'
+    | '/ponto-relatorios'
     | '/postos'
     | '/prospeccao-maps'
     | '/protocolo-folhas-ponto'
@@ -1061,6 +1228,20 @@ export interface FileRouteTypes {
     | '/_authenticated/painel-nexti'
     | '/_authenticated/pesquisa-colaborador-nexti'
     | '/_authenticated/pesquisa-faltas'
+    | '/_authenticated/ponto'
+    | '/_authenticated/ponto-ajustes'
+    | '/_authenticated/ponto-aprovacoes'
+    | '/_authenticated/ponto-auditoria'
+    | '/_authenticated/ponto-banco-horas'
+    | '/_authenticated/ponto-configuracoes'
+    | '/_authenticated/ponto-empresas'
+    | '/_authenticated/ponto-escalas'
+    | '/_authenticated/ponto-espelho'
+    | '/_authenticated/ponto-faltas'
+    | '/_authenticated/ponto-fechamento'
+    | '/_authenticated/ponto-funcionarios'
+    | '/_authenticated/ponto-painel'
+    | '/_authenticated/ponto-relatorios'
     | '/_authenticated/postos'
     | '/_authenticated/prospeccao-maps'
     | '/_authenticated/protocolo-folhas-ponto'
@@ -1430,6 +1611,104 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPesquisaFaltasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ponto': {
+      id: '/_authenticated/ponto'
+      path: '/ponto'
+      fullPath: '/ponto'
+      preLoaderRoute: typeof AuthenticatedPontoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-ajustes': {
+      id: '/_authenticated/ponto-ajustes'
+      path: '/ponto-ajustes'
+      fullPath: '/ponto-ajustes'
+      preLoaderRoute: typeof AuthenticatedPontoAjustesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-aprovacoes': {
+      id: '/_authenticated/ponto-aprovacoes'
+      path: '/ponto-aprovacoes'
+      fullPath: '/ponto-aprovacoes'
+      preLoaderRoute: typeof AuthenticatedPontoAprovacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-auditoria': {
+      id: '/_authenticated/ponto-auditoria'
+      path: '/ponto-auditoria'
+      fullPath: '/ponto-auditoria'
+      preLoaderRoute: typeof AuthenticatedPontoAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-banco-horas': {
+      id: '/_authenticated/ponto-banco-horas'
+      path: '/ponto-banco-horas'
+      fullPath: '/ponto-banco-horas'
+      preLoaderRoute: typeof AuthenticatedPontoBancoHorasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-configuracoes': {
+      id: '/_authenticated/ponto-configuracoes'
+      path: '/ponto-configuracoes'
+      fullPath: '/ponto-configuracoes'
+      preLoaderRoute: typeof AuthenticatedPontoConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-empresas': {
+      id: '/_authenticated/ponto-empresas'
+      path: '/ponto-empresas'
+      fullPath: '/ponto-empresas'
+      preLoaderRoute: typeof AuthenticatedPontoEmpresasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-escalas': {
+      id: '/_authenticated/ponto-escalas'
+      path: '/ponto-escalas'
+      fullPath: '/ponto-escalas'
+      preLoaderRoute: typeof AuthenticatedPontoEscalasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-espelho': {
+      id: '/_authenticated/ponto-espelho'
+      path: '/ponto-espelho'
+      fullPath: '/ponto-espelho'
+      preLoaderRoute: typeof AuthenticatedPontoEspelhoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-faltas': {
+      id: '/_authenticated/ponto-faltas'
+      path: '/ponto-faltas'
+      fullPath: '/ponto-faltas'
+      preLoaderRoute: typeof AuthenticatedPontoFaltasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-fechamento': {
+      id: '/_authenticated/ponto-fechamento'
+      path: '/ponto-fechamento'
+      fullPath: '/ponto-fechamento'
+      preLoaderRoute: typeof AuthenticatedPontoFechamentoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-funcionarios': {
+      id: '/_authenticated/ponto-funcionarios'
+      path: '/ponto-funcionarios'
+      fullPath: '/ponto-funcionarios'
+      preLoaderRoute: typeof AuthenticatedPontoFuncionariosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-painel': {
+      id: '/_authenticated/ponto-painel'
+      path: '/ponto-painel'
+      fullPath: '/ponto-painel'
+      preLoaderRoute: typeof AuthenticatedPontoPainelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ponto-relatorios': {
+      id: '/_authenticated/ponto-relatorios'
+      path: '/ponto-relatorios'
+      fullPath: '/ponto-relatorios'
+      preLoaderRoute: typeof AuthenticatedPontoRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/postos': {
       id: '/_authenticated/postos'
       path: '/postos'
@@ -1783,6 +2062,20 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPainelNextiRoute: typeof AuthenticatedPainelNextiRoute
   AuthenticatedPesquisaColaboradorNextiRoute: typeof AuthenticatedPesquisaColaboradorNextiRoute
   AuthenticatedPesquisaFaltasRoute: typeof AuthenticatedPesquisaFaltasRoute
+  AuthenticatedPontoRoute: typeof AuthenticatedPontoRoute
+  AuthenticatedPontoAjustesRoute: typeof AuthenticatedPontoAjustesRoute
+  AuthenticatedPontoAprovacoesRoute: typeof AuthenticatedPontoAprovacoesRoute
+  AuthenticatedPontoAuditoriaRoute: typeof AuthenticatedPontoAuditoriaRoute
+  AuthenticatedPontoBancoHorasRoute: typeof AuthenticatedPontoBancoHorasRoute
+  AuthenticatedPontoConfiguracoesRoute: typeof AuthenticatedPontoConfiguracoesRoute
+  AuthenticatedPontoEmpresasRoute: typeof AuthenticatedPontoEmpresasRoute
+  AuthenticatedPontoEscalasRoute: typeof AuthenticatedPontoEscalasRoute
+  AuthenticatedPontoEspelhoRoute: typeof AuthenticatedPontoEspelhoRoute
+  AuthenticatedPontoFaltasRoute: typeof AuthenticatedPontoFaltasRoute
+  AuthenticatedPontoFechamentoRoute: typeof AuthenticatedPontoFechamentoRoute
+  AuthenticatedPontoFuncionariosRoute: typeof AuthenticatedPontoFuncionariosRoute
+  AuthenticatedPontoPainelRoute: typeof AuthenticatedPontoPainelRoute
+  AuthenticatedPontoRelatoriosRoute: typeof AuthenticatedPontoRelatoriosRoute
   AuthenticatedPostosRoute: typeof AuthenticatedPostosRoute
   AuthenticatedProspeccaoMapsRoute: typeof AuthenticatedProspeccaoMapsRoute
   AuthenticatedProtocoloFolhasPontoRoute: typeof AuthenticatedProtocoloFolhasPontoRoute
@@ -1846,6 +2139,20 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPesquisaColaboradorNextiRoute:
     AuthenticatedPesquisaColaboradorNextiRoute,
   AuthenticatedPesquisaFaltasRoute: AuthenticatedPesquisaFaltasRoute,
+  AuthenticatedPontoRoute: AuthenticatedPontoRoute,
+  AuthenticatedPontoAjustesRoute: AuthenticatedPontoAjustesRoute,
+  AuthenticatedPontoAprovacoesRoute: AuthenticatedPontoAprovacoesRoute,
+  AuthenticatedPontoAuditoriaRoute: AuthenticatedPontoAuditoriaRoute,
+  AuthenticatedPontoBancoHorasRoute: AuthenticatedPontoBancoHorasRoute,
+  AuthenticatedPontoConfiguracoesRoute: AuthenticatedPontoConfiguracoesRoute,
+  AuthenticatedPontoEmpresasRoute: AuthenticatedPontoEmpresasRoute,
+  AuthenticatedPontoEscalasRoute: AuthenticatedPontoEscalasRoute,
+  AuthenticatedPontoEspelhoRoute: AuthenticatedPontoEspelhoRoute,
+  AuthenticatedPontoFaltasRoute: AuthenticatedPontoFaltasRoute,
+  AuthenticatedPontoFechamentoRoute: AuthenticatedPontoFechamentoRoute,
+  AuthenticatedPontoFuncionariosRoute: AuthenticatedPontoFuncionariosRoute,
+  AuthenticatedPontoPainelRoute: AuthenticatedPontoPainelRoute,
+  AuthenticatedPontoRelatoriosRoute: AuthenticatedPontoRelatoriosRoute,
   AuthenticatedPostosRoute: AuthenticatedPostosRoute,
   AuthenticatedProspeccaoMapsRoute: AuthenticatedProspeccaoMapsRoute,
   AuthenticatedProtocoloFolhasPontoRoute:

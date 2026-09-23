@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { BarChart3, BriefcaseBusiness, CalendarDays, ChevronDown, Download, FileText, LogOut, MapPin, Menu, PanelLeftClose, PanelLeftOpen, Target, Users, X } from "lucide-react";
+import { AlarmClock, BarChart3, BriefcaseBusiness, Building2, CalendarDays, CheckCircle2, ChevronDown, Clock, Download, FileText, LogOut, MapPin, Menu, PanelLeftClose, PanelLeftOpen, PencilLine, Settings, ShieldCheck, Target, Users, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { operacionalNavItems, rhNavItems } from "@/components/FloatingNav";
@@ -19,6 +19,23 @@ const itensComercial = [
   { to: "/comercial-agenda", label: "Agenda", icon: CalendarDays },
   { to: "/comercial-contratos", label: "Contratos", icon: BriefcaseBusiness },
   { to: "/comercial-relatorios", label: "Relatórios", icon: BarChart3 },
+] as const;
+
+const itensPonto = [
+  { to: "/ponto", label: "Registro de ponto", icon: Clock },
+  { to: "/ponto-espelho", label: "Meu espelho", icon: FileText },
+  { to: "/ponto-ajustes", label: "Solicitar ajuste", icon: PencilLine },
+  { to: "/ponto-painel", label: "Painel do ponto", icon: BarChart3 },
+  { to: "/ponto-aprovacoes", label: "Aprovações", icon: CheckCircle2 },
+  { to: "/ponto-funcionarios", label: "Funcionários", icon: Users },
+  { to: "/ponto-empresas", label: "Empresas e postos", icon: Building2 },
+  { to: "/ponto-escalas", label: "Escalas", icon: CalendarDays },
+  { to: "/ponto-banco-horas", label: "Banco de horas", icon: AlarmClock },
+  { to: "/ponto-faltas", label: "Faltas", icon: CalendarDays },
+  { to: "/ponto-fechamento", label: "Fechamento", icon: BriefcaseBusiness },
+  { to: "/ponto-relatorios", label: "Relatórios do ponto", icon: BarChart3 },
+  { to: "/ponto-configuracoes", label: "Configurações", icon: Settings },
+  { to: "/ponto-auditoria", label: "Auditoria", icon: ShieldCheck },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -166,6 +183,33 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="truncate">{recolhida ? "DP" : "Departamento pessoal"}</span>
             <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", dpAberta && "rotate-180")} />
           </button>
+        )}
+
+        {podeVerCategoria("categoria-departamento-pessoal") && dpAberta && podeVer("/ponto") && (
+          <ul className="mt-1 space-y-0.5">
+            {itensPonto.map((item) => {
+              const selecionado = caminho === item.to;
+              return (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    title={recolhida ? item.label : undefined}
+                    aria-current={selecionado ? "page" : undefined}
+                    className={cn(
+                      "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
+                      selecionado
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                    )}
+                  >
+                    <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
+                    {!recolhida && <span className="truncate">{item.label}</span>}
+                    {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         )}
 
         {podeVerCategoria("categoria-financeiro") && (

@@ -66,6 +66,19 @@ const ALIASES: Record<string, string> = {
   "comercial-agenda": "comercial",
   "comercial-contratos": "comercial",
   "comercial-relatorios": "comercial",
+  "ponto-espelho": "ponto",
+  "ponto-ajustes": "ponto",
+  "ponto-painel": "ponto",
+  "ponto-funcionarios": "ponto",
+  "ponto-empresas": "ponto",
+  "ponto-escalas": "ponto",
+  "ponto-banco-horas": "ponto",
+  "ponto-faltas": "ponto",
+  "ponto-aprovacoes": "ponto",
+  "ponto-fechamento": "ponto",
+  "ponto-relatorios": "ponto",
+  "ponto-configuracoes": "ponto",
+  "ponto-auditoria": "ponto",
 };
 
 /** Converte um caminho de rota ("/control") na chave da página ("control"). */
