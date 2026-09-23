@@ -1178,25 +1178,77 @@ export const cadastrarPessoaNexti = createServerFn({ method: "POST" })
           String(payload["cpf"] ?? payload["document"] ?? ""),
           String(payload["enrolment"] ?? payload["externalId"] ?? ""),
         );
-        if (!existente) {
-          return {
-            nome,
-            ok: false,
-            personId: null,
-            mensagem: `Este colaborador já está cadastrado na NEXTI (CPF ou matrícula em uso) e não foi possível localizá-lo para atualizar. Confira o CPF e a matrícula.${extra}`,
-          };
-        }
 
-        const atualizado = await atualizarPessoa(config, existente.id, payload);
-        const infoVinculo = atualizado.ok ? await vincular(existente.id) : "";
-        return {
-          nome,
-          ok: atualizado.ok,
-          personId: existente.id,
-          mensagem: atualizado.ok
-            ? `Colaborador já existia na NEXTI (matrícula interna ${existente.id}) — cadastro atualizado.${extra}${infoVinculo}`
-            : `Colaborador já existe na NEXTI (cadastro interno ${existente.id}) e a NEXTI recusou a alteração: ${atualizado.erro}. Isso costuma acontecer quando o cadastro foi desligado/removido na NEXTI e ainda está bloqueado para edição — reative o cadastro na NEXTI (ou apague-o definitivamente) e importe de novo.${extra}`,
+        // Tenta novamente o cadastro: o aviso de duplicidade pode ser de outra
+        // empresa, e nesse caso o colaborador ainda precisa ser cadastrado aqui.
+        const tentarDeNovo = async () => {
+          try {
+            return await requestNexti({
+              config,
+              endpoint: "/api/persons",
+              method: "POST",
+              body: payload,
+            });
+          } catch {
+            return null;
+          }
         };
+
+        if (!existente) {
+          const novaTentativa = await tentarDeNovo();
+          if (novaTentativa && novaTentativa.status >= 200 && novaTentativa.status < 300) {
+            res = novaTentativa;
+          } else {
+            return {
+              nome,
+              ok: false,
+              personId: null,
+              mensagem: `A NEXTI avisou que já existe um cadastro com esse CPF ou matrícula, mas não foi possível localizá-lo para conferir. Confira o CPF e a matrícula.${extra}`,
+            };
+          }
+        } else {
+          const empresaDestino = Number(payload["companyId"] ?? 0);
+          const matriculaEnviada = limpar(
+            String(payload["enrolment"] ?? payload["externalId"] ?? ""),
+          );
+          const mesmoNome =
+            limpar(existente.nome).toUpperCase() === limpar(String(payload["name"] ?? nome)).toUpperCase();
+          const mesmaMatricula =
+            Boolean(matriculaEnviada) && existente.matricula === matriculaEnviada;
+          const mesmaEmpresa =
+            empresaDestino > 0 && existente.empresaId > 0 && existente.empresaId === empresaDestino;
+
+          if (mesmaEmpresa && (mesmoNome || mesmaMatricula)) {
+            // Já está cadastrado na mesma empresa: não duplica, apenas atualiza.
+            const atualizado = await atualizarPessoa(config, existente.id, payload);
+            const infoVinculo = atualizado.ok ? await vincular(existente.id) : "";
+            return {
+              nome,
+              ok: atualizado.ok,
+              personId: existente.id,
+              mensagem: atualizado.ok
+                ? `Colaborador já existia na mesma empresa (cadastro interno ${existente.id}) — cadastro atualizado, sem duplicar.${extra}${infoVinculo}`
+                : `Colaborador já existe na mesma empresa (cadastro interno ${existente.id}) e a NEXTI recusou a alteração: ${atualizado.erro}. Isso costuma acontecer quando o cadastro foi desligado/removido na NEXTI e ainda está bloqueado para edição — reative o cadastro na NEXTI (ou apague-o definitivamente) e importe de novo.${extra}`,
+            };
+          }
+
+          // Empresa diferente (ou dados divergentes): faz o cadastro mesmo assim.
+          const novaTentativa = await tentarDeNovo();
+          if (novaTentativa && novaTentativa.status >= 200 && novaTentativa.status < 300) {
+            res = novaTentativa;
+          } else {
+            const atualizado = await atualizarPessoa(config, existente.id, payload);
+            const infoVinculo = atualizado.ok ? await vincular(existente.id) : "";
+            return {
+              nome,
+              ok: atualizado.ok,
+              personId: existente.id,
+              mensagem: atualizado.ok
+                ? `Existia um cadastro em outra empresa (cadastro interno ${existente.id}); a NEXTI não aceita dois cadastros com o mesmo CPF, então o cadastro foi transferido para a empresa informada.${extra}${infoVinculo}`
+                : `Existe um cadastro deste colaborador em outra empresa (cadastro interno ${existente.id}) e a NEXTI não permitiu nem criar nem transferir: ${atualizado.erro}.${extra}`,
+            };
+          }
+        }
       }
 
       let corpoResposta: unknown = res.data;
