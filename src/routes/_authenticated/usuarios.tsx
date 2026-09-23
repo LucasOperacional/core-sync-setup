@@ -81,7 +81,7 @@ import { useSessao } from "@/hooks/use-sessao";
 export const Route = createFileRoute("/_authenticated/usuarios")({
   head: () => ({
     meta: [
-      { title: "Usuários" },
+      { title: "Usuários | NXS GESTÃO" },
       {
         name: "description",
         content: "Gerenciamento de usuários e permissões.",
