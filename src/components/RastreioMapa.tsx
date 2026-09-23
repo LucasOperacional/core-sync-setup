@@ -1,3 +1,4 @@
+/// <reference types="google.maps" />
 import { useEffect, useRef, useState } from "react";
 import type { PosicaoRastreio } from "@/lib/rastreamento.functions";
 import type { PostoMapa } from "@/lib/nexti-postos-mapa.functions";
