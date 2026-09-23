@@ -271,11 +271,6 @@ function AdminPage() {
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-8">
           <div className="flex items-center gap-3">
-            <img
-              src={ciopLogo}
-              alt="Logo CIOP"
-              className="size-12 drop-shadow-[0_4px_16px_rgba(220,38,38,0.35)]"
-            />
             <h1 className="text-2xl font-bold sm:text-3xl">Painel Administrativo</h1>
             <Link
               to="/"
