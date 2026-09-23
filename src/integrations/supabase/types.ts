@@ -1102,6 +1102,591 @@ export type Database = {
         }
         Relationships: []
       }
+      com_atividades: {
+        Row: {
+          cliente_id: string | null
+          concluida_em: string | null
+          created_at: string
+          created_by: string
+          descricao: string | null
+          id: string
+          inicio_em: string
+          oportunidade_id: string | null
+          responsavel_id: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          concluida_em?: string | null
+          created_at?: string
+          created_by: string
+          descricao?: string | null
+          id?: string
+          inicio_em: string
+          oportunidade_id?: string | null
+          responsavel_id: string
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string | null
+          concluida_em?: string | null
+          created_at?: string
+          created_by?: string
+          descricao?: string | null
+          id?: string
+          inicio_em?: string
+          oportunidade_id?: string | null
+          responsavel_id?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "com_atividades_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "com_clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "com_atividades_oportunidade_id_fkey"
+            columns: ["oportunidade_id"]
+            isOneToOne: false
+            referencedRelation: "com_oportunidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      com_auditoria: {
+        Row: {
+          acao: string
+          created_at: string
+          detalhes: Json
+          entidade: string
+          entidade_id: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          detalhes?: Json
+          entidade: string
+          entidade_id?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          detalhes?: Json
+          entidade?: string
+          entidade_id?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      com_clientes: {
+        Row: {
+          ativo: boolean
+          cidade: string | null
+          cnpj: string | null
+          created_at: string
+          created_by: string
+          email: string | null
+          endereco: string | null
+          id: string
+          maps_place_id: string | null
+          nome_fantasia: string | null
+          origem_lead: string | null
+          razao_social: string
+          responsavel_id: string
+          segmento: string | null
+          telefone: string | null
+          tipo: string
+          uf: string | null
+          unidade_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cidade?: string | null
+          cnpj?: string | null
+          created_at?: string
+          created_by: string
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          maps_place_id?: string | null
+          nome_fantasia?: string | null
+          origem_lead?: string | null
+          razao_social: string
+          responsavel_id: string
+          segmento?: string | null
+          telefone?: string | null
+          tipo?: string
+          uf?: string | null
+          unidade_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cidade?: string | null
+          cnpj?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          maps_place_id?: string | null
+          nome_fantasia?: string | null
+          origem_lead?: string | null
+          razao_social?: string
+          responsavel_id?: string
+          segmento?: string | null
+          telefone?: string | null
+          tipo?: string
+          uf?: string | null
+          unidade_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "com_clientes_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "com_unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      com_contratos: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          created_by: string
+          documento_path: string | null
+          fim: string
+          id: string
+          implantacao_enviada_em: string | null
+          implantacao_status: string
+          indice_reajuste: string | null
+          inicio: string
+          numero: string
+          proposta_id: string
+          proximo_reajuste: string | null
+          responsavel_id: string
+          status: string
+          updated_at: string
+          valor_mensal: number
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          created_by: string
+          documento_path?: string | null
+          fim: string
+          id?: string
+          implantacao_enviada_em?: string | null
+          implantacao_status?: string
+          indice_reajuste?: string | null
+          inicio: string
+          numero: string
+          proposta_id: string
+          proximo_reajuste?: string | null
+          responsavel_id: string
+          status?: string
+          updated_at?: string
+          valor_mensal: number
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          created_by?: string
+          documento_path?: string | null
+          fim?: string
+          id?: string
+          implantacao_enviada_em?: string | null
+          implantacao_status?: string
+          indice_reajuste?: string | null
+          inicio?: string
+          numero?: string
+          proposta_id?: string
+          proximo_reajuste?: string | null
+          responsavel_id?: string
+          status?: string
+          updated_at?: string
+          valor_mensal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "com_contratos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "com_clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "com_contratos_proposta_id_fkey"
+            columns: ["proposta_id"]
+            isOneToOne: true
+            referencedRelation: "com_propostas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      com_equipe: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          gestor_id: string | null
+          id: string
+          papel: string
+          unidade_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          gestor_id?: string | null
+          id?: string
+          papel?: string
+          unidade_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          gestor_id?: string | null
+          id?: string
+          papel?: string
+          unidade_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "com_equipe_gestor_id_fkey"
+            columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "com_equipe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "com_equipe_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "com_unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      com_etapas: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          ordem: number
+          probabilidade: number
+          tipo_final: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          ordem: number
+          probabilidade?: number
+          tipo_final?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          probabilidade?: number
+          tipo_final?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      com_interacoes: {
+        Row: {
+          assunto: string
+          cliente_id: string
+          created_at: string
+          created_by: string
+          descricao: string | null
+          id: string
+          ocorrido_em: string
+          responsavel_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          assunto: string
+          cliente_id: string
+          created_at?: string
+          created_by: string
+          descricao?: string | null
+          id?: string
+          ocorrido_em?: string
+          responsavel_id: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          assunto?: string
+          cliente_id?: string
+          created_at?: string
+          created_by?: string
+          descricao?: string | null
+          id?: string
+          ocorrido_em?: string
+          responsavel_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "com_interacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "com_clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      com_oportunidades: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          created_by: string
+          etapa_id: string
+          ganho_em: string | null
+          id: string
+          motivo_perda: string | null
+          perdido_em: string | null
+          previsao_fechamento: string | null
+          probabilidade: number
+          responsavel_id: string
+          titulo: string
+          unidade_id: string | null
+          updated_at: string
+          valor_previsto: number
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          created_by: string
+          etapa_id: string
+          ganho_em?: string | null
+          id?: string
+          motivo_perda?: string | null
+          perdido_em?: string | null
+          previsao_fechamento?: string | null
+          probabilidade?: number
+          responsavel_id: string
+          titulo: string
+          unidade_id?: string | null
+          updated_at?: string
+          valor_previsto?: number
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          created_by?: string
+          etapa_id?: string
+          ganho_em?: string | null
+          id?: string
+          motivo_perda?: string | null
+          perdido_em?: string | null
+          previsao_fechamento?: string | null
+          probabilidade?: number
+          responsavel_id?: string
+          titulo?: string
+          unidade_id?: string | null
+          updated_at?: string
+          valor_previsto?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "com_oportunidades_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "com_clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "com_oportunidades_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "com_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "com_oportunidades_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "com_unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      com_proposta_versoes: {
+        Row: {
+          created_at: string
+          criado_por: string
+          custo_total: number
+          id: string
+          impostos_percentual: number
+          itens: Json
+          margem_percentual: number
+          observacoes: string | null
+          proposta_id: string
+          valor_mensal: number
+          versao: number
+        }
+        Insert: {
+          created_at?: string
+          criado_por: string
+          custo_total?: number
+          id?: string
+          impostos_percentual?: number
+          itens?: Json
+          margem_percentual?: number
+          observacoes?: string | null
+          proposta_id: string
+          valor_mensal?: number
+          versao: number
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string
+          custo_total?: number
+          id?: string
+          impostos_percentual?: number
+          itens?: Json
+          margem_percentual?: number
+          observacoes?: string | null
+          proposta_id?: string
+          valor_mensal?: number
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "com_proposta_versoes_proposta_id_fkey"
+            columns: ["proposta_id"]
+            isOneToOne: false
+            referencedRelation: "com_propostas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      com_propostas: {
+        Row: {
+          aprovada_em: string | null
+          created_at: string
+          created_by: string
+          enviada_em: string | null
+          id: string
+          numero: string
+          oportunidade_id: string
+          prazo_meses: number
+          responsavel_id: string
+          status: string
+          updated_at: string
+          validade_ate: string | null
+          valor_mensal: number
+          versao_atual: number
+        }
+        Insert: {
+          aprovada_em?: string | null
+          created_at?: string
+          created_by: string
+          enviada_em?: string | null
+          id?: string
+          numero: string
+          oportunidade_id: string
+          prazo_meses?: number
+          responsavel_id: string
+          status?: string
+          updated_at?: string
+          validade_ate?: string | null
+          valor_mensal?: number
+          versao_atual?: number
+        }
+        Update: {
+          aprovada_em?: string | null
+          created_at?: string
+          created_by?: string
+          enviada_em?: string | null
+          id?: string
+          numero?: string
+          oportunidade_id?: string
+          prazo_meses?: number
+          responsavel_id?: string
+          status?: string
+          updated_at?: string
+          validade_ate?: string | null
+          valor_mensal?: number
+          versao_atual?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "com_propostas_oportunidade_id_fkey"
+            columns: ["oportunidade_id"]
+            isOneToOne: false
+            referencedRelation: "com_oportunidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      com_unidades: {
+        Row: {
+          ativo: boolean
+          cidade: string | null
+          codigo: string | null
+          created_at: string
+          id: string
+          nome: string
+          uf: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cidade?: string | null
+          codigo?: string | null
+          created_at?: string
+          id?: string
+          nome: string
+          uf?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cidade?: string | null
+          codigo?: string | null
+          created_at?: string
+          id?: string
+          nome?: string
+          uf?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crt_lancamentos: {
         Row: {
           assinatura_colaborador: string | null
@@ -5293,6 +5878,12 @@ export type Database = {
         Returns: {
           nome: string
         }[]
+      }
+      com_eh_admin: { Args: { _user_id: string }; Returns: boolean }
+      com_eh_gestor: { Args: { _user_id: string }; Returns: boolean }
+      com_pode_ver_responsavel: {
+        Args: { _responsavel_id: string; _user_id: string }
+        Returns: boolean
       }
       eh_membro_sala: {
         Args: { _room_id: string; _user_id: string }
