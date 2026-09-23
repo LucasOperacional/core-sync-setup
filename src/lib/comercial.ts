@@ -97,12 +97,12 @@ const banco = supabase as any;
 
 export async function carregarComercial(): Promise<ComercialDados> {
   const [clientes, etapas, oportunidades, propostas, atividades, contratos] = await Promise.all([
-    banco.from("com_clientes").select("*").eq("ativo", true).order("created_at", { ascending: false }).limit(500),
-    banco.from("com_etapas").select("*").eq("ativo", true).order("ordem"),
-    banco.from("com_oportunidades").select("*").order("updated_at", { ascending: false }).limit(500),
-    banco.from("com_propostas").select("*").order("created_at", { ascending: false }).limit(500),
-    banco.from("com_atividades").select("*").order("inicio_em").limit(500),
-    banco.from("com_contratos").select("*").order("fim").limit(500),
+    banco.from("com_clientes").select("id,tipo,razao_social,nome_fantasia,cnpj,email,telefone,endereco,cidade,uf,segmento,origem_lead,responsavel_id,unidade_id,ativo,created_at").eq("ativo", true).order("created_at", { ascending: false }).limit(500),
+    banco.from("com_etapas").select("id,nome,ordem,probabilidade,tipo_final").eq("ativo", true).order("ordem"),
+    banco.from("com_oportunidades").select("id,cliente_id,etapa_id,titulo,valor_previsto,probabilidade,previsao_fechamento,responsavel_id,motivo_perda,created_at").order("updated_at", { ascending: false }).limit(500),
+    banco.from("com_propostas").select("id,oportunidade_id,numero,status,versao_atual,valor_mensal,prazo_meses,validade_ate,responsavel_id,created_at").order("created_at", { ascending: false }).limit(500),
+    banco.from("com_atividades").select("id,cliente_id,oportunidade_id,tipo,titulo,descricao,inicio_em,concluida_em,responsavel_id").order("inicio_em").limit(500),
+    banco.from("com_contratos").select("id,proposta_id,cliente_id,numero,inicio,fim,valor_mensal,indice_reajuste,proximo_reajuste,status,implantacao_status,responsavel_id").order("fim").limit(500),
   ]);
   const erro = [clientes, etapas, oportunidades, propostas, atividades, contratos].find((r) => r.error)?.error;
   if (erro) throw new Error(erro.message);

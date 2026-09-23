@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
 import {
   AlertTriangle, BarChart3, CalendarDays, CheckCircle2,
   Download, FileText, Filter, Loader2, Plus, Search, Target, TrendingUp, Users,
@@ -59,7 +56,14 @@ export function ComercialWorkspace({ modo }: { modo: ComercialModo }) {
   const [inicio, setInicio] = useState("");
   const [fim, setFim] = useState("");
   const [dialogo, setDialogo] = useState<null | "cliente" | "oportunidade" | "proposta" | "atividade" | "contrato">(null);
-  const query = useQuery({ queryKey: ["comercial-dados"], queryFn: carregarComercial, staleTime: 20_000 });
+  const query = useQuery({
+    queryKey: ["comercial-dados"],
+    queryFn: carregarComercial,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    refetchOnWindowFocus: false,
+    placeholderData: (anterior) => anterior,
+  });
   const dados = query.data ?? { clientes: [], etapas: [], oportunidades: [], propostas: [], atividades: [], contratos: [] };
 
   const salvar = useMutation({
@@ -155,7 +159,7 @@ function Funil({ dados, mover }: { dados: ComercialDados; mover: (v: { id: strin
 }
 
 function Propostas({ dados }: { dados: ComercialDados }) {
-  const exportar = async (p: ComercialDados["propostas"][number]) => { const doc = new jsPDF(); doc.setFontSize(18); doc.text(`Proposta ${p.numero}`, 14, 20); doc.setFontSize(10); doc.text(`Valor mensal: ${moeda(p.valor_mensal)}`, 14, 32); doc.text(`Prazo: ${p.prazo_meses} meses`, 14, 39); const { data } = await banco.from("com_proposta_versoes").select("*").eq("proposta_id", p.id).order("versao", { ascending: false }).limit(1).maybeSingle(); autoTable(doc, { startY: 48, head: [["Função", "Quantidade", "Jornada", "Escala", "Local", "Custo"]], body: ((data?.itens ?? []) as any[]).map((i) => [i.funcao, i.quantidade, i.jornada, i.escala, i.local, moeda(i.custo)]), theme: "grid" }); doc.save(`proposta-${p.numero}.pdf`); };
+  const exportar = async (p: ComercialDados["propostas"][number]) => { const [{ jsPDF }, { default: autoTable }] = await Promise.all([import("jspdf"), import("jspdf-autotable")]); const doc = new jsPDF(); doc.setFontSize(18); doc.text(`Proposta ${p.numero}`, 14, 20); doc.setFontSize(10); doc.text(`Valor mensal: ${moeda(p.valor_mensal)}`, 14, 32); doc.text(`Prazo: ${p.prazo_meses} meses`, 14, 39); const { data } = await banco.from("com_proposta_versoes").select("itens").eq("proposta_id", p.id).order("versao", { ascending: false }).limit(1).maybeSingle(); autoTable(doc, { startY: 48, head: [["Função", "Quantidade", "Jornada", "Escala", "Local", "Custo"]], body: ((data?.itens ?? []) as any[]).map((i) => [i.funcao, i.quantidade, i.jornada, i.escala, i.local, moeda(i.custo)]), theme: "grid" }); doc.save(`proposta-${p.numero}.pdf`); };
   return dados.propostas.length ? <Card className="border-neutral-800 bg-neutral-900"><Table><TableHeader><TableRow><TableHead>Número</TableHead><TableHead>Oportunidade</TableHead><TableHead>Versão</TableHead><TableHead>Valor mensal</TableHead><TableHead>Prazo</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Prévia</TableHead></TableRow></TableHeader><TableBody>{dados.propostas.map((p) => <TableRow key={p.id}><TableCell className="font-medium">{p.numero}</TableCell><TableCell>{dados.oportunidades.find((o) => o.id === p.oportunidade_id)?.titulo || "—"}</TableCell><TableCell>v{p.versao_atual}</TableCell><TableCell>{moeda(p.valor_mensal)}</TableCell><TableCell>{p.prazo_meses} meses</TableCell><TableCell><Badge variant={p.status === "aprovada" ? "success" : p.status === "recusada" ? "destructive" : "secondary"}>{p.status}</Badge></TableCell><TableCell className="text-right"><Button size="sm" variant="outline" onClick={() => exportar(p)}><Download />PDF</Button></TableCell></TableRow>)}</TableBody></Table></Card> : <Vazio texto="Nenhuma proposta criada. A primeira versão ficará registrada no histórico." />;
 }
 
@@ -171,8 +175,8 @@ function Relatorios(props: { dados: ComercialDados; busca: string; setBusca: (v:
   const { dados, inicio, fim } = props;
   const ops = dados.oportunidades.filter((o) => (!inicio || o.created_at >= inicio) && (!fim || o.created_at.slice(0, 10) <= fim));
   const linhas = dados.etapas.map((e) => ({ etapa: e.nome, quantidade: ops.filter((o) => o.etapa_id === e.id).length, valor: ops.filter((o) => o.etapa_id === e.id).reduce((s, o) => s + Number(o.valor_previsto), 0) }));
-  const excel = () => { const ws = XLSX.utils.json_to_sheet(linhas.map((l) => ({ Etapa: l.etapa, Oportunidades: l.quantidade, "Valor previsto": l.valor }))); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Desempenho"); XLSX.writeFile(wb, "relatorio-comercial.xlsx"); };
-  const pdf = () => { const doc = new jsPDF(); doc.text("Relatório de desempenho comercial", 14, 18); autoTable(doc, { startY: 25, head: [["Etapa", "Oportunidades", "Valor previsto"]], body: linhas.map((l) => [l.etapa, l.quantidade, moeda(l.valor)]) }); doc.save("relatorio-comercial.pdf"); };
+  const excel = async () => { const XLSX = await import("xlsx"); const ws = XLSX.utils.json_to_sheet(linhas.map((l) => ({ Etapa: l.etapa, Oportunidades: l.quantidade, "Valor previsto": l.valor }))); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Desempenho"); XLSX.writeFile(wb, "relatorio-comercial.xlsx"); };
+  const pdf = async () => { const [{ jsPDF }, { default: autoTable }] = await Promise.all([import("jspdf"), import("jspdf-autotable")]); const doc = new jsPDF(); doc.text("Relatório de desempenho comercial", 14, 18); autoTable(doc, { startY: 25, head: [["Etapa", "Oportunidades", "Valor previsto"]], body: linhas.map((l) => [l.etapa, l.quantidade, moeda(l.valor)]) }); doc.save("relatorio-comercial.pdf"); };
   return <><Filtros {...props} busca="" setBusca={() => {}} /><div className="flex justify-end gap-2"><Button variant="outline" onClick={pdf}><Download />PDF</Button><Button className="bg-red-600 text-neutral-50 hover:bg-red-700" onClick={excel}><Download />Excel</Button></div><div className="grid gap-4 lg:grid-cols-[1fr_2fr]"><Card className="border-neutral-800 bg-neutral-900"><CardHeader><CardTitle>Resumo do período</CardTitle></CardHeader><CardContent className="space-y-3 pt-5"><Kpi titulo="Oportunidades" valor={ops.length} detalhe="No período selecionado" icon={Target} /><Kpi titulo="Valor previsto" valor={moeda(ops.reduce((s, o) => s + Number(o.valor_previsto), 0))} detalhe="Soma do pipeline" icon={BarChart3} /></CardContent></Card><Card className="border-neutral-800 bg-neutral-900"><Table><TableHeader><TableRow><TableHead>Etapa</TableHead><TableHead>Oportunidades</TableHead><TableHead>Valor previsto</TableHead></TableRow></TableHeader><TableBody>{linhas.map((l) => <TableRow key={l.etapa}><TableCell className="font-medium">{l.etapa}</TableCell><TableCell>{l.quantidade}</TableCell><TableCell>{moeda(l.valor)}</TableCell></TableRow>)}</TableBody></Table></Card></div></>;
 }
 
