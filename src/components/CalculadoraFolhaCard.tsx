@@ -9,6 +9,7 @@ import {
   FileText,
   Loader2,
   Sparkles,
+  Timer,
   Trash2,
   User,
 } from "lucide-react";
@@ -61,11 +62,17 @@ export function CalculadoraFolhaCard() {
 
   const resumo = useMemo(() => resumoCompleto(dias, texto), [dias, texto]);
   const escala = escalaIA || resumo.escala;
+  const jornadaPadrao = useMemo(() => jornadaPadraoDaEscala(escala), [escala]);
   const diasComMarcacao = resumo.dias.filter((d) => d.minutos > 0).length;
   const horasExtras = useMemo(
-    () => calcularHorasExtras(resumo.dias, jornadaPadraoDaEscala(escala)),
-    [resumo.dias, escala],
+    () => calcularHorasExtras(resumo.dias, jornadaPadrao),
+    [resumo.dias, jornadaPadrao],
   );
+  const extrasPorDia = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const e of horasExtras.porDia) mapa.set(e.dia, e.extras);
+    return mapa;
+  }, [horasExtras]);
 
   function limparIA() {
     setEscalaIA(null);
@@ -157,6 +164,7 @@ Escala informada: ${escala ?? "não identificada"}
 Colaborador: ${colaborador || "não informado"}
 Período: ${periodo || "não informado"}
 Total calculado: ${minutosParaTexto(resumo.minutosTotais)}
+Horas extras calculadas: ${minutosParaTexto(horasExtras.total)} (jornada normal ${minutosParaTexto(jornadaPadrao)})
 Resumo semanal: ${resumo.semanas.map((s) => `${s.rotulo} = ${minutosParaTexto(s.minutos)}`).join(" | ")}
 Resumo mensal: ${resumo.meses.map((m) => `${m.rotulo} = ${minutosParaTexto(m.minutos)}`).join(" | ")}
 
@@ -212,8 +220,8 @@ Responda em português, curto e objetivo, em tópicos.`;
         </CardTitle>
         <CardDescription>
           Importe a folha de ponto em PDF: o sistema lê a folha inteira, localiza a escala e os
-          horários com a IA (Gemini) e monta o resumo do dia, da semana e do mês. A Manus AI pode
-          conferir o cálculo.
+          horários com a IA (Gemini) e monta o resumo do dia, da semana, do mês e das horas
+          extras. A Manus AI pode conferir o cálculo.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -317,6 +325,77 @@ Responda em português, curto e objetivo, em tópicos.`;
               {periodo && <Badge variant="outline">Período: {periodo}</Badge>}
             </div>
 
+            {/* Horas extras em destaque */}
+            <div className="rounded-xl border border-primary/40 bg-primary/5 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="flex items-center gap-2 text-sm font-semibold uppercase">
+                  <Timer className="h-4 w-4 text-primary" /> Horas extras
+                </p>
+                <Badge variant="outline">
+                  Jornada normal: {minutosParaTexto(jornadaPadrao)} por dia
+                </Badge>
+              </div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                    Total de horas extras
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums text-primary">
+                    {minutosParaTexto(horasExtras.total)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                    Dias com horas extras
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums">
+                    {horasExtras.porDia.length}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">
+                    Maior extra em um dia
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums">
+                    {minutosParaTexto(
+                      horasExtras.porDia.reduce((m, e) => Math.max(m, e.extras), 0),
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {horasExtras.porDia.length > 0 ? (
+                <div className="mt-3 overflow-x-auto rounded-lg border border-border bg-background">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Dia</TableHead>
+                        <TableHead>Total do dia</TableHead>
+                        <TableHead>Horas extras</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {horasExtras.porDia.map((e, i) => (
+                        <TableRow key={`extra-${e.dia}-${i}`}>
+                          <TableCell className="font-medium">{e.dia}</TableCell>
+                          <TableCell className="tabular-nums">
+                            {minutosParaTexto(e.minutos)}
+                          </TableCell>
+                          <TableCell className="tabular-nums font-semibold text-primary">
+                            +{minutosParaTexto(e.extras)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Nenhum dia ficou acima da jornada normal — sem horas extras no período.
+                </p>
+              )}
+            </div>
+
             <div className="grid gap-3 md:grid-cols-3">
               <div className="rounded-lg border border-border p-3">
                 <p className="flex items-center gap-2 text-xs font-semibold uppercase text-muted-foreground">
@@ -354,49 +433,6 @@ Responda em português, curto e objetivo, em tópicos.`;
                 <p className="text-xs text-muted-foreground">total do período importado</p>
               </div>
             </div>
-
-            {horasExtras.porDia.length > 0 && (
-              <div className="rounded-lg border border-primary/40 bg-primary/5 p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="flex items-center gap-2 text-xs font-semibold uppercase text-muted-foreground">
-                    <Clock className="h-4 w-4" /> Horas extras
-                  </p>
-                  <Badge variant="outline">
-                    Jornada normal: {minutosParaTexto(horasExtras.jornadaPadrao)}
-                  </Badge>
-                </div>
-                <p className="mt-1 text-2xl font-semibold tabular-nums">
-                  {minutosParaTexto(horasExtras.total)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {horasExtras.porDia.length} dia(s) acima da jornada
-                </p>
-                <div className="mt-3 overflow-x-auto rounded-lg border border-border bg-background">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Dia</TableHead>
-                        <TableHead>Total do dia</TableHead>
-                        <TableHead>Horas extras</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {horasExtras.porDia.map((e, i) => (
-                        <TableRow key={`extra-${e.dia}-${i}`}>
-                          <TableCell className="font-medium">{e.dia}</TableCell>
-                          <TableCell className="tabular-nums">
-                            {minutosParaTexto(e.minutos)}
-                          </TableCell>
-                          <TableCell className="tabular-nums font-semibold">
-                            {minutosParaTexto(e.extras)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            )}
 
             {resumo.semanas.length > 0 && (
               <div className="overflow-x-auto rounded-lg border border-border">
@@ -455,22 +491,33 @@ Responda em português, curto e objetivo, em tópicos.`;
                     <TableHead>Dia</TableHead>
                     <TableHead>Marcações</TableHead>
                     <TableHead>Total do dia</TableHead>
+                    <TableHead>Horas extras</TableHead>
                     <TableHead>Observação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {resumo.dias.map((d, i) => (
-                    <TableRow key={`${d.dia}-${i}`}>
-                      <TableCell className="font-medium">{d.dia}</TableCell>
-                      <TableCell className="tabular-nums">
-                        {d.horarios.join(" · ") || "—"}
-                      </TableCell>
-                      <TableCell className="tabular-nums">{minutosParaTexto(d.minutos)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {d.observacao ?? "—"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {resumo.dias.map((d, i) => {
+                    const extra = extrasPorDia.get(d.dia) ?? 0;
+                    return (
+                      <TableRow key={`${d.dia}-${i}`}>
+                        <TableCell className="font-medium">{d.dia}</TableCell>
+                        <TableCell className="tabular-nums">
+                          {d.horarios.join(" · ") || "—"}
+                        </TableCell>
+                        <TableCell className="tabular-nums">
+                          {minutosParaTexto(d.minutos)}
+                        </TableCell>
+                        <TableCell
+                          className={`tabular-nums ${extra > 0 ? "font-semibold text-primary" : "text-muted-foreground"}`}
+                        >
+                          {extra > 0 ? `+${minutosParaTexto(extra)}` : "—"}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {d.observacao ?? "—"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
