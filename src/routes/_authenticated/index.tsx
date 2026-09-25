@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, BriefcaseBusiness, Clock3, ShieldCheck } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { NoticiasWidget } from "@/components/NoticiasWidget";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -114,6 +115,7 @@ function HomePage() {
             <span className="mt-4 flex items-center gap-2 text-sm text-primary">Abrir área <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></span>
           </Link>
         </div>
+        <NoticiasWidget />
       </section>
     </main>
   );
