@@ -280,8 +280,8 @@ async function calcularDiaInterno(sb: Ctx["supabase"], employeeId: string, data:
     .eq("data_ref", data)
     .order("registrado_em", { ascending: true });
 
-  const lista = ((entradas ?? []) as { tipo: TipoMarcacaoServidor; registrado_em: string }[]).filter(
-    (e) => e.tipo !== "saida_extraordinaria",
+  const lista = ((entradas ?? []) as { tipo: TipoMarcacaoServidor; registrado_em: string; status: string }[]).filter(
+    (e) => e.tipo !== "saida_extraordinaria" && e.status !== "corrigido",
   );
 
   const { data: vinculo } = await sb
