@@ -32,11 +32,11 @@ export const CATEGORIAS_MENU: Record<string, CategoriaMenu> = {
     titulo: "Departamento pessoal",
     descricao: "Férias, vales, folha de pagamento e eSocial.",
     itens: [
-      { to: "/dp-ferias", label: "Férias", descricao: "Programação e cálculo de férias.", icon: "calendar" },
-      { to: "/dp-vale-transporte", label: "Cálculo do vale transporte", descricao: "Tarifa × viagens × dias do ponto.", icon: "pin" },
-      { to: "/dp-vale-alimentacao", label: "Cálculo do vale alimentação", descricao: "Valor diário × dias com presença.", icon: "clipboard" },
-      { to: "/dp-folha", label: "Folha de pagamento", descricao: "Integrada ao ponto digital, com holerite.", icon: "file" },
-      { to: "/dp-esocial", label: "eSocial", descricao: "Eventos de remuneração para o governo.", icon: "shield" },
+      { to: "/dp-ferias", label: "Férias", descricao: "Programação e cálculo de férias.", icon: "calendar", livre: true },
+      { to: "/dp-vale-transporte", label: "Cálculo do vale transporte", descricao: "Tarifa × viagens × dias do ponto.", icon: "pin", livre: true },
+      { to: "/dp-vale-alimentacao", label: "Cálculo do vale alimentação", descricao: "Valor diário × dias com presença.", icon: "clipboard", livre: true },
+      { to: "/dp-folha", label: "Folha de pagamento", descricao: "Integrada ao ponto digital, com holerite.", icon: "file", livre: true },
+      { to: "/dp-esocial", label: "eSocial", descricao: "Eventos de remuneração para o governo.", icon: "shield", livre: true },
     ],
   },
   "ponto-nxs": {
