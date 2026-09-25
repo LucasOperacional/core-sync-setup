@@ -1884,6 +1884,185 @@ export type Database = {
         }
         Relationships: []
       }
+      dp_dados_funcionario: {
+        Row: {
+          dependentes: number
+          employee_id: string
+          salario: number
+          updated_at: string
+          va_valor_dia: number
+          vt_optante: boolean
+          vt_tarifa: number
+          vt_viagens_dia: number
+        }
+        Insert: {
+          dependentes?: number
+          employee_id: string
+          salario?: number
+          updated_at?: string
+          va_valor_dia?: number
+          vt_optante?: boolean
+          vt_tarifa?: number
+          vt_viagens_dia?: number
+        }
+        Update: {
+          dependentes?: number
+          employee_id?: string
+          salario?: number
+          updated_at?: string
+          va_valor_dia?: number
+          vt_optante?: boolean
+          vt_tarifa?: number
+          vt_viagens_dia?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dp_dados_funcionario_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dp_esocial_eventos: {
+        Row: {
+          competencia: string | null
+          created_at: string
+          created_by: string | null
+          employee_id: string | null
+          evento: string
+          id: string
+          mensagem: string | null
+          recibo: string | null
+          status: string
+          xml: string
+        }
+        Insert: {
+          competencia?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string | null
+          evento: string
+          id?: string
+          mensagem?: string | null
+          recibo?: string | null
+          status?: string
+          xml: string
+        }
+        Update: {
+          competencia?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string | null
+          evento?: string
+          id?: string
+          mensagem?: string | null
+          recibo?: string | null
+          status?: string
+          xml?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dp_esocial_eventos_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dp_ferias: {
+        Row: {
+          abono_dias: number
+          aquisitivo_fim: string
+          aquisitivo_inicio: string
+          created_at: string
+          created_by: string | null
+          dias: number
+          employee_id: string
+          id: string
+          inicio: string
+          status: string
+          valores: Json
+        }
+        Insert: {
+          abono_dias?: number
+          aquisitivo_fim: string
+          aquisitivo_inicio: string
+          created_at?: string
+          created_by?: string | null
+          dias?: number
+          employee_id: string
+          id?: string
+          inicio: string
+          status?: string
+          valores?: Json
+        }
+        Update: {
+          abono_dias?: number
+          aquisitivo_fim?: string
+          aquisitivo_inicio?: string
+          created_at?: string
+          created_by?: string | null
+          dias?: number
+          employee_id?: string
+          id?: string
+          inicio?: string
+          status?: string
+          valores?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dp_ferias_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dp_folhas: {
+        Row: {
+          competencia: string
+          created_by: string | null
+          dados: Json
+          employee_id: string
+          id: string
+          liquido: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          competencia: string
+          created_by?: string | null
+          dados?: Json
+          employee_id: string
+          id?: string
+          liquido?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          competencia?: string
+          created_by?: string | null
+          dados?: Json
+          employee_id?: string
+          id?: string
+          liquido?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dp_folhas_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "pnt_employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       faltas_arquivos: {
         Row: {
           caminho: string
