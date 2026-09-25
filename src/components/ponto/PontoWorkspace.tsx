@@ -471,10 +471,11 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
     (acc, r) => ({
       trabalhado: acc.trabalhado + r.trabalhado_min,
       previsto: acc.previsto + r.previsto_min,
+      atraso: acc.atraso + r.atraso_min,
       extra: acc.extra + r.extra_min,
       saldo: acc.saldo + r.saldo_min,
     }),
-    { trabalhado: 0, previsto: 0, extra: 0, saldo: 0 },
+    { trabalhado: 0, previsto: 0, atraso: 0, extra: 0, saldo: 0 },
   );
 
   const exportarPdf = async (modelo: ModeloPdf) => {
