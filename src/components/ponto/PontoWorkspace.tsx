@@ -704,6 +704,20 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
                 <Button size="sm" variant="outline" onClick={() => setEdicao({ ...edicao, linhas: [...edicao.linhas].sort((a, b) => a.horario.localeCompare(b.horario)) })}>
                   Organizar por horário
                 </Button>
+                {edicao.linhas.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-destructive"
+                    onClick={() => {
+                      if (window.confirm("Remover todas as marcações deste dia? As originais ficam guardadas no histórico.")) {
+                        setEdicao({ ...edicao, linhas: [] });
+                      }
+                    }}
+                  >
+                    <Trash2 className="size-4" /> Remover todas
+                  </Button>
+                )}
               </div>
               {(() => {
                 const ordenadas = [...edicao.linhas].filter((l) => /^\d{2}:\d{2}$/.test(l.horario)).sort((a, b) => a.horario.localeCompare(b.horario));
