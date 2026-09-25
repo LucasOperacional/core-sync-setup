@@ -850,9 +850,16 @@ function Painel({ dados }: { dados: DadosPonto }) {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {grupos.map((g) => {
-              const presentesPosto = g.pessoas.filter((p) => presentes.has(p.id)).length;
-              return (
-                <Card key={g.id}>
+               const presentesPosto = g.pessoas.filter((p) => presentes.has(p.id)).length;
+               return (
+                 <Card
+                   key={g.id}
+                   className="cursor-pointer"
+                   onClick={() => {
+                     setPostoAberto(g.id);
+                     setFolhaAberta(null);
+                   }}
+                 >
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-start justify-between gap-2 text-sm">
                       <span className="flex items-center gap-2">
