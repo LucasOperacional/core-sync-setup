@@ -516,15 +516,18 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
       .sort((a, b) => a.registrado_em.localeCompare(b.registrado_em))
       .map((m) => ({ tipo: m.tipo as TipoMarcacao, horario: horaLocal(m.registrado_em).slice(0, 5) }));
 
-  /** Motivos reais do dia: pedidos de ajuste do funcionário + correções feitas pelo responsável. */
+  /** Motivo real mais recente do dia: último pedido de ajuste do funcionário ou última correção do responsável. */
   const motivosDoDia = (dia: string): string[] => {
-    const dosPedidos = dados.pedidos
-      .filter((p) => p.employee_id === alvo && p.data_ref === dia)
-      .map((p) => `${p.motivo}${p.status === "aprovada" ? " (ajuste aprovado)" : p.status === "rejeitada" ? " (ajuste recusado)" : " (aguardando aprovação)"}`);
-    const dasCorrecoes = dados.marcacoes
-      .filter((m) => m.employee_id === alvo && m.data_ref === dia && m.observacao)
-      .map((m) => m.observacao as string);
-    return [...new Set([...dosPedidos, ...dasCorrecoes])];
+    const pedido = dados.pedidos.find((p) => p.employee_id === alvo && p.data_ref === dia);
+    const correcao = dados.marcacoes.find((m) => m.employee_id === alvo && m.data_ref === dia && m.observacao);
+    const limpar = (t: string) => t.replace(/^Editado pelo responsável:\s*/i, "").trim();
+    const lista: string[] = [];
+    if (pedido) lista.push(`${limpar(pedido.motivo)}${pedido.status === "aprovada" ? " (ajuste aprovado)" : pedido.status === "rejeitada" ? " (ajuste recusado)" : " (aguardando aprovação)"}`);
+    if (correcao?.observacao) {
+      const texto = limpar(correcao.observacao);
+      if (!lista.some((l) => l.startsWith(texto))) lista.push(texto);
+    }
+    return lista.slice(0, 2);
   };
 
   const [remocao, setRemocao] = useState<{ data: string; index: number; linha: { tipo: TipoMarcacao; horario: string }; motivo: string } | null>(null);
