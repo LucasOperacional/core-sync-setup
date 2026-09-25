@@ -711,7 +711,7 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="ghost" onClick={() => setEdicao(null)}>Cancelar</Button>
-                <Button disabled={salvarEdicao.isPending} onClick={() => salvarEdicao.mutate()}>
+                <Button disabled={salvarEdicao.isPending || !edicao.motivo.trim()} onClick={() => salvarEdicao.mutate()}>
                   {salvarEdicao.isPending ? "Salvando..." : "Salvar folha"}
                 </Button>
               </div>
