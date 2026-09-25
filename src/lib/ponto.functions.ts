@@ -586,6 +586,107 @@ export const decidirAjuste = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+/** Responsável reorganiza as marcações de um dia. Originais são preservados como "corrigido". */
+export const editarMarcacoesDia = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      employeeId: string;
+      dataRef: string;
+      marcacoes: { tipo: TipoMarcacaoServidor; horario: string }[];
+      motivo: string;
+    }) => {
+      if (!input.employeeId || !input.dataRef) throw new Error("Informe funcionário e data.");
+      if (!input.motivo?.trim()) throw new Error("Descreva o motivo da correção.");
+      for (const m of input.marcacoes) {
+        if (!TIPOS.includes(m.tipo)) throw new Error("Tipo de marcação inválido.");
+        if (!/^\d{2}:\d{2}$/.test(m.horario)) throw new Error("Horário inválido.");
+      }
+      return input;
+    },
+  )
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase as unknown as Ctx["supabase"];
+    const userId = context.userId as string;
+    const [{ data: gestor }, { data: admin }] = await Promise.all([
+      sb.rpc("pnt_eh_gestor", { _user_id: userId }),
+      sb.rpc("has_role", { _user_id: userId, _role: "admin" }),
+    ]);
+    if (!gestor && !admin) throw new Error("Apenas o responsável pode editar a folha.");
+
+    const ordenadas = [...data.marcacoes].sort((a, b) => a.horario.localeCompare(b.horario));
+    const seq: TipoMarcacaoServidor[] = [];
+    for (const m of ordenadas) {
+      const erro = sequenciaValida(seq, m.tipo);
+      if (erro) throw new Error(`${m.horario}: ${erro}`);
+      seq.push(m.tipo);
+    }
+
+    const { data: func } = await sb
+      .from("pnt_employees")
+      .select("organization_id")
+      .eq("id", data.employeeId)
+      .maybeSingle();
+    if (!func) throw new Error("Funcionário não encontrado.");
+
+    const { data: atuais } = await sb
+      .from("pnt_time_entries")
+      .select("id, tipo, registrado_em, status")
+      .eq("employee_id", data.employeeId)
+      .eq("data_ref", data.dataRef)
+      .neq("status", "corrigido");
+    const anteriores = (atuais ?? []) as { id: string; tipo: string; registrado_em: string }[];
+
+    if (anteriores.length) {
+      const { error } = await sb
+        .from("pnt_time_entries")
+        .update({ status: "corrigido" })
+        .in("id", anteriores.map((a) => a.id));
+      if (error) throw new Error(error.message);
+    }
+
+    const lote = Date.now().toString(36);
+    if (ordenadas.length) {
+      const { error } = await sb.from("pnt_time_entries").insert(
+        ordenadas.map((m, i) => ({
+          organization_id: func.organization_id,
+          employee_id: data.employeeId,
+          tipo: m.tipo,
+          registrado_em: new Date(`${data.dataRef}T${m.horario}:00-03:00`).toISOString(),
+          data_ref: data.dataRef,
+          origem: "ajuste",
+          status: "valido",
+          comprovante: `EDT-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+          idempotency_key: `edicao-${data.employeeId}-${data.dataRef}-${lote}-${i}`,
+          observacao: `Editado pelo responsável: ${data.motivo.trim()}`,
+          criado_por: userId,
+        })),
+      );
+      if (error) throw new Error(error.message);
+    }
+
+    const valorNovo = ordenadas.map((m) => ({ tipo: m.tipo, horario: m.horario }));
+    await sb.from("pnt_time_adjustments").insert({
+      organization_id: func.organization_id,
+      request_id: null,
+      entry_id: null,
+      employee_id: data.employeeId,
+      valor_anterior: anteriores,
+      valor_novo: valorNovo,
+      aplicado_por: userId,
+    });
+    await sb.from("pnt_audit_logs").insert({
+      organization_id: func.organization_id,
+      user_id: userId,
+      acao: "edicao_folha",
+      recurso: "pnt_time_entries",
+      detalhes: { employeeId: data.employeeId, dataRef: data.dataRef, motivo: data.motivo.trim(), anteriores, novas: valorNovo },
+    });
+
+    await calcularDiaInterno(sb, data.employeeId, data.dataRef);
+    return { ok: true as const };
+  });
+
 /** Fecha (ou reabre) o período de apuração. */
 export const fecharPeriodo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
