@@ -9,7 +9,6 @@ import { cadastrarConta, type CadastroRole } from "@/lib/cadastro.functions";
 import { entrarComUsuario } from "@/lib/auth.functions";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import loginBgAsset from "@/assets/video-autenticacao-claro.webm.asset.json";
-import logoAzul from "@/assets/logo-nxs-plus-azul.png.asset.json";
 import logoBranca from "@/assets/logo-nxs-plus-branca.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
@@ -143,9 +142,9 @@ function AuthPage() {
           <ThemeToggle className="fixed right-4 top-4 z-50 shadow-xs" />
         </ClientOnly>
         <div className="relative z-10 hidden flex-col justify-between p-10 lg:flex">
-          <div className="flex items-center gap-3"><img src={logoAzul.url} alt="NXS Plus Gestão" className="h-8 w-auto dark:hidden" draggable={false} /><img src={logoBranca.url} alt="NXS Plus Gestão" className="hidden h-8 w-auto dark:block" draggable={false} /><div><p className="font-display text-sm font-semibold text-foreground dark:text-white">NXS GESTÃO</p><p className="text-xs text-muted-foreground dark:text-white/70">Central integrada com a sua Empresa</p></div></div>
-          <div className="max-w-sm"><p className="text-xs font-semibold text-primary dark:text-[#7db4e8]">AMBIENTE CORPORATIVO</p><h1 className="mt-3 font-display text-3xl font-semibold leading-tight text-foreground dark:text-white">Controle com segurança e precisão.</h1><p className="mt-4 text-sm leading-6 text-muted-foreground dark:text-white/80">Acesse relatórios, protocolos, indicadores e fluxos autorizados para o seu perfil.</p></div>
-          <p className="text-xs text-muted-foreground dark:text-white/60">Acesso protegido e monitorado.</p>
+          <div className="flex items-center gap-3"><img src={logoBranca.url} alt="NXS Plus Gestão" className="h-8 w-auto" draggable={false} /><div><p className="font-display text-sm font-semibold text-white">NXS GESTÃO</p><p className="text-xs text-white/70">Central integrada com a sua Empresa</p></div></div>
+          <div className="max-w-sm"><p className="text-xs font-semibold text-[#7db4e8]">AMBIENTE CORPORATIVO</p><h1 className="mt-3 font-display text-3xl font-semibold leading-tight text-white">Controle com segurança e precisão.</h1><p className="mt-4 text-sm leading-6 text-white/80">Acesse relatórios, protocolos, indicadores e fluxos autorizados para o seu perfil.</p></div>
+          <p className="text-xs text-white/60">Acesso protegido e monitorado.</p>
         </div>
 
         {/* ── Right panel: login form ── */}
@@ -153,15 +152,9 @@ function AuthPage() {
           <div className="w-full max-w-sm">
             <div className="mb-4 flex items-center justify-center">
               <img
-                src={logoAzul.url}
-                alt="NXS Plus Gestão"
-                className="h-14 w-auto object-contain dark:hidden"
-                draggable={false}
-              />
-              <img
                 src={logoBranca.url}
                 alt="NXS Plus Gestão"
-                className="hidden h-14 w-auto object-contain dark:block"
+                className="h-14 w-auto object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
                 draggable={false}
               />
             </div>
