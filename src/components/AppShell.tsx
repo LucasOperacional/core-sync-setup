@@ -18,6 +18,7 @@ const STORAGE_KEY = "ciop:navegacao-recolhida";
 const CATEGORIAS_SIDEBAR = [
   { slug: "comercial", categoria: "categoria-comercial", label: "Comercial", sigla: "COM" },
   { slug: "departamento-pessoal", categoria: "categoria-departamento-pessoal", label: "Departamento pessoal", sigla: "DP" },
+  { slug: "ponto-nxs", categoria: "categoria-departamento-pessoal", label: "Ponto Nxs", sigla: "PN" },
   { slug: "financeiro", categoria: "categoria-financeiro", label: "Financeiro", sigla: "FIN" },
   { slug: "operacional", categoria: "categoria-operacional", label: "Operacional", sigla: "OP" },
   { slug: "recursos-humanos", categoria: "categoria-recursos-humanos", label: "Recursos humanos", sigla: "RH" },
