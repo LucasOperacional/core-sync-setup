@@ -75,7 +75,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             <>
               <img src={logoAzul.url} alt="NXS Plus Gestão" className="h-9 w-auto shrink-0 object-contain dark:hidden" draggable={false} />
               <img src={logoBranca.url} alt="NXS Plus Gestão" className="hidden h-9 w-auto shrink-0 object-contain dark:block" draggable={false} />
-              <span className="border-l border-sidebar-border pl-2 text-[10px] font-semibold uppercase text-sidebar-foreground/55">Sistemas</span>
             </>
           )}
         </Link>
@@ -177,7 +176,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Button variant="ghost" size="icon" onClick={() => setMenuMobile(true)} aria-label="Abrir menu"><Menu /></Button>
           <img src={logoAzul.url} alt="NXS Plus Gestão" className="ml-3 h-8 w-auto shrink-0 object-contain dark:hidden" draggable={false} />
           <img src={logoBranca.url} alt="NXS Plus Gestão" className="ml-3 hidden h-8 w-auto shrink-0 object-contain dark:block" draggable={false} />
-          <span className="ml-2 border-l border-border pl-2 text-[10px] font-semibold uppercase text-muted-foreground">Sistemas</span>
         </div>
         <div className="app-workspace min-w-0">{children}</div>
       </div>
