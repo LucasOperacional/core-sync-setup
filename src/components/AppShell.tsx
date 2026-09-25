@@ -72,10 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {compacta ? (
             <span className="grid size-8 shrink-0 place-items-center rounded-md bg-sidebar-primary font-display text-xs text-sidebar-primary-foreground shadow-xs">N</span>
           ) : (
-            <>
-              <img src={logoAzul.url} alt="NXS Plus Gestão" className="h-9 w-auto shrink-0 object-contain dark:hidden" draggable={false} />
-              <img src={logoBranca.url} alt="NXS Plus Gestão" className="hidden h-9 w-auto shrink-0 object-contain dark:block" draggable={false} />
-            </>
+            <img src={logoBranca.url} alt="NXS Plus Gestão" className="h-9 w-auto shrink-0 object-contain" draggable={false} />
           )}
         </Link>
       </div>
