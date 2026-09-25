@@ -75,8 +75,8 @@
 /* ─── Azul confiança: interface corporativa clara ─── */
 :root {
   --radius: 0.625rem;
-  --font-display: "Archivo Black", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Hind", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
 
   --background: oklch(0.9722 0.0034 247.86);
   --foreground: oklch(0.2595 0.052 264.33);
@@ -186,8 +186,8 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: 0;
-    font-weight: 400;
+    letter-spacing: -0.015em;
+    font-weight: 600;
   }
 }
 
@@ -290,7 +290,8 @@
   .app-workspace h1 {
     font-size: clamp(1.5rem, 2vw, 2.15rem);
     line-height: 1.2;
-    font-weight: 400;
+    font-weight: 600;
+    letter-spacing: -0.015em;
     text-transform: none;
   }
 
@@ -316,9 +317,6 @@
     background-color: color-mix(in oklab, var(--color-muted) 25%, transparent) !important;
   }
 
-  .app-workspace [class*="tracking-"] {
-    letter-spacing: 0 !important;
-  }
 
   .app-workspace input,
   .app-workspace textarea,
