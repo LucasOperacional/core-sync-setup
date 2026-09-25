@@ -99,12 +99,6 @@ const links = [
     desc: "Protocolos de entrega.",
   },
   {
-    to: "/assinatura-documentos" as const,
-    icon: FileSignature,
-    title: "Assinatura",
-    desc: "CRT e PDFs assinados pelo celular.",
-  },
-  {
     to: "/gerentes" as const,
     icon: LayoutDashboard,
     title: "Gerentes",
