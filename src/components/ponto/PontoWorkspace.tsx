@@ -702,9 +702,15 @@ function Ajustes({ dados, employeeId, aoSalvar }: { dados: DadosPonto; employeeI
 
 function Painel({ dados }: { dados: DadosPonto }) {
   const [empresa, setEmpresa] = useState("");
+  const [posto, setPosto] = useState("");
   const hoje = hojeLocal();
 
-  const funcionarios = dados.funcionarios.filter((f) => f.ativo && (!empresa || f.company_id === empresa));
+  const funcionarios = dados.funcionarios.filter(
+    (f) =>
+      f.ativo &&
+      (!empresa || f.company_id === empresa) &&
+      (!posto || (posto === "__sem" ? !f.unit_id : f.unit_id === posto)),
+  );
   const ids = new Set(funcionarios.map((f) => f.id));
   const doDia = dados.marcacoes.filter((m) => m.data_ref === hoje && ids.has(m.employee_id));
   const resumos = dados.resumos.filter((r) => r.data === hoje && ids.has(r.employee_id));
@@ -722,19 +728,40 @@ function Painel({ dados }: { dados: DadosPonto }) {
   const extras = resumos.reduce((s, r) => s + r.extra_min, 0);
   const saldoBanco = dados.banco.filter((b) => ids.has(b.employee_id)).reduce((s, b) => s + b.minutos, 0);
 
+  const unidadesVisiveis = dados.unidades.filter((u) => !empresa || (u as { company_id?: string | null }).company_id === empresa || funcionarios.some((f) => f.unit_id === u.id));
+  const grupos = [
+    ...unidadesVisiveis.map((u) => ({ id: u.id, nome: u.nome, pessoas: funcionarios.filter((f) => f.unit_id === u.id) })),
+    { id: "__sem", nome: "Sem posto definido", pessoas: funcionarios.filter((f) => !f.unit_id) },
+  ].filter((g) => (posto ? g.id === posto : g.pessoas.length > 0 || g.id !== "__sem"));
+
   return (
     <div className="space-y-6">
-      <div className="max-w-xs">
-        <Label>Empresa</Label>
-        <select className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm" value={empresa} onChange={(e) => setEmpresa(e.target.value)}>
-          <option value="">Todas</option>
-          {dados.empresas.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.nome}
-            </option>
-          ))}
-        </select>
+      <div className="grid max-w-2xl gap-3 sm:grid-cols-2">
+        <div>
+          <Label>Empresa</Label>
+          <select className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm" value={empresa} onChange={(e) => setEmpresa(e.target.value)}>
+            <option value="">Todas</option>
+            {dados.empresas.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <Label>Posto</Label>
+          <select className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm" value={posto} onChange={(e) => setPosto(e.target.value)}>
+            <option value="">Todos</option>
+            {dados.unidades.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.nome}
+              </option>
+            ))}
+            <option value="__sem">Sem posto definido</option>
+          </select>
+        </div>
       </div>
+
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi titulo="Funcionários ativos" valor={String(funcionarios.length)} icone={ShieldCheck} />
@@ -747,7 +774,56 @@ function Painel({ dados }: { dados: DadosPonto }) {
         <Kpi titulo="Saldo do banco de horas" valor={minutosParaTexto(saldoBanco)} icone={ShieldCheck} />
       </div>
 
+      <div>
+        <h3 className="mb-3 text-base font-semibold">Lotação por posto</h3>
+        {grupos.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhum posto cadastrado.</p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {grupos.map((g) => {
+              const presentesPosto = g.pessoas.filter((p) => presentes.has(p.id)).length;
+              return (
+                <Card key={g.id}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-start justify-between gap-2 text-sm">
+                      <span className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        {g.nome}
+                      </span>
+                      <span className="whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                        {presentesPosto}/{g.pessoas.length} presentes
+                      </span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {g.pessoas.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Ninguém lotado neste posto.</p>
+                    ) : (
+                      <ul className="max-h-56 space-y-1 overflow-y-auto text-sm">
+                        {g.pessoas
+                          .slice()
+                          .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+                          .map((p) => (
+                            <li key={p.id} className="flex items-center justify-between gap-2 border-b border-border/60 py-1 last:border-0">
+                              <span className="truncate">
+                                {p.nome}
+                                {p.cargo ? <span className="text-muted-foreground"> · {p.cargo}</span> : null}
+                              </span>
+                              <span className={`h-2 w-2 shrink-0 rounded-full ${presentes.has(p.id) ? "bg-primary" : "bg-muted-foreground/40"}`} title={presentes.has(p.id) ? "Presente hoje" : "Sem entrada hoje"} />
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       <Card>
+
         <CardHeader>
           <CardTitle>Movimento de hoje</CardTitle>
         </CardHeader>
