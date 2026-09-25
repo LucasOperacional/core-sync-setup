@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronRight, Download, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { ArrowLeft, ChevronRight, Download, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import logoAzul from "@/assets/logo-nxs-plus-azul.png.asset.json";
@@ -56,6 +56,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   const inicioItem = operacionalNavItems.find((item) => item.to === "/");
+
+  const voltar = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigate({ to: "/" });
+    }
+  };
 
   const sair = async () => {
     await supabase.auth.signOut();
@@ -174,7 +182,23 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Button variant="ghost" size="icon" onClick={() => setMenuMobile(true)} aria-label="Abrir menu"><Menu /></Button>
           <img src={logoAzul.url} alt="NXS Plus Gestão" className="ml-3 h-8 w-auto shrink-0 object-contain dark:hidden" draggable={false} />
           <img src={logoBranca.url} alt="NXS Plus Gestão" className="ml-3 hidden h-8 w-auto shrink-0 object-contain dark:block" draggable={false} />
+          {caminho !== "/" && (
+            <Button variant="outline" size="sm" onClick={voltar} className="ml-auto gap-1.5" aria-label="Voltar">
+              <ArrowLeft className="size-4" /> Voltar
+            </Button>
+          )}
         </div>
+        {caminho !== "/" && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={voltar}
+            className="fixed right-4 top-4 z-40 hidden gap-1.5 shadow-panel lg:inline-flex"
+            aria-label="Voltar"
+          >
+            <ArrowLeft className="size-4" /> Voltar
+          </Button>
+        )}
         <div className="app-workspace min-w-0">{children}</div>
       </div>
     </div>
