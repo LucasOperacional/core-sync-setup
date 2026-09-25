@@ -25,6 +25,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { Card, CardContent } from "@/components/ui/card";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
 
 const ICONES: Record<string, LucideIcon> = {
@@ -76,9 +77,7 @@ export function CategoriaCards({
   const { carregando, podeVer, podeVerCategoria } = useMinhasPermissoes();
 
   if (!podeVerCategoria(categoriaKey)) {
-    return (
-      <p className="text-sm text-muted-foreground">Você não tem acesso a esta área.</p>
-    );
+    return <p className="text-sm text-muted-foreground">Você não tem acesso a esta área.</p>;
   }
 
   if (carregando) {
@@ -94,14 +93,16 @@ export function CategoriaCards({
   const visiveis = comIcones(itens).filter((item) => item.livre || podeVer(item.to));
 
   if (visiveis.length === 0) {
-    return <p className="text-sm text-muted-foreground">Nenhum card disponível nesta área ainda.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">Nenhum card disponível nesta área ainda.</p>
+    );
   }
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {visiveis.map((item) => (
         <Link key={item.to} to={item.to} preload="intent" className="group block">
-          <Card {...({ className: "h-full" } as never)} asChild>
+          <Card className="h-full">
             <CardContent className="flex h-full items-start gap-3 p-5">
               <span className="grid size-10 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
                 <item.icon className="size-5" />
@@ -117,5 +118,3 @@ export function CategoriaCards({
     </div>
   );
 }
-
-import { Card, CardContent } from "@/components/ui/card";
