@@ -436,9 +436,33 @@ function Registro({
 
 /* --------------------------------- espelho -------------------------------- */
 
+type ModeloPdf = "completo" | "simplificado" | "conferencia";
+
+const MODELOS_PDF: { id: ModeloPdf; nome: string; colunas: string; descricao: string }[] = [
+  {
+    id: "completo",
+    nome: "Espelho completo",
+    colunas: "Data · Marcações · Trabalhado · Previsto · Atraso · Extra · Saldo · Situação",
+    descricao: "Todas as colunas do espelho, com linha de totais e campos de assinatura do funcionário e do responsável.",
+  },
+  {
+    id: "simplificado",
+    nome: "Espelho simplificado",
+    colunas: "Data · Marcações · Trabalhado · Saldo",
+    descricao: "Versão enxuta para conferência rápida, com linha de totais e campos de assinatura.",
+  },
+  {
+    id: "conferencia",
+    nome: "Ficha de conferência",
+    colunas: "Data · Marcações · Assinatura do dia",
+    descricao: "Uma linha por dia com espaço para o funcionário conferir e assinar as marcações daquele dia.",
+  },
+];
+
 function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId: string | null; gestor: boolean }) {
   const [funcionario, setFuncionario] = useState<string>(employeeId ?? "");
   const [mes, setMes] = useState(() => hojeLocal().slice(0, 7));
+  const [modelosAberto, setModelosAberto] = useState(false);
   const alvo = gestor ? funcionario || employeeId || "" : employeeId ?? "";
 
   const resumos = dados.resumos.filter((r) => r.employee_id === alvo && r.data.startsWith(mes)).sort((a, b) => b.data.localeCompare(a.data));
