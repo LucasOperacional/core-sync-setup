@@ -150,6 +150,7 @@ function AuthPage() {
 
         {/* ── Right panel: login form ── */}
         <div className="relative z-10 flex items-center justify-center px-5 py-16 sm:px-8">
+          <div className="w-full max-w-sm">
             <div className="mb-4 flex items-center justify-center">
               <img
                 src={logoAzul.url}
