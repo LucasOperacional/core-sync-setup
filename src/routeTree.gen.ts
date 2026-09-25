@@ -83,6 +83,7 @@ import { Route as AuthenticatedVerificadorAtestadosRouteImport } from './routes/
 import { Route as AssinarCrtTokenRouteImport } from './routes/assinar-crt.$token'
 import { Route as AssinarMovimentacaoTokenRouteImport } from './routes/assinar-movimentacao.$token'
 import { Route as AssinarTokenRouteImport } from './routes/assinar.$token'
+import { Route as AuthenticatedCategoriaCatRouteImport } from './routes/_authenticated/categoria.$cat'
 import { Route as AuthenticatedGerentesIndexRouteImport } from './routes/_authenticated/gerentes.index'
 import { Route as AuthenticatedGerentesSlugRouteImport } from './routes/_authenticated/gerentes.$slug'
 import { Route as AuthenticatedMesaOperacionalIndexRouteImport } from './routes/_authenticated/mesa-operacional.index'
@@ -528,6 +529,12 @@ const AssinarTokenRoute = AssinarTokenRouteImport.update({
   path: '/assinar/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedCategoriaCatRoute =
+  AuthenticatedCategoriaCatRouteImport.update({
+    id: '/categoria/$cat',
+    path: '/categoria/$cat',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedGerentesIndexRoute =
   AuthenticatedGerentesIndexRouteImport.update({
     id: '/gerentes/',
@@ -752,6 +759,7 @@ export interface FileRoutesByFullPath {
   '/assinar-crt/$token': typeof AssinarCrtTokenRoute
   '/assinar-movimentacao/$token': typeof AssinarMovimentacaoTokenRoute
   '/assinar/$token': typeof AssinarTokenRoute
+  '/categoria/$cat': typeof AuthenticatedCategoriaCatRoute
   '/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
   '/mesa-operacional/$gerente': typeof AuthenticatedMesaOperacionalGerenteRoute
   '/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
@@ -853,6 +861,7 @@ export interface FileRoutesByTo {
   '/assinar-movimentacao/$token': typeof AssinarMovimentacaoTokenRoute
   '/assinar/$token': typeof AssinarTokenRoute
   '/': typeof AuthenticatedIndexRoute
+  '/categoria/$cat': typeof AuthenticatedCategoriaCatRoute
   '/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
   '/mesa-operacional/$gerente': typeof AuthenticatedMesaOperacionalGerenteRoute
   '/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
@@ -956,6 +965,7 @@ export interface FileRoutesById {
   '/assinar-movimentacao/$token': typeof AssinarMovimentacaoTokenRoute
   '/assinar/$token': typeof AssinarTokenRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/categoria/$cat': typeof AuthenticatedCategoriaCatRoute
   '/_authenticated/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
   '/_authenticated/mesa-operacional/$gerente': typeof AuthenticatedMesaOperacionalGerenteRoute
   '/_authenticated/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
@@ -1059,6 +1069,7 @@ export interface FileRouteTypes {
     | '/assinar-crt/$token'
     | '/assinar-movimentacao/$token'
     | '/assinar/$token'
+    | '/categoria/$cat'
     | '/gerentes/$slug'
     | '/mesa-operacional/$gerente'
     | '/relatorios-gerente/$slug'
@@ -1160,6 +1171,7 @@ export interface FileRouteTypes {
     | '/assinar-movimentacao/$token'
     | '/assinar/$token'
     | '/'
+    | '/categoria/$cat'
     | '/gerentes/$slug'
     | '/mesa-operacional/$gerente'
     | '/relatorios-gerente/$slug'
@@ -1262,6 +1274,7 @@ export interface FileRouteTypes {
     | '/assinar-movimentacao/$token'
     | '/assinar/$token'
     | '/_authenticated/'
+    | '/_authenticated/categoria/$cat'
     | '/_authenticated/gerentes/$slug'
     | '/_authenticated/mesa-operacional/$gerente'
     | '/_authenticated/relatorios-gerente/$slug'
@@ -1842,6 +1855,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssinarTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/categoria/$cat': {
+      id: '/_authenticated/categoria/$cat'
+      path: '/categoria/$cat'
+      fullPath: '/categoria/$cat'
+      preLoaderRoute: typeof AuthenticatedCategoriaCatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/gerentes/': {
       id: '/_authenticated/gerentes/'
       path: '/gerentes'
@@ -2093,6 +2113,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVagasAprovadasRoute: typeof AuthenticatedVagasAprovadasRoute
   AuthenticatedVerificadorAtestadosRoute: typeof AuthenticatedVerificadorAtestadosRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedCategoriaCatRoute: typeof AuthenticatedCategoriaCatRoute
   AuthenticatedGerentesSlugRoute: typeof AuthenticatedGerentesSlugRoute
   AuthenticatedMesaOperacionalGerenteRoute: typeof AuthenticatedMesaOperacionalGerenteRoute
   AuthenticatedRelatoriosGerenteSlugRoute: typeof AuthenticatedRelatoriosGerenteSlugRoute
@@ -2173,6 +2194,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedVerificadorAtestadosRoute:
     AuthenticatedVerificadorAtestadosRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedCategoriaCatRoute: AuthenticatedCategoriaCatRoute,
   AuthenticatedGerentesSlugRoute: AuthenticatedGerentesSlugRoute,
   AuthenticatedMesaOperacionalGerenteRoute:
     AuthenticatedMesaOperacionalGerenteRoute,

@@ -1,8 +1,8 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { AlarmClock, BarChart3, BriefcaseBusiness, Building2, CalendarDays, CheckCircle2, ChevronDown, Clock, Download, FileText, LogOut, MapPin, Menu, PanelLeftClose, PanelLeftOpen, PencilLine, Settings, ShieldCheck, Target, Users, X } from "lucide-react";
+import { ChevronRight, Download, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { operacionalNavItems, rhNavItems } from "@/components/FloatingNav";
+import { operacionalNavItems } from "@/components/FloatingNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
@@ -12,47 +12,23 @@ import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "ciop:navegacao-recolhida";
 
-const itensComercial = [
-  { to: "/comercial-clientes", label: "Clientes", icon: Users },
-  { to: "/comercial-funil", label: "Funil", icon: Target },
-  { to: "/comercial-propostas", label: "Propostas", icon: FileText },
-  { to: "/comercial-agenda", label: "Agenda", icon: CalendarDays },
-  { to: "/comercial-contratos", label: "Contratos", icon: BriefcaseBusiness },
-  { to: "/comercial-relatorios", label: "Relatórios", icon: BarChart3 },
-] as const;
-
-const itensPonto = [
-  { to: "/ponto", label: "Registro de ponto", icon: Clock },
-  { to: "/ponto-espelho", label: "Meu espelho", icon: FileText },
-  { to: "/ponto-ajustes", label: "Solicitar ajuste", icon: PencilLine },
-  { to: "/ponto-painel", label: "Painel do ponto", icon: BarChart3 },
-  { to: "/ponto-aprovacoes", label: "Aprovações", icon: CheckCircle2 },
-  { to: "/ponto-funcionarios", label: "Funcionários", icon: Users },
-  { to: "/ponto-empresas", label: "Empresas e postos", icon: Building2 },
-  { to: "/ponto-escalas", label: "Escalas", icon: CalendarDays },
-  { to: "/ponto-banco-horas", label: "Banco de horas", icon: AlarmClock },
-  { to: "/ponto-faltas", label: "Faltas", icon: CalendarDays },
-  { to: "/ponto-fechamento", label: "Fechamento", icon: BriefcaseBusiness },
-  { to: "/ponto-relatorios", label: "Relatórios do ponto", icon: BarChart3 },
-  { to: "/ponto-configuracoes", label: "Configurações", icon: Settings },
-  { to: "/ponto-auditoria", label: "Auditoria", icon: ShieldCheck },
+/** Categorias do menu: o clique abre a página de cards da área (em vez de expandir o menu). */
+const CATEGORIAS_SIDEBAR = [
+  { slug: "comercial", categoria: "categoria-comercial", label: "Comercial", sigla: "COM" },
+  { slug: "departamento-pessoal", categoria: "categoria-departamento-pessoal", label: "Departamento pessoal", sigla: "DP" },
+  { slug: "financeiro", categoria: "categoria-financeiro", label: "Financeiro", sigla: "FIN" },
+  { slug: "operacional", categoria: "categoria-operacional", label: "Operacional", sigla: "OP" },
+  { slug: "recursos-humanos", categoria: "categoria-recursos-humanos", label: "Recursos humanos", sigla: "RH" },
+  { slug: "suprimentos", categoria: "categoria-suprimentos", label: "Suprimentos", sigla: "SUP" },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const caminho = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
-  const { podeVer, podeVerCategoria } = useMinhasPermissoes();
+  const { podeVerCategoria } = useMinhasPermissoes();
   const { user } = useSessao();
   const [menuMobile, setMenuMobile] = useState(false);
   const [recolhida, setRecolhida] = useState(false);
-  const [operacionalAberta, setOperacionalAberta] = useState(false);
-  const [rhAberta, setRhAberta] = useState(false);
-  const [dpAberta, setDpAberta] = useState(false);
-  const [comercialAberta, setComercialAberta] = useState(false);
-  const [financeiroAberta, setFinanceiroAberta] = useState(false);
-  const [suprimentosAberta, setSuprimentosAberta] = useState(false);
-
-
 
   useEffect(() => {
     try {
@@ -77,9 +53,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   const inicioItem = operacionalNavItems.find((item) => item.to === "/");
-  const itensOperacional = operacionalNavItems.filter((item) => item.to !== "/" && podeVer(item.to));
-  const itensRh = rhNavItems.filter((item) => podeVer(item.to));
-  const ativo = (to: string) => (to === "/" ? caminho === "/" : caminho.startsWith(to));
 
   const sair = async () => {
     await supabase.auth.signOut();
@@ -101,227 +74,42 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link
             to="/"
             title={recolhida ? inicioItem.label : undefined}
-            aria-current={ativo("/") ? "page" : undefined}
+            aria-current={caminho === "/" ? "page" : undefined}
             className={cn(
               "group flex h-10 min-w-0 items-center gap-3 rounded-md border-l-2 px-3 text-sm font-medium transition-colors duration-150",
-              ativo("/")
+              caminho === "/"
                 ? "border-sidebar-primary bg-sidebar-accent text-sidebar-accent-foreground"
                 : "border-transparent text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
             )}
           >
-            <inicioItem.icon className={cn("size-4 shrink-0", ativo("/") && "text-primary")} />
+            <inicioItem.icon className={cn("size-4 shrink-0", caminho === "/" && "text-primary")} />
             {!recolhida && <span className="truncate">{inicioItem.label}</span>}
-            {ativo("/") && <span className="ml-auto text-[9px] font-semibold text-sidebar-foreground/55">01</span>}
+            {caminho === "/" && <span className="ml-auto text-[9px] font-semibold text-sidebar-foreground/55">01</span>}
           </Link>
         )}
 
-        {podeVerCategoria("categoria-comercial") && (
-          <button
-            type="button"
-            onClick={() => setComercialAberta((v) => !v)}
-            aria-expanded={comercialAberta}
-             className="mt-3 flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-            title={recolhida ? "COM" : undefined}
-          >
-            <span className="truncate">{recolhida ? "COM" : "Comercial"}</span>
-            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", comercialAberta && "rotate-180")} />
-          </button>
-        )}
-
-        {podeVerCategoria("categoria-comercial") && comercialAberta && (
-          <ul className="mt-1 space-y-0.5">
-            {podeVer("/comercial") &&
-              itensComercial.map((item) => {
-                const selecionado = caminho === item.to;
-                return (
-                  <li key={item.to}>
-                    <Link
-                      to={item.to}
-                      title={recolhida ? item.label : undefined}
-                      aria-current={selecionado ? "page" : undefined}
-                      className={cn(
-                        "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                        selecionado
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                      )}
-                    >
-                      <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
-                      {!recolhida && <span className="truncate">{item.label}</span>}
-                      {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                    </Link>
-                  </li>
-                );
-              })}
-            <li>
-              <Link
-                to="/prospeccao-maps"
-                title={recolhida ? "Prospecção Google Maps" : undefined}
-                aria-current={ativo("/prospeccao-maps") ? "page" : undefined}
-                className={cn(
-                  "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                  ativo("/prospeccao-maps")
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                )}
-              >
-                <MapPin className={cn("size-4 shrink-0", ativo("/prospeccao-maps") && "text-primary")} />
-                {!recolhida && <span className="truncate">Prospecção Google Maps</span>}
-                {ativo("/prospeccao-maps") && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-              </Link>
-            </li>
-          </ul>
-        )}
-
-        {podeVerCategoria("categoria-departamento-pessoal") && (
-          <button
-            type="button"
-            onClick={() => setDpAberta((v) => !v)}
-            aria-expanded={dpAberta}
-            className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-            title={recolhida ? "DP" : undefined}
-          >
-            <span className="truncate">{recolhida ? "DP" : "Departamento pessoal"}</span>
-            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", dpAberta && "rotate-180")} />
-          </button>
-        )}
-
-        {podeVerCategoria("categoria-departamento-pessoal") && dpAberta && podeVer("/ponto") && (
-          <ul className="mt-1 space-y-0.5">
-            {itensPonto.map((item) => {
-              const selecionado = caminho === item.to;
-              return (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    title={recolhida ? item.label : undefined}
-                    aria-current={selecionado ? "page" : undefined}
-                    className={cn(
-                      "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                      selecionado
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                    )}
-                  >
-                    <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
-                    {!recolhida && <span className="truncate">{item.label}</span>}
-                    {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
-        {podeVerCategoria("categoria-financeiro") && (
-          <button
-            type="button"
-            onClick={() => setFinanceiroAberta((v) => !v)}
-            aria-expanded={financeiroAberta}
-            className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-            title={recolhida ? "FIN" : undefined}
-          >
-            <span className="truncate">{recolhida ? "FIN" : "Financeiro"}</span>
-            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", financeiroAberta && "rotate-180")} />
-          </button>
-        )}
-
-        {podeVerCategoria("categoria-operacional") && (
-          <>
-          <button
-            type="button"
-            onClick={() => setOperacionalAberta((v) => !v)}
-            aria-expanded={operacionalAberta}
-            className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-            title={recolhida ? "OP" : undefined}
-          >
-            <span className="truncate">{recolhida ? "OP" : "Operacional"}</span>
-            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", operacionalAberta && "rotate-180")} />
-          </button>
-          {operacionalAberta && (
-            <ul className="mt-1 space-y-0.5">
-              {itensOperacional.map((item) => {
-                const selecionado = ativo(item.to);
-                return (
-                  <li key={item.to}>
-                    <Link
-                      to={item.to}
-                      title={recolhida ? item.label : undefined}
-                      aria-current={selecionado ? "page" : undefined}
-                      className={cn(
-                        "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                        selecionado
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                      )}
-                    >
-                      <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
-                      {!recolhida && <span className="truncate">{item.label}</span>}
-                      {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          </>
-        )}
-
-        {podeVerCategoria("categoria-recursos-humanos") && itensRh.length > 0 && (
-          (
-            <>
-              <button
-                type="button"
-                onClick={() => setRhAberta((v) => !v)}
-                aria-expanded={rhAberta}
-                className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-                title={recolhida ? "RH" : undefined}
-              >
-                <span className="truncate">{recolhida ? "RH" : "Recursos humanos"}</span>
-                <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", rhAberta && "rotate-180")} />
-              </button>
-              {rhAberta && (
-                <ul className="mt-1 space-y-0.5">
-                  {itensRh.map((item) => {
-                    const selecionado = ativo(item.to);
-                    return (
-                      <li key={item.to}>
-                        <Link
-                          to={item.to}
-                          title={recolhida ? item.label : undefined}
-                          aria-current={selecionado ? "page" : undefined}
-                          className={cn(
-                              "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                            selecionado
-                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                                : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                          )}
-                        >
-                          <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
-                          {!recolhida && <span className="truncate">{item.label}</span>}
-                          {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
+        {CATEGORIAS_SIDEBAR.map((cat) => {
+          if (!podeVerCategoria(cat.categoria)) return null;
+          const selecionada = caminho === `/categoria/${cat.slug}`;
+          return (
+            <Link
+              key={cat.categoria}
+              to="/categoria/$cat"
+              params={{ cat: cat.slug }}
+              title={recolhida ? cat.sigla : undefined}
+              aria-current={selecionada ? "page" : undefined}
+              className={cn(
+                "mt-3 flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                selecionada
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground/55",
               )}
-            </>
-          )
-        )}
-
-        {podeVerCategoria("categoria-suprimentos") && (
-          <button
-            type="button"
-            onClick={() => setSuprimentosAberta((v) => !v)}
-            aria-expanded={suprimentosAberta}
-            className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-            title={recolhida ? "SUP" : undefined}
-          >
-            <span className="truncate">{recolhida ? "SUP" : "Suprimentos"}</span>
-            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", suprimentosAberta && "rotate-180")} />
-          </button>
-        )}
+            >
+              <span className="truncate">{recolhida ? cat.sigla : cat.label}</span>
+              {!recolhida && <ChevronRight className="size-4 shrink-0 opacity-60" />}
+            </Link>
+          );
+        })}
       </nav>
 
 
