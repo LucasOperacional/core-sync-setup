@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   BrainCircuit,
@@ -44,6 +44,7 @@ import {
 import { lerFolhaComIA } from "@/lib/folha-ia.functions";
 import { manusExecutarTarefa } from "@/lib/manus.functions";
 import { loadManusConfig } from "@/lib/manus-ai";
+import { supabase } from "@/integrations/supabase/client";
 
 export function CalculadoraFolhaCard() {
   const [texto, setTexto] = useState("");
@@ -58,7 +59,22 @@ export function CalculadoraFolhaCard() {
   const [modeloIA, setModeloIA] = useState("");
   const [parecerManus, setParecerManus] = useState("");
   const [manusCarregando, setManusCarregando] = useState(false);
+  const [importador, setImportador] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    void supabase.auth.getUser().then(({ data, error }) => {
+      const usuario = data.user;
+      if (!usuario || error) return;
+      const nome =
+        (usuario.user_metadata?.["nome"] as string | undefined) ||
+        (usuario.user_metadata?.["name"] as string | undefined) ||
+        (usuario.user_metadata?.["full_name"] as string | undefined) ||
+        usuario.email ||
+        "Usuário";
+      setImportador(nome);
+    });
+  }, []);
 
   const resumo = useMemo(() => resumoCompleto(dias, texto), [dias, texto]);
   const escala = escalaIA || resumo.escala;
@@ -319,6 +335,11 @@ Responda em português, curto e objetivo, em tópicos.`;
               {colaborador && (
                 <Badge variant="outline" className="flex items-center gap-1 font-semibold">
                   <User className="h-3 w-3" /> Colaborador: {colaborador}
+                </Badge>
+              )}
+              {importador && (
+                <Badge variant="outline" className="flex items-center gap-1 font-semibold">
+                  <User className="h-3 w-3" /> Importado por: {importador}
                 </Badge>
               )}
               {escala && <Badge variant="outline">Escala: {escala}</Badge>}
