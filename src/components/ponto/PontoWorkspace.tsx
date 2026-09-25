@@ -494,7 +494,6 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
       startY: 28,
       head,
       body: totaisLinha ? [...body, ...totaisLinha] : body,
-      foot: totaisLinha ? undefined : undefined,
       styles: { fontSize: modelo === "completo" ? 8 : 9 },
     });
     const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
@@ -507,12 +506,10 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
     } else {
       doc.setFontSize(8);
       doc.text("Eu declaro que conferi as marcações acima e que correspondem ao efetivamente trabalhado.", 14, finalY + 12);
-ecaminhamento:
-      const y = finalY + 28;
       doc.setFontSize(10);
+      const y = finalY + 28;
       doc.text("_______________________________", 14, y);
       doc.text("Assinatura do funcionário", 14, y + 5);
-ecaminhamento2:
     }
     doc.save(modelo === "conferencia" ? `ficha-conferencia-${mes}.pdf` : `espelho-${modelo}-${mes}.pdf`);
   };
