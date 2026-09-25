@@ -617,12 +617,8 @@ export const editarMarcacoesDia = createServerFn({ method: "POST" })
     if (!gestor && !admin) throw new Error("Apenas o responsável pode editar a folha.");
 
     const ordenadas = [...data.marcacoes].sort((a, b) => a.horario.localeCompare(b.horario));
-    const seq: TipoMarcacaoServidor[] = [];
-    for (const m of ordenadas) {
-      const erro = sequenciaValida(seq, m.tipo);
-      if (erro) throw new Error(`${m.horario}: ${erro}`);
-      seq.push(m.tipo);
-    }
+    // Correção feita pelo responsável: permite deixar o dia incompleto
+    // (ex.: remover a entrada). O cálculo marca o dia como "incompleto".
 
     const { data: func } = await sb
       .from("pnt_employees")
