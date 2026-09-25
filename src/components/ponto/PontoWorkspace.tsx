@@ -705,6 +705,41 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
                   Organizar por horário
                 </Button>
               </div>
+              {(() => {
+                const ordenadas = [...edicao.linhas].filter((l) => /^\d{2}:\d{2}$/.test(l.horario)).sort((a, b) => a.horario.localeCompare(b.horario));
+                const paraMin = (h: string) => Number(h.slice(0, 2)) * 60 + Number(h.slice(3, 5));
+                let trab = 0;
+                let inicio: number | null = null;
+                for (const l of ordenadas) {
+                  const t = paraMin(l.horario);
+                  if (l.tipo === "entrada" || l.tipo === "intervalo_fim") inicio = t;
+                  else if (inicio !== null) {
+                    trab += Math.max(0, t - inicio);
+                    inicio = null;
+                  }
+                }
+                const previsto = resumos.find((r) => r.data === edicao.data)?.previsto_min ?? 0;
+                const extra = previsto > 0 ? Math.max(0, trab - previsto) : 0;
+                const atraso = previsto > 0 ? Math.max(0, previsto - trab) : 0;
+                const saldo = previsto > 0 ? trab - previsto : 0;
+                const itens: [string, string, string?][] = [
+                  ["Trabalhado", minutosParaTexto(trab)],
+                  ["Previsto", minutosParaTexto(previsto)],
+                  ["Atraso", minutosParaTexto(atraso)],
+                  ["Extra", extra > 0 ? minutosParaTexto(extra) : "—", extra > 0 ? "text-primary font-semibold" : ""],
+                  ["Saldo", minutosParaTexto(saldo), saldo < 0 ? "text-destructive" : ""],
+                ];
+                return (
+                  <div className="grid grid-cols-5 gap-2 rounded-md border border-border bg-muted/40 p-2 text-center">
+                    {itens.map(([rot, val, cls]) => (
+                      <div key={rot}>
+                        <div className="text-[10px] uppercase text-muted-foreground">{rot}</div>
+                        <div className={`text-sm ${cls ?? ""}`}>{val}</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
               <div>
                 <Label>Motivo da correção</Label>
                 <Textarea value={edicao.motivo} onChange={(e) => setEdicao({ ...edicao, motivo: e.target.value })} placeholder="Ex.: funcionário esqueceu de marcar a saída do intervalo" />
