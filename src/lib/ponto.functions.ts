@@ -355,13 +355,13 @@ async function calcularDiaInterno(sb: Ctx["supabase"], employeeId: string, data:
   const primeira = lista.find((e) => e.tipo === "entrada");
   const ultima = [...lista].reverse().find((e) => e.tipo === "saida");
   if (escala?.entrada && primeira) {
-    const esperada = new Date(`${data}T${escala.entrada}`);
+    const esperada = new Date(`${data}T${escala.entrada.slice(0, 8).padEnd(8, ":00")}-03:00`);
     const real = new Date(primeira.registrado_em);
     const diff = (real.getTime() - esperada.getTime()) / 60000;
     if (diff > tolerancia) atraso = Math.round(diff);
   }
   if (escala?.saida && ultima) {
-    const esperada = new Date(`${data}T${escala.saida}`);
+    const esperada = new Date(`${data}T${escala.saida.slice(0, 8).padEnd(8, ":00")}-03:00`);
     const real = new Date(ultima.registrado_em);
     const diff = (esperada.getTime() - real.getTime()) / 60000;
     if (diff > tolerancia) antecipada = Math.round(diff);
