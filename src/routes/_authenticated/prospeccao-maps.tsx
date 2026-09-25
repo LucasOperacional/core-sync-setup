@@ -65,12 +65,23 @@ function paraCsv(leads: LeadMaps[]): string {
 
 function ProspeccaoMapsPage() {
   const [consulta, setConsulta] = useState("");
-  const [limite, setLimite] = useState(20);
+  const [limite, setLimite] = useState(60);
+  const [regioesTxt, setRegioesTxt] = useState("");
   const [leads, setLeads] = useState<LeadMaps[]>([]);
   const buscar = useServerFn(buscarLeadsMaps);
 
   const mutacao = useMutation({
-    mutationFn: async () => buscar({ data: { consulta, limite } }),
+    mutationFn: async () => buscar({
+        data: {
+          consulta,
+          limite,
+          regioes: regioesTxt
+            .split(/[\n,;]+/)
+            .map((r) => r.trim())
+            .filter((r) => r.length >= 2)
+            .slice(0, 15),
+        },
+      }),
     onSuccess: (r) => setLeads(r.leads),
   });
 
@@ -121,9 +132,9 @@ function ProspeccaoMapsPage() {
               <Input
                 type="number"
                 min={1}
-                max={60}
+                max={300}
                 value={limite}
-                onChange={(e) => setLimite(Number(e.target.value) || 20)}
+                onChange={(e) => setLimite(Math.min(300, Number(e.target.value) || 60))}
                 className="md:w-28"
                 aria-label="Quantidade de resultados"
               />
@@ -142,6 +153,16 @@ function ProspeccaoMapsPage() {
                 </Button>
               )}
             </form>
+            <textarea
+              value={regioesTxt}
+              onChange={(e) => setRegioesTxt(e.target.value)}
+              rows={3}
+              placeholder="Opcional para trazer mais resultados: bairros ou cidades, um por linha (ex.: Setor Bueno, Setor Marista, Aparecida de Goiânia) — até 15"
+              className="mt-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              O Google limita cada busca a 60 empresas. Informando regiões, a busca é feita em cada uma e os repetidos são removidos (até 300 resultados).
+            </p>
             {mutacao.isError && (
               <p className="mt-3 text-sm text-destructive">
                 {(mutacao.error as Error).message}

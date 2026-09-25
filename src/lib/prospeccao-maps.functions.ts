@@ -6,7 +6,8 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
 
 const buscaSchema = z.object({
   consulta: z.string().min(2).max(200),
-  limite: z.number().int().min(1).max(60).default(20),
+  limite: z.number().int().min(1).max(300).default(20),
+  regioes: z.array(z.string().min(2).max(80)).max(15).default([]),
 });
 
 export interface LeadMaps {
@@ -63,12 +64,22 @@ export const buscarLeadsMaps = createServerFn({ method: "POST" })
     }
 
     const leads: LeadMaps[] = [];
-    let pageToken: string | undefined;
+    const vistos = new Set<string>();
+    // Cada busca do Google devolve no máximo 60 lugares; dividir por regiões
+    // (bairros/cidades) amplia o total, removendo repetidos.
+    const consultas = data.regioes.length
+      ? [data.consulta, ...data.regioes.map((r) => `${data.consulta} em ${r}`)]
+      : [data.consulta];
 
-    while (leads.length < data.limite) {
+    for (const textQuery of consultas) {
+    if (leads.length >= data.limite) break;
+    let pageToken: string | undefined;
+    let paginas = 0;
+    while (leads.length < data.limite && paginas < 3) {
+      paginas++;
       const corpo: Record<string, unknown> = {
-        textQuery: data.consulta,
-        pageSize: Math.min(20, data.limite - leads.length),
+        textQuery,
+        pageSize: 20,
         languageCode: "pt-BR",
         regionCode: "BR",
       };
@@ -97,6 +108,8 @@ export const buscarLeadsMaps = createServerFn({ method: "POST" })
       };
 
       for (const p of json.places ?? []) {
+        if (p.id && vistos.has(p.id)) continue;
+        if (p.id) vistos.add(p.id);
         leads.push({
           id: p.id ?? crypto.randomUUID(),
           nome: p.displayName?.text ?? "",
@@ -114,6 +127,7 @@ export const buscarLeadsMaps = createServerFn({ method: "POST" })
 
       pageToken = json.nextPageToken;
       if (!pageToken || !(json.places ?? []).length) break;
+    }
     }
 
     return { leads: leads.slice(0, data.limite) };
