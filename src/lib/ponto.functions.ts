@@ -368,7 +368,9 @@ async function calcularDiaInterno(sb: Ctx["supabase"], employeeId: string, data:
   }
 
   const trabalhadoMin = Math.max(0, Math.round(trabalhado));
-  const extra = Math.max(0, trabalhadoMin - previsto);
+  // Só há hora extra quando existe escala para comparar: sem escala atribuída,
+  // a jornada inteira não pode ser tratada como extra.
+  const extra = escala ? Math.max(0, trabalhadoMin - previsto) : 0;
   const saldo = trabalhadoMin - previsto;
   const situacao = incompleto ? "incompleto" : extra > 0 ? "extra" : saldo < 0 ? "debito" : "ok";
 
