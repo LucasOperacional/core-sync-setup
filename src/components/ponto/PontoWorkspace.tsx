@@ -516,6 +516,20 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
       .sort((a, b) => a.registrado_em.localeCompare(b.registrado_em))
       .map((m) => ({ tipo: m.tipo as TipoMarcacao, horario: horaLocal(m.registrado_em).slice(0, 5) }));
 
+  /** Motivo real mais recente do dia: último pedido de ajuste do funcionário ou última correção do responsável. */
+  const motivosDoDia = (dia: string): string[] => {
+    const pedido = dados.pedidos.find((p) => p.employee_id === alvo && p.data_ref === dia);
+    const correcao = dados.marcacoes.find((m) => m.employee_id === alvo && m.data_ref === dia && m.observacao);
+    const limpar = (t: string) => t.replace(/^Editado pelo responsável:\s*/i, "").trim();
+    const lista: string[] = [];
+    if (pedido) lista.push(`${limpar(pedido.motivo)}${pedido.status === "aprovada" ? " (ajuste aprovado)" : pedido.status === "rejeitada" ? " (ajuste recusado)" : " (aguardando aprovação)"}`);
+    if (correcao?.observacao) {
+      const texto = limpar(correcao.observacao);
+      if (!lista.some((l) => l.startsWith(texto))) lista.push(texto);
+    }
+    return lista.slice(0, 2);
+  };
+
   const [remocao, setRemocao] = useState<{ data: string; index: number; linha: { tipo: TipoMarcacao; horario: string }; motivo: string } | null>(null);
   const removerUma = useMutation({
     mutationFn: () => {
@@ -552,7 +566,7 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
         .join("  ");
       const base = [dataBr(r.data), marcacoesDia];
       if (modelo === "completo") {
-        return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.previsto_min), minutosParaTexto(r.atraso_min), r.extra_min > 0 ? minutosParaTexto(r.extra_min) : "-", minutosParaTexto(r.saldo_min), r.situacao];
+        return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.previsto_min), minutosParaTexto(r.atraso_min), r.extra_min > 0 ? minutosParaTexto(r.extra_min) : "-", minutosParaTexto(r.saldo_min), r.situacao, motivosDoDia(r.data).join("; ")];
       }
       if (modelo === "simplificado") {
         return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.saldo_min)];
@@ -561,13 +575,13 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
     });
 
     const head = modelo === "completo"
-      ? [["Data", "Marcações", "Trabalhado", "Previsto", "Atraso", "Extra", "Saldo", "Situação"]]
+      ? [["Data", "Marcações", "Trabalhado", "Previsto", "Atraso", "Extra", "Saldo", "Situação", "Motivo"]]
       : modelo === "simplificado"
         ? [["Data", "Marcações", "Trabalhado", "Saldo"]]
         : [["Data", "Marcações", "Conferido por (assinatura)"]];
 
     const totaisLinha = modelo === "completo"
-      ? [["Totais", "", minutosParaTexto(totais.trabalhado), minutosParaTexto(totais.previsto), minutosParaTexto(totais.atraso), minutosParaTexto(totais.extra), minutosParaTexto(totais.saldo), ""]]
+      ? [["Totais", "", minutosParaTexto(totais.trabalhado), minutosParaTexto(totais.previsto), minutosParaTexto(totais.atraso), minutosParaTexto(totais.extra), minutosParaTexto(totais.saldo), "", ""]]
       : modelo === "simplificado"
         ? [["Totais", "", minutosParaTexto(totais.trabalhado), minutosParaTexto(totais.saldo)]]
         : undefined;
@@ -692,8 +706,18 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
             </td>
             <td className="px-3 py-2">{minutosParaTexto(r.trabalhado_min)}</td>
             <td className="px-3 py-2">{minutosParaTexto(r.previsto_min)}</td>
-            <td className="px-3 py-2">{minutosParaTexto(r.atraso_min)}</td>
-            <td className={`px-3 py-2 ${r.extra_min > 0 ? "font-semibold text-primary" : "text-muted-foreground"}`}>{r.extra_min > 0 ? minutosParaTexto(r.extra_min) : "—"}</td>
+            <td className="px-3 py-2">
+              {minutosParaTexto(r.atraso_min)}
+              {r.atraso_min > 0 && motivosDoDia(r.data).length > 0 && (
+                <div className="mt-0.5 max-w-52 text-[11px] leading-snug text-muted-foreground">{motivosDoDia(r.data).join(" · ")}</div>
+              )}
+            </td>
+            <td className={`px-3 py-2 ${r.extra_min > 0 ? "font-semibold text-primary" : "text-muted-foreground"}`}>
+              {r.extra_min > 0 ? minutosParaTexto(r.extra_min) : "—"}
+              {r.extra_min > 0 && motivosDoDia(r.data).length > 0 && (
+                <div className="mt-0.5 max-w-52 text-[11px] font-normal leading-snug text-muted-foreground">{motivosDoDia(r.data).join(" · ")}</div>
+              )}
+            </td>
             <td className={r.saldo_min < 0 ? "px-3 py-2 text-destructive" : "px-3 py-2"}>{minutosParaTexto(r.saldo_min)}</td>
             <td className="px-3 py-2">{r.situacao}</td>
             {gestor && (
