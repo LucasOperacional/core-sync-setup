@@ -2,6 +2,8 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ChevronRight, Download, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
+import logoAzul from "@/assets/logo-nxs-plus-azul.png.asset.json";
+import logoBranca from "@/assets/logo-nxs-plus-branca.png.asset.json";
 import { operacionalNavItems } from "@/components/FloatingNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -59,13 +61,23 @@ export function AppShell({ children }: { children: ReactNode }) {
     await navigate({ to: "/auth" });
   };
 
+  // Na gaveta do celular o logo aparece sempre inteiro; no computador ele
+  // encolhe junto com o menu recolhido.
+  const compacta = recolhida && !menuMobile;
+
   const navigation = (
     <>
       <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-4">
-        <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="NXS — página inicial">
-          <span className="grid size-8 shrink-0 place-items-center rounded-md bg-sidebar-primary font-display text-xs text-sidebar-primary-foreground shadow-xs">N</span>
-          {!compacta && <span className="truncate font-display text-sm text-sidebar-foreground">NXS</span>}
-          {!compacta && <span className="border-l border-sidebar-border pl-3 text-[10px] font-semibold uppercase text-sidebar-foreground/55">Sistemas</span>}
+        <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="NXS Plus — página inicial">
+          {compacta ? (
+            <span className="grid size-8 shrink-0 place-items-center rounded-md bg-sidebar-primary font-display text-xs text-sidebar-primary-foreground shadow-xs">N</span>
+          ) : (
+            <>
+              <img src={logoAzul.url} alt="NXS Plus Gestão" className="h-9 w-auto shrink-0 object-contain dark:hidden" draggable={false} />
+              <img src={logoBranca.url} alt="NXS Plus Gestão" className="hidden h-9 w-auto shrink-0 object-contain dark:block" draggable={false} />
+              <span className="border-l border-sidebar-border pl-2 text-[10px] font-semibold uppercase text-sidebar-foreground/55">Sistemas</span>
+            </>
+          )}
         </Link>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5" aria-label="Navegação principal">
@@ -163,8 +175,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="min-w-0">
         <div className="sticky top-0 z-30 flex h-16 items-center border-b border-border bg-card/95 px-4 backdrop-blur lg:hidden">
           <Button variant="ghost" size="icon" onClick={() => setMenuMobile(true)} aria-label="Abrir menu"><Menu /></Button>
-          <span className="ml-3 grid size-8 place-items-center rounded-md bg-primary font-display text-xs text-primary-foreground">N</span>
-          <span className="ml-2 truncate font-display text-sm">NXS</span>
+          <img src={logoAzul.url} alt="NXS Plus Gestão" className="ml-3 h-8 w-auto shrink-0 object-contain dark:hidden" draggable={false} />
+          <img src={logoBranca.url} alt="NXS Plus Gestão" className="ml-3 hidden h-8 w-auto shrink-0 object-contain dark:block" draggable={false} />
           <span className="ml-2 border-l border-border pl-2 text-[10px] font-semibold uppercase text-muted-foreground">Sistemas</span>
         </div>
         <div className="app-workspace min-w-0">{children}</div>
