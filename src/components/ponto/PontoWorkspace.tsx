@@ -527,7 +527,7 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
         .join("  ");
       const base = [dataBr(r.data), marcacoesDia];
       if (modelo === "completo") {
-        return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.previsto_min), minutosParaTexto(r.atraso_min), minutosParaTexto(r.extra_min), minutosParaTexto(r.saldo_min), r.situacao];
+        return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.previsto_min), minutosParaTexto(r.atraso_min), r.extra_min > 0 ? minutosParaTexto(r.extra_min) : "-", minutosParaTexto(r.saldo_min), r.situacao];
       }
       if (modelo === "simplificado") {
         return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.saldo_min)];
@@ -657,7 +657,7 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
             <td className="px-3 py-2">{minutosParaTexto(r.trabalhado_min)}</td>
             <td className="px-3 py-2">{minutosParaTexto(r.previsto_min)}</td>
             <td className="px-3 py-2">{minutosParaTexto(r.atraso_min)}</td>
-            <td className="px-3 py-2">{minutosParaTexto(r.extra_min)}</td>
+            <td className={`px-3 py-2 ${r.extra_min > 0 ? "font-semibold text-primary" : "text-muted-foreground"}`}>{r.extra_min > 0 ? minutosParaTexto(r.extra_min) : "—"}</td>
             <td className={r.saldo_min < 0 ? "px-3 py-2 text-destructive" : "px-3 py-2"}>{minutosParaTexto(r.saldo_min)}</td>
             <td className="px-3 py-2">{r.situacao}</td>
             {gestor && (
