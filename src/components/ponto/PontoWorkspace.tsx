@@ -479,6 +479,33 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
     { trabalhado: 0, previsto: 0, atraso: 0, extra: 0, saldo: 0 },
   );
 
+  const cliente = useQueryClient();
+  const editar = useServerFn(editarMarcacoesDia);
+  const [diaNovo, setDiaNovo] = useState("");
+  const [edicao, setEdicao] = useState<{ data: string; linhas: { tipo: TipoMarcacao; horario: string }[]; motivo: string } | null>(null);
+  const abrirEdicao = (dia: string) => {
+    const linhas = dados.marcacoes
+      .filter((m) => m.employee_id === alvo && m.data_ref === dia && m.status !== "corrigido")
+      .sort((a, b) => a.registrado_em.localeCompare(b.registrado_em))
+      .map((m) => ({ tipo: m.tipo as TipoMarcacao, horario: horaLocal(m.registrado_em).slice(0, 5) }));
+    setEdicao({ data: dia, linhas, motivo: "" });
+  };
+  const atualizarLinha = (i: number, parcial: Partial<{ tipo: TipoMarcacao; horario: string }>) =>
+    setEdicao((e) => (e ? { ...e, linhas: e.linhas.map((l, j) => (j === i ? { ...l, ...parcial } : l)) } : e));
+  const salvarEdicao = useMutation({
+    mutationFn: () => {
+      if (!edicao) throw new Error("Nada para salvar.");
+      return editar({ data: { employeeId: alvo, dataRef: edicao.data, marcacoes: edicao.linhas, motivo: edicao.motivo } });
+    },
+    onSuccess: () => {
+      toast.success("Folha atualizada.");
+      setEdicao(null);
+      void cliente.invalidateQueries({ queryKey: ["ponto"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   const exportarPdf = async (modelo: ModeloPdf) => {
     const [{ jsPDF }, autoTable] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
     const doc = new jsPDF();
@@ -599,8 +626,20 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
         <Kpi titulo="Saldo do período" valor={minutosParaTexto(totais.saldo)} icone={ShieldCheck} />
       </div>
 
-      <Tabela cabecalho={["Data", "Marcações", "Trabalhado", "Previsto", "Atraso", "Extra", "Saldo", "Situação"]}>
-        {resumos.length === 0 && <Vazio colunas={8} texto="Nenhum dia apurado neste mês." />}
+      {gestor && alvo && (
+        <div className="flex flex-wrap items-end gap-2">
+          <div>
+            <Label>Editar outro dia</Label>
+            <Input type="date" value={diaNovo} onChange={(e) => setDiaNovo(e.target.value)} />
+          </div>
+          <Button variant="outline" disabled={!diaNovo} onClick={() => abrirEdicao(diaNovo)}>
+            <Pencil className="size-4" /> Editar marcações
+          </Button>
+        </div>
+      )}
+
+      <Tabela cabecalho={["Data", "Marcações", "Trabalhado", "Previsto", "Atraso", "Extra", "Saldo", "Situação", ...(gestor ? [""] : [])]}>
+        {resumos.length === 0 && <Vazio colunas={gestor ? 9 : 8} texto="Nenhum dia apurado neste mês." />}
         {resumos.map((r) => (
           <tr key={r.id}>
             <td className="px-3 py-2">{dataBr(r.data)}</td>
@@ -617,9 +656,65 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
             <td className="px-3 py-2">{minutosParaTexto(r.extra_min)}</td>
             <td className={r.saldo_min < 0 ? "px-3 py-2 text-destructive" : "px-3 py-2"}>{minutosParaTexto(r.saldo_min)}</td>
             <td className="px-3 py-2">{r.situacao}</td>
+            {gestor && (
+              <td className="px-3 py-2">
+                <Button size="sm" variant="ghost" onClick={() => abrirEdicao(r.data)}>
+                  <Pencil className="size-4" /> Editar
+                </Button>
+              </td>
+            )}
           </tr>
         ))}
       </Tabela>
+
+      <Dialog open={!!edicao} onOpenChange={(v) => !v && setEdicao(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar marcações — {edicao ? dataBr(edicao.data) : ""}</DialogTitle>
+            <DialogDescription>Ajuste, remova ou inclua marcações. Os registros originais ficam guardados no histórico.</DialogDescription>
+          </DialogHeader>
+          {edicao && (
+            <div className="space-y-3">
+              {edicao.linhas.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma marcação neste dia.</p>}
+              {edicao.linhas.map((l, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <select
+                    className="h-10 flex-1 rounded-md border border-border bg-background px-3 text-sm"
+                    value={l.tipo}
+                    onChange={(e) => atualizarLinha(i, { tipo: e.target.value as TipoMarcacao })}
+                  >
+                    {(Object.keys(ROTULO_TIPO) as TipoMarcacao[]).map((t) => (
+                      <option key={t} value={t}>{ROTULO_TIPO[t]}</option>
+                    ))}
+                  </select>
+                  <Input type="time" className="w-32" value={l.horario} onChange={(e) => atualizarLinha(i, { horario: e.target.value })} />
+                  <Button size="icon" variant="ghost" aria-label="Remover marcação" onClick={() => setEdicao({ ...edicao, linhas: edicao.linhas.filter((_, j) => j !== i) })}>
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              ))}
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => setEdicao({ ...edicao, linhas: [...edicao.linhas, { tipo: "entrada", horario: "08:00" }] })}>
+                  <Plus className="size-4" /> Adicionar marcação
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setEdicao({ ...edicao, linhas: [...edicao.linhas].sort((a, b) => a.horario.localeCompare(b.horario)) })}>
+                  Organizar por horário
+                </Button>
+              </div>
+              <div>
+                <Label>Motivo da correção</Label>
+                <Textarea value={edicao.motivo} onChange={(e) => setEdicao({ ...edicao, motivo: e.target.value })} placeholder="Ex.: funcionário esqueceu de marcar a saída do intervalo" />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setEdicao(null)}>Cancelar</Button>
+                <Button disabled={salvarEdicao.isPending} onClick={() => salvarEdicao.mutate()}>
+                  {salvarEdicao.isPending ? "Salvando..." : "Salvar folha"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
