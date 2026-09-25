@@ -57,6 +57,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const inicioItem = operacionalNavItems.find((item) => item.to === "/");
 
+  const voltar = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigate({ to: "/" });
+    }
+  };
+
   const sair = async () => {
     await supabase.auth.signOut();
     await navigate({ to: "/auth" });
