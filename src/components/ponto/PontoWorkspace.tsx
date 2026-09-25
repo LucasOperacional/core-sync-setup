@@ -804,6 +804,31 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!remocao} onOpenChange={(v) => !v && setRemocao(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remover marcação — {remocao ? `${dataBr(remocao.data)} · ${remocao.linha.horario}` : ""}</DialogTitle>
+            <DialogDescription>
+              {remocao ? `${ROTULO_TIPO[remocao.linha.tipo]} será retirada da folha. O registro original fica guardado no histórico e na auditoria.` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          {remocao && (
+            <div className="space-y-3">
+              <div>
+                <Label>Motivo da remoção</Label>
+                <Textarea value={remocao.motivo} onChange={(e) => setRemocao({ ...remocao, motivo: e.target.value })} placeholder="Ex.: marcação registrada no horário errado" />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setRemocao(null)}>Cancelar</Button>
+                <Button variant="destructive" disabled={removerUma.isPending || !remocao.motivo.trim()} onClick={() => removerUma.mutate()}>
+                  {removerUma.isPending ? "Removendo..." : "Remover marcação"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
