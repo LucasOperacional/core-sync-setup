@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   AlarmClock,
+  ArrowLeft,
   CalendarClock,
   CheckCircle2,
   Clock,
@@ -703,6 +704,8 @@ function Ajustes({ dados, employeeId, aoSalvar }: { dados: DadosPonto; employeeI
 function Painel({ dados }: { dados: DadosPonto }) {
   const [empresa, setEmpresa] = useState("");
   const [posto, setPosto] = useState("");
+  const [postoAberto, setPostoAberto] = useState<string | null>(null);
+  const [folhaAberta, setFolhaAberta] = useState<string | null>(null);
   const hoje = hojeLocal();
 
   const funcionarios = dados.funcionarios.filter(
