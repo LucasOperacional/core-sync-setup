@@ -559,10 +559,37 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
           <Label>Mês</Label>
           <Input type="month" value={mes} onChange={(e) => setMes(e.target.value)} />
         </div>
-        <Button variant="outline" onClick={exportarPdf} disabled={resumos.length === 0}>
+        <Button variant="outline" onClick={() => setModelosAberto(true)} disabled={resumos.length === 0}>
           <Download className="size-4" /> Espelho em PDF
         </Button>
       </div>
+
+      <Dialog open={modelosAberto} onOpenChange={setModelosAberto}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modelos do PDF</DialogTitle>
+            <DialogDescription>Escolha o modelo do espelho que será gerado para {mes}.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {MODELOS_PDF.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => {
+                  setModelosAberto(false);
+                  void exportarPdf(m.id);
+                }}
+                className="flex flex-col items-start gap-2 rounded-lg border border-border bg-background p-4 text-left transition hover:border-primary/40 hover:shadow-md"
+              >
+                <FileText className="size-5 text-primary" />
+                <span className="text-sm font-semibold">{m.nome}</span>
+                <span className="rounded border border-border bg-muted/50 px-2 py-1 font-mono text-[10px] leading-snug text-muted-foreground">{m.colunas}</span>
+                <span className="text-xs text-muted-foreground">{m.descricao}</span>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi titulo="Horas trabalhadas" valor={minutosParaTexto(totais.trabalhado)} icone={Clock} />
