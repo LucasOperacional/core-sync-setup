@@ -633,8 +633,11 @@ export const meuPapelPonto = createServerFn({ method: "GET" })
     const userId = context.userId as string;
     const { data } = await sb.rpc("pnt_papel_do_usuario", { _user_id: userId });
     const funcionario = await funcionarioDoUsuario(sb, userId);
+    // Superadmin sempre enxerga todos os registros de ponto.
+    const email = String((context as { claims?: { email?: string } }).claims?.email ?? "").toLowerCase();
+    const superadmin = email === "lucasdallan@gmail.com";
     return {
-      papel: (data as string | null) ?? "funcionario",
+      papel: superadmin ? "admin" : ((data as string | null) ?? "funcionario"),
       employeeId: funcionario?.id ?? null,
       nome: funcionario?.nome ?? null,
     };
