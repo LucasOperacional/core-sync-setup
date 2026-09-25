@@ -11,7 +11,6 @@ import {
   Home,
   LayoutGrid,
   MapPin,
-  PenLine,
   Scale,
   ShieldCheck,
   Users,
