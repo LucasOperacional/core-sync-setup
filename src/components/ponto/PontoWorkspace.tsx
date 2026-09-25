@@ -737,6 +737,72 @@ function Painel({ dados }: { dados: DadosPonto }) {
     { id: "__sem", nome: "Sem posto definido", pessoas: funcionarios.filter((f) => !f.unit_id) },
   ].filter((g) => (posto ? g.id === posto : g.pessoas.length > 0 || g.id !== "__sem"));
 
+  const grupoAberto = postoAberto ? grupos.find((g) => g.id === postoAberto) ?? null : null;
+
+  if (grupoAberto) {
+    const funcionarioFolha = folhaAberta ? dados.funcionarios.find((f) => f.id === folhaAberta) ?? null : null;
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => (folhaAberta ? setFolhaAberta(null) : setPostoAberto(null))}
+          >
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            {folhaAberta ? `Voltar para ${grupoAberto.nome}` : "Voltar ao painel"}
+          </Button>
+          <h3 className="flex items-center gap-2 text-base font-semibold">
+            <MapPin className="h-4 w-4 text-primary" />
+            {grupoAberto.nome}
+            {funcionarioFolha ? <span className="text-muted-foreground">/ {funcionarioFolha.nome}</span> : null}
+          </h3>
+        </div>
+
+        {funcionarioFolha ? (
+          <Espelho key={funcionarioFolha.id} dados={dados} employeeId={funcionarioFolha.id} gestor />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">
+                Funcionários lotados ({grupoAberto.pessoas.filter((p) => presentes.has(p.id)).length}/{grupoAberto.pessoas.length} presentes hoje)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {grupoAberto.pessoas.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Ninguém lotado neste posto.</p>
+              ) : (
+                <ul className="divide-y divide-border/60 text-sm">
+                  {grupoAberto.pessoas
+                    .slice()
+                    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+                    .map((p) => (
+                      <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span
+                            className={`h-2 w-2 shrink-0 rounded-full ${presentes.has(p.id) ? "bg-primary" : "bg-muted-foreground/40"}`}
+                            title={presentes.has(p.id) ? "Presente hoje" : "Sem entrada hoje"}
+                          />
+                          <span className="truncate">
+                            {p.nome}
+                            {p.cargo ? <span className="text-muted-foreground"> · {p.cargo}</span> : null}
+                          </span>
+                        </span>
+                        <Button variant="outline" size="sm" onClick={() => setFolhaAberta(p.id)}>
+                          <FileText className="mr-1 h-4 w-4" />
+                          Folha de ponto
+                        </Button>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid max-w-2xl gap-3 sm:grid-cols-2">
