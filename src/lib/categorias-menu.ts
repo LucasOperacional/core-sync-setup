@@ -30,8 +30,14 @@ export const CATEGORIAS_MENU: Record<string, CategoriaMenu> = {
   "departamento-pessoal": {
     chave: "categoria-departamento-pessoal",
     titulo: "Departamento pessoal",
-    descricao: "Ponto eletrônico, espelhos, escalas e fechamento do período.",
-    itens: [],
+    descricao: "Férias, vales, folha de pagamento e eSocial.",
+    itens: [
+      { to: "/dp-ferias", label: "Férias", descricao: "Programação e cálculo de férias.", icon: "calendar" },
+      { to: "/dp-vale-transporte", label: "Cálculo do vale transporte", descricao: "Tarifa × viagens × dias do ponto.", icon: "pin" },
+      { to: "/dp-vale-alimentacao", label: "Cálculo do vale alimentação", descricao: "Valor diário × dias com presença.", icon: "clipboard" },
+      { to: "/dp-folha", label: "Folha de pagamento", descricao: "Integrada ao ponto digital, com holerite.", icon: "file" },
+      { to: "/dp-esocial", label: "eSocial", descricao: "Eventos de remuneração para o governo.", icon: "shield" },
+    ],
   },
   "ponto-nxs": {
     chave: "categoria-departamento-pessoal",
