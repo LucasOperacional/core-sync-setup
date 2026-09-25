@@ -9,6 +9,7 @@ import {
   Clock,
   Coffee,
   Download,
+  FileText,
   LogIn,
   LogOut,
   MapPin,
@@ -20,6 +21,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -434,9 +436,33 @@ function Registro({
 
 /* --------------------------------- espelho -------------------------------- */
 
+type ModeloPdf = "completo" | "simplificado" | "conferencia";
+
+const MODELOS_PDF: { id: ModeloPdf; nome: string; colunas: string; descricao: string }[] = [
+  {
+    id: "completo",
+    nome: "Espelho completo",
+    colunas: "Data · Marcações · Trabalhado · Previsto · Atraso · Extra · Saldo · Situação",
+    descricao: "Todas as colunas do espelho, com linha de totais e campos de assinatura do funcionário e do responsável.",
+  },
+  {
+    id: "simplificado",
+    nome: "Espelho simplificado",
+    colunas: "Data · Marcações · Trabalhado · Saldo",
+    descricao: "Versão enxuta para conferência rápida, com linha de totais e campos de assinatura.",
+  },
+  {
+    id: "conferencia",
+    nome: "Ficha de conferência",
+    colunas: "Data · Marcações · Assinatura do dia",
+    descricao: "Uma linha por dia com espaço para o funcionário conferir e assinar as marcações daquele dia.",
+  },
+];
+
 function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId: string | null; gestor: boolean }) {
   const [funcionario, setFuncionario] = useState<string>(employeeId ?? "");
   const [mes, setMes] = useState(() => hojeLocal().slice(0, 7));
+  const [modelosAberto, setModelosAberto] = useState(false);
   const alvo = gestor ? funcionario || employeeId || "" : employeeId ?? "";
 
   const resumos = dados.resumos.filter((r) => r.employee_id === alvo && r.data.startsWith(mes)).sort((a, b) => b.data.localeCompare(a.data));
@@ -445,41 +471,72 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
     (acc, r) => ({
       trabalhado: acc.trabalhado + r.trabalhado_min,
       previsto: acc.previsto + r.previsto_min,
+      atraso: acc.atraso + r.atraso_min,
       extra: acc.extra + r.extra_min,
       saldo: acc.saldo + r.saldo_min,
     }),
-    { trabalhado: 0, previsto: 0, extra: 0, saldo: 0 },
+    { trabalhado: 0, previsto: 0, atraso: 0, extra: 0, saldo: 0 },
   );
 
-  const exportarPdf = async () => {
+  const exportarPdf = async (modelo: ModeloPdf) => {
     const [{ jsPDF }, autoTable] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
     const doc = new jsPDF();
     const nome = dados.funcionarios.find((f) => f.id === alvo)?.nome ?? "Funcionário";
     doc.setFontSize(14);
-    doc.text(`Espelho de ponto — ${nome}`, 14, 16);
+    doc.text(`${modelo === "conferencia" ? "Ficha de conferência de ponto" : "Espelho de ponto"} — ${nome}`, 14, 16);
     doc.setFontSize(10);
     doc.text(`Período: ${mes}`, 14, 23);
+
+    const body = resumos.map((r) => {
+      const marcacoesDia = marcacoes
+        .filter((m) => m.data_ref === r.data && m.status !== "corrigido")
+        .sort((a, b) => a.registrado_em.localeCompare(b.registrado_em))
+        .map((m) => horaLocal(m.registrado_em))
+        .join("  ");
+      const base = [dataBr(r.data), marcacoesDia];
+      if (modelo === "completo") {
+        return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.previsto_min), minutosParaTexto(r.atraso_min), minutosParaTexto(r.extra_min), minutosParaTexto(r.saldo_min), r.situacao];
+      }
+      if (modelo === "simplificado") {
+        return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.saldo_min)];
+      }
+      return [...base, ""];
+    });
+
+    const head = modelo === "completo"
+      ? [["Data", "Marcações", "Trabalhado", "Previsto", "Atraso", "Extra", "Saldo", "Situação"]]
+      : modelo === "simplificado"
+        ? [["Data", "Marcações", "Trabalhado", "Saldo"]]
+        : [["Data", "Marcações", "Conferido por (assinatura)"]];
+
+    const totaisLinha = modelo === "completo"
+      ? [["Totais", "", minutosParaTexto(totais.trabalhado), minutosParaTexto(totais.previsto), minutosParaTexto(totais.atraso), minutosParaTexto(totais.extra), minutosParaTexto(totais.saldo), ""]]
+      : modelo === "simplificado"
+        ? [["Totais", "", minutosParaTexto(totais.trabalhado), minutosParaTexto(totais.saldo)]]
+        : undefined;
+
     autoTable.default(doc, {
       startY: 28,
-      head: [["Data", "Marcações", "Trabalhado", "Previsto", "Extra", "Saldo"]],
-      body: resumos.map((r) => [
-        dataBr(r.data),
-        marcacoes
-          .filter((m) => m.data_ref === r.data && m.status !== "corrigido")
-          .map((m) => horaLocal(m.registrado_em))
-          .join("  "),
-        minutosParaTexto(r.trabalhado_min),
-        minutosParaTexto(r.previsto_min),
-        minutosParaTexto(r.extra_min),
-        minutosParaTexto(r.saldo_min),
-      ]),
+      head,
+      body: totaisLinha ? [...body, ...totaisLinha] : body,
+      styles: { fontSize: modelo === "completo" ? 8 : 9 },
     });
-    const y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 20;
-    doc.text("_______________________________", 14, y);
-    doc.text("Assinatura do funcionário", 14, y + 5);
-    doc.text("_______________________________", 120, y);
-    doc.text("Assinatura do responsável", 120, y + 5);
-    doc.save(`espelho-${mes}.pdf`);
+    const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
+    if (modelo !== "conferencia") {
+      const y = finalY + 20;
+      doc.text("_______________________________", 14, y);
+      doc.text("Assinatura do funcionário", 14, y + 5);
+      doc.text("_______________________________", 120, y);
+      doc.text("Assinatura do responsável", 120, y + 5);
+    } else {
+      doc.setFontSize(8);
+      doc.text("Eu declaro que conferi as marcações acima e que correspondem ao efetivamente trabalhado.", 14, finalY + 12);
+      doc.setFontSize(10);
+      const y = finalY + 28;
+      doc.text("_______________________________", 14, y);
+      doc.text("Assinatura do funcionário", 14, y + 5);
+    }
+    doc.save(modelo === "conferencia" ? `ficha-conferencia-${mes}.pdf` : `espelho-${modelo}-${mes}.pdf`);
   };
 
   return (
@@ -502,10 +559,37 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
           <Label>Mês</Label>
           <Input type="month" value={mes} onChange={(e) => setMes(e.target.value)} />
         </div>
-        <Button variant="outline" onClick={exportarPdf} disabled={resumos.length === 0}>
+        <Button variant="outline" onClick={() => setModelosAberto(true)} disabled={resumos.length === 0}>
           <Download className="size-4" /> Espelho em PDF
         </Button>
       </div>
+
+      <Dialog open={modelosAberto} onOpenChange={setModelosAberto}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modelos do PDF</DialogTitle>
+            <DialogDescription>Escolha o modelo do espelho que será gerado para {mes}.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {MODELOS_PDF.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => {
+                  setModelosAberto(false);
+                  void exportarPdf(m.id);
+                }}
+                className="flex flex-col items-start gap-2 rounded-lg border border-border bg-background p-4 text-left transition hover:border-primary/40 hover:shadow-md"
+              >
+                <FileText className="size-5 text-primary" />
+                <span className="text-sm font-semibold">{m.nome}</span>
+                <span className="rounded border border-border bg-muted/50 px-2 py-1 font-mono text-[10px] leading-snug text-muted-foreground">{m.colunas}</span>
+                <span className="text-xs text-muted-foreground">{m.descricao}</span>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi titulo="Horas trabalhadas" valor={minutosParaTexto(totais.trabalhado)} icone={Clock} />
