@@ -153,15 +153,9 @@ function AuthPage() {
           <div className="w-full max-w-sm">
             <div className="mb-4 flex items-center justify-center">
               <img
-                src={logoAzul.url}
-                alt="NXS Plus Gestão"
-                className="h-14 w-auto object-contain dark:hidden"
-                draggable={false}
-              />
-              <img
                 src={logoBranca.url}
                 alt="NXS Plus Gestão"
-                className="hidden h-14 w-auto object-contain dark:block"
+                className="h-14 w-auto object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
                 draggable={false}
               />
             </div>
