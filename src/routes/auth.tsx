@@ -143,8 +143,8 @@ function AuthPage() {
         </ClientOnly>
         <div className="relative z-10 hidden flex-col justify-between p-10 lg:flex">
           <div className="flex items-center gap-3"><img src={logoBranca.url} alt="NXS Plus Gestão" className="h-8 w-auto" draggable={false} /><div><p className="font-display text-sm font-semibold text-white">NXS GESTÃO</p><p className="text-xs text-white/70">Central integrada com a sua Empresa</p></div></div>
-          <div className="max-w-sm"><p className="text-xs font-semibold text-[#7db4e8]">AMBIENTE CORPORATIVO</p><h1 className="mt-3 font-display text-3xl font-semibold leading-tight text-white">Controle com segurança e precisão.</h1><p className="mt-4 text-sm leading-6 text-white/80">Acesse relatórios, protocolos, indicadores e fluxos autorizados para o seu perfil.</p></div>
-          <p className="text-xs text-white/60">Acesso protegido e monitorado.</p>
+          <div className="max-w-sm"><p className="text-xs font-semibold text-[#7db4e8]">AMBIENTE CORPORATIVO</p><h1 className="mt-8 font-display text-3xl font-semibold leading-tight text-white">Controle com segurança e precisão.</h1><p className="mt-8 text-sm leading-6 text-white/80">Acesse relatórios, protocolos, indicadores e fluxos autorizados para o seu perfil.</p></div>
+          <p className="mt-16 text-xs text-white/60 lg:mt-0">Acesso protegido e monitorado.</p>
         </div>
 
         {/* ── Right panel: login form ── */}
