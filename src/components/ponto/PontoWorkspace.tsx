@@ -563,7 +563,7 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
         .join("  ");
       const base = [dataBr(r.data), marcacoesDia];
       if (modelo === "completo") {
-        return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.previsto_min), minutosParaTexto(r.atraso_min), r.extra_min > 0 ? minutosParaTexto(r.extra_min) : "-", minutosParaTexto(r.saldo_min), r.situacao];
+        return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.previsto_min), minutosParaTexto(r.atraso_min), r.extra_min > 0 ? minutosParaTexto(r.extra_min) : "-", minutosParaTexto(r.saldo_min), r.situacao, motivosDoDia(r.data).join("; ")];
       }
       if (modelo === "simplificado") {
         return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.saldo_min)];
@@ -572,13 +572,13 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
     });
 
     const head = modelo === "completo"
-      ? [["Data", "Marcações", "Trabalhado", "Previsto", "Atraso", "Extra", "Saldo", "Situação"]]
+      ? [["Data", "Marcações", "Trabalhado", "Previsto", "Atraso", "Extra", "Saldo", "Situação", "Motivo"]]
       : modelo === "simplificado"
         ? [["Data", "Marcações", "Trabalhado", "Saldo"]]
         : [["Data", "Marcações", "Conferido por (assinatura)"]];
 
     const totaisLinha = modelo === "completo"
-      ? [["Totais", "", minutosParaTexto(totais.trabalhado), minutosParaTexto(totais.previsto), minutosParaTexto(totais.atraso), minutosParaTexto(totais.extra), minutosParaTexto(totais.saldo), ""]]
+      ? [["Totais", "", minutosParaTexto(totais.trabalhado), minutosParaTexto(totais.previsto), minutosParaTexto(totais.atraso), minutosParaTexto(totais.extra), minutosParaTexto(totais.saldo), "", ""]]
       : modelo === "simplificado"
         ? [["Totais", "", minutosParaTexto(totais.trabalhado), minutosParaTexto(totais.saldo)]]
         : undefined;
