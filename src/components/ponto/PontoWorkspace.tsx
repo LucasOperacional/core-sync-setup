@@ -14,8 +14,11 @@ import {
   LogIn,
   LogOut,
   MapPin,
+  Pencil,
+  Plus,
   RefreshCw,
   ShieldCheck,
+  Trash2,
   Wifi,
   WifiOff,
 } from "lucide-react";
@@ -44,6 +47,7 @@ import {
 } from "@/lib/ponto";
 import {
   decidirAjuste,
+  editarMarcacoesDia,
   fecharPeriodo,
   meuPapelPonto,
   recalcularPeriodo,
