@@ -38,6 +38,11 @@ import { Route as AuthenticatedCoordenacaoRouteImport } from './routes/_authenti
 import { Route as AuthenticatedCoordenacaoCrtRouteImport } from './routes/_authenticated/coordenacao-crt'
 import { Route as AuthenticatedCoordenacaoMovimentacoesRouteImport } from './routes/_authenticated/coordenacao-movimentacoes'
 import { Route as AuthenticatedCoordenadorRouteImport } from './routes/_authenticated/coordenador'
+import { Route as AuthenticatedDpEsocialRouteImport } from './routes/_authenticated/dp-esocial'
+import { Route as AuthenticatedDpFeriasRouteImport } from './routes/_authenticated/dp-ferias'
+import { Route as AuthenticatedDpFolhaRouteImport } from './routes/_authenticated/dp-folha'
+import { Route as AuthenticatedDpValeAlimentacaoRouteImport } from './routes/_authenticated/dp-vale-alimentacao'
+import { Route as AuthenticatedDpValeTransporteRouteImport } from './routes/_authenticated/dp-vale-transporte'
 import { Route as AuthenticatedFaltasRouteImport } from './routes/_authenticated/faltas'
 import { Route as AuthenticatedGpsRouteImport } from './routes/_authenticated/gps'
 import { Route as AuthenticatedIaOperacionalRouteImport } from './routes/_authenticated/ia-operacional'
@@ -268,6 +273,33 @@ const AuthenticatedCoordenadorRoute =
   AuthenticatedCoordenadorRouteImport.update({
     id: '/coordenador',
     path: '/coordenador',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDpEsocialRoute = AuthenticatedDpEsocialRouteImport.update({
+  id: '/dp-esocial',
+  path: '/dp-esocial',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDpFeriasRoute = AuthenticatedDpFeriasRouteImport.update({
+  id: '/dp-ferias',
+  path: '/dp-ferias',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDpFolhaRoute = AuthenticatedDpFolhaRouteImport.update({
+  id: '/dp-folha',
+  path: '/dp-folha',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDpValeAlimentacaoRoute =
+  AuthenticatedDpValeAlimentacaoRouteImport.update({
+    id: '/dp-vale-alimentacao',
+    path: '/dp-vale-alimentacao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDpValeTransporteRoute =
+  AuthenticatedDpValeTransporteRouteImport.update({
+    id: '/dp-vale-transporte',
+    path: '/dp-vale-transporte',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedFaltasRoute = AuthenticatedFaltasRouteImport.update({
@@ -714,6 +746,11 @@ export interface FileRoutesByFullPath {
   '/coordenacao-crt': typeof AuthenticatedCoordenacaoCrtRoute
   '/coordenacao-movimentacoes': typeof AuthenticatedCoordenacaoMovimentacoesRoute
   '/coordenador': typeof AuthenticatedCoordenadorRoute
+  '/dp-esocial': typeof AuthenticatedDpEsocialRoute
+  '/dp-ferias': typeof AuthenticatedDpFeriasRoute
+  '/dp-folha': typeof AuthenticatedDpFolhaRoute
+  '/dp-vale-alimentacao': typeof AuthenticatedDpValeAlimentacaoRoute
+  '/dp-vale-transporte': typeof AuthenticatedDpValeTransporteRoute
   '/faltas': typeof AuthenticatedFaltasRoute
   '/gps': typeof AuthenticatedGpsRoute
   '/ia-operacional': typeof AuthenticatedIaOperacionalRoute
@@ -815,6 +852,11 @@ export interface FileRoutesByTo {
   '/coordenacao-crt': typeof AuthenticatedCoordenacaoCrtRoute
   '/coordenacao-movimentacoes': typeof AuthenticatedCoordenacaoMovimentacoesRoute
   '/coordenador': typeof AuthenticatedCoordenadorRoute
+  '/dp-esocial': typeof AuthenticatedDpEsocialRoute
+  '/dp-ferias': typeof AuthenticatedDpFeriasRoute
+  '/dp-folha': typeof AuthenticatedDpFolhaRoute
+  '/dp-vale-alimentacao': typeof AuthenticatedDpValeAlimentacaoRoute
+  '/dp-vale-transporte': typeof AuthenticatedDpValeTransporteRoute
   '/faltas': typeof AuthenticatedFaltasRoute
   '/gps': typeof AuthenticatedGpsRoute
   '/ia-operacional': typeof AuthenticatedIaOperacionalRoute
@@ -919,6 +961,11 @@ export interface FileRoutesById {
   '/_authenticated/coordenacao-crt': typeof AuthenticatedCoordenacaoCrtRoute
   '/_authenticated/coordenacao-movimentacoes': typeof AuthenticatedCoordenacaoMovimentacoesRoute
   '/_authenticated/coordenador': typeof AuthenticatedCoordenadorRoute
+  '/_authenticated/dp-esocial': typeof AuthenticatedDpEsocialRoute
+  '/_authenticated/dp-ferias': typeof AuthenticatedDpFeriasRoute
+  '/_authenticated/dp-folha': typeof AuthenticatedDpFolhaRoute
+  '/_authenticated/dp-vale-alimentacao': typeof AuthenticatedDpValeAlimentacaoRoute
+  '/_authenticated/dp-vale-transporte': typeof AuthenticatedDpValeTransporteRoute
   '/_authenticated/faltas': typeof AuthenticatedFaltasRoute
   '/_authenticated/gps': typeof AuthenticatedGpsRoute
   '/_authenticated/ia-operacional': typeof AuthenticatedIaOperacionalRoute
@@ -1024,6 +1071,11 @@ export interface FileRouteTypes {
     | '/coordenacao-crt'
     | '/coordenacao-movimentacoes'
     | '/coordenador'
+    | '/dp-esocial'
+    | '/dp-ferias'
+    | '/dp-folha'
+    | '/dp-vale-alimentacao'
+    | '/dp-vale-transporte'
     | '/faltas'
     | '/gps'
     | '/ia-operacional'
@@ -1125,6 +1177,11 @@ export interface FileRouteTypes {
     | '/coordenacao-crt'
     | '/coordenacao-movimentacoes'
     | '/coordenador'
+    | '/dp-esocial'
+    | '/dp-ferias'
+    | '/dp-folha'
+    | '/dp-vale-alimentacao'
+    | '/dp-vale-transporte'
     | '/faltas'
     | '/gps'
     | '/ia-operacional'
@@ -1228,6 +1285,11 @@ export interface FileRouteTypes {
     | '/_authenticated/coordenacao-crt'
     | '/_authenticated/coordenacao-movimentacoes'
     | '/_authenticated/coordenador'
+    | '/_authenticated/dp-esocial'
+    | '/_authenticated/dp-ferias'
+    | '/_authenticated/dp-folha'
+    | '/_authenticated/dp-vale-alimentacao'
+    | '/_authenticated/dp-vale-transporte'
     | '/_authenticated/faltas'
     | '/_authenticated/gps'
     | '/_authenticated/ia-operacional'
@@ -1538,6 +1600,41 @@ declare module '@tanstack/react-router' {
       path: '/coordenador'
       fullPath: '/coordenador'
       preLoaderRoute: typeof AuthenticatedCoordenadorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dp-esocial': {
+      id: '/_authenticated/dp-esocial'
+      path: '/dp-esocial'
+      fullPath: '/dp-esocial'
+      preLoaderRoute: typeof AuthenticatedDpEsocialRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dp-ferias': {
+      id: '/_authenticated/dp-ferias'
+      path: '/dp-ferias'
+      fullPath: '/dp-ferias'
+      preLoaderRoute: typeof AuthenticatedDpFeriasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dp-folha': {
+      id: '/_authenticated/dp-folha'
+      path: '/dp-folha'
+      fullPath: '/dp-folha'
+      preLoaderRoute: typeof AuthenticatedDpFolhaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dp-vale-alimentacao': {
+      id: '/_authenticated/dp-vale-alimentacao'
+      path: '/dp-vale-alimentacao'
+      fullPath: '/dp-vale-alimentacao'
+      preLoaderRoute: typeof AuthenticatedDpValeAlimentacaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dp-vale-transporte': {
+      id: '/_authenticated/dp-vale-transporte'
+      path: '/dp-vale-transporte'
+      fullPath: '/dp-vale-transporte'
+      preLoaderRoute: typeof AuthenticatedDpValeTransporteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/faltas': {
@@ -2070,6 +2167,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCoordenacaoCrtRoute: typeof AuthenticatedCoordenacaoCrtRoute
   AuthenticatedCoordenacaoMovimentacoesRoute: typeof AuthenticatedCoordenacaoMovimentacoesRoute
   AuthenticatedCoordenadorRoute: typeof AuthenticatedCoordenadorRoute
+  AuthenticatedDpEsocialRoute: typeof AuthenticatedDpEsocialRoute
+  AuthenticatedDpFeriasRoute: typeof AuthenticatedDpFeriasRoute
+  AuthenticatedDpFolhaRoute: typeof AuthenticatedDpFolhaRoute
+  AuthenticatedDpValeAlimentacaoRoute: typeof AuthenticatedDpValeAlimentacaoRoute
+  AuthenticatedDpValeTransporteRoute: typeof AuthenticatedDpValeTransporteRoute
   AuthenticatedFaltasRoute: typeof AuthenticatedFaltasRoute
   AuthenticatedGpsRoute: typeof AuthenticatedGpsRoute
   AuthenticatedIaOperacionalRoute: typeof AuthenticatedIaOperacionalRoute
@@ -2147,6 +2249,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCoordenacaoMovimentacoesRoute:
     AuthenticatedCoordenacaoMovimentacoesRoute,
   AuthenticatedCoordenadorRoute: AuthenticatedCoordenadorRoute,
+  AuthenticatedDpEsocialRoute: AuthenticatedDpEsocialRoute,
+  AuthenticatedDpFeriasRoute: AuthenticatedDpFeriasRoute,
+  AuthenticatedDpFolhaRoute: AuthenticatedDpFolhaRoute,
+  AuthenticatedDpValeAlimentacaoRoute: AuthenticatedDpValeAlimentacaoRoute,
+  AuthenticatedDpValeTransporteRoute: AuthenticatedDpValeTransporteRoute,
   AuthenticatedFaltasRoute: AuthenticatedFaltasRoute,
   AuthenticatedGpsRoute: AuthenticatedGpsRoute,
   AuthenticatedIaOperacionalRoute: AuthenticatedIaOperacionalRoute,

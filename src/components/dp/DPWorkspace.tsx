@@ -237,11 +237,11 @@ function ModoFolha({ base, competencia, onEditar, onSalvo }: { base: Base; compe
     setSalvando(true);
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("dp_folhas").upsert(
-      linhas.map(({ f, r }) => ({ competencia, employee_id: f.id, dados: JSON.parse(JSON.stringify(r)), liquido: r.liquido, status: "fechada", created_by: u.user?.id, updated_at: new Date().toISOString() })),
+      linhas.map(({ f, r }) => ({ competencia, employee_id: f.id, dados: JSON.parse(JSON.stringify(r)), liquido: r.liquido, status: "fechada", created_by: u.user?.id ?? null, updated_at: new Date().toISOString() })),
       { onConflict: "competencia,employee_id" },
     );
     setSalvando(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Folha salva com os dados atuais do ponto.");
     onSalvo();
   }
@@ -287,21 +287,21 @@ function ModoFerias({ base, onEditar, onSalvo }: { base: Base; onEditar: (f: Fun
   const nome = (id: string) => base.funcionarios.find((x) => x.id === id)?.nome ?? "—";
 
   async function salvar() {
-    if (!f || !calc || !inicio || !aqIni) return toast.error("Preencha funcionário, período aquisitivo e início.");
-    if (dias + abono > 30) return toast.error("Dias de férias + abono não podem passar de 30.");
-    if (abono > 10) return toast.error("O abono é de no máximo 10 dias.");
+    if (!f || !calc || !inicio || !aqIni) { toast.error("Preencha funcionário, período aquisitivo e início."); return; }
+    if (dias + abono > 30) { toast.error("Dias de férias + abono não podem passar de 30."); return; }
+    if (abono > 10) { toast.error("O abono é de no máximo 10 dias."); return; }
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("dp_ferias").insert({
       employee_id: f.id, aquisitivo_inicio: aqIni, aquisitivo_fim: somarDias(aqIni, 364), inicio, dias, abono_dias: abono,
-      valores: calc, created_by: u.user?.id,
+      valores: calc, created_by: u.user?.id ?? null,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Férias programadas.");
     onSalvo();
   }
   async function excluir(id: string) {
     const { error } = await supabase.from("dp_ferias").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     onSalvo();
   }
 
@@ -362,24 +362,24 @@ function ModoESocial({ base, competencia, onSalvo }: { base: Base; competencia: 
   const pendencias = base.funcionarios.filter((f) => !soDigitos(f.cpf) || !base.empresas.find((e) => e.id === f.company_id)?.cnpj);
 
   async function gerar() {
-    if (base.folhas.length === 0) return toast.error("Salve a folha desta competência antes de gerar os eventos.");
+    if (base.folhas.length === 0) { toast.error("Salve a folha desta competência antes de gerar os eventos."); return; }
     setGerando(true);
     const { data: u } = await supabase.auth.getUser();
     const registros = base.folhas.flatMap((fl) => {
       const f = base.funcionarios.find((x) => x.id === fl.employee_id);
       const cnpj = base.empresas.find((e) => e.id === f?.company_id)?.cnpj;
       if (!f || !cnpj || !soDigitos(f.cpf)) return [];
-      return [{ evento: "S-1200", competencia, employee_id: f.id, xml: xmlS1200(f, cnpj, competencia, fl.dados as unknown as ResultadoFolha), created_by: u.user?.id }];
+      return [{ evento: "S-1200", competencia, employee_id: f.id, xml: xmlS1200(f, cnpj, competencia, fl.dados as unknown as ResultadoFolha), created_by: u.user?.id ?? null }];
     });
     const { error } = registros.length ? await supabase.from("dp_esocial_eventos").insert(registros) : { error: null };
     setGerando(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(`${registros.length} evento(s) S-1200 gerado(s).`);
     onSalvo();
   }
   async function baixar(id: string, evento: string) {
     const { data, error } = await supabase.from("dp_esocial_eventos").select("xml").eq("id", id).single();
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     const url = URL.createObjectURL(new Blob([data.xml], { type: "application/xml" }));
     const a = document.createElement("a");
     a.href = url; a.download = `${evento}-${id.slice(0, 8)}.xml`; a.click();
@@ -411,7 +411,7 @@ function DadosDialog({ func, atual, onFechar, onSalvo }: { func: Func; atual: Da
   );
   async function salvar() {
     const { error } = await supabase.from("dp_dados_funcionario").upsert({ employee_id: func.id, ...d, updated_at: new Date().toISOString() });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Dados salvos.");
     onSalvo();
     onFechar();
