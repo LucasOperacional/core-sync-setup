@@ -453,35 +453,68 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
     { trabalhado: 0, previsto: 0, extra: 0, saldo: 0 },
   );
 
-  const exportarPdf = async () => {
+  const exportarPdf = async (modelo: ModeloPdf) => {
     const [{ jsPDF }, autoTable] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
     const doc = new jsPDF();
     const nome = dados.funcionarios.find((f) => f.id === alvo)?.nome ?? "Funcionário";
     doc.setFontSize(14);
-    doc.text(`Espelho de ponto — ${nome}`, 14, 16);
+    doc.text(`${modelo === "conferencia" ? "Ficha de conferência de ponto" : "Espelho de ponto"} — ${nome}`, 14, 16);
     doc.setFontSize(10);
     doc.text(`Período: ${mes}`, 14, 23);
+
+    const body = resumos.map((r) => {
+      const marcacoesDia = marcacoes
+        .filter((m) => m.data_ref === r.data && m.status !== "corrigido")
+        .sort((a, b) => a.registrado_em.localeCompare(b.registrado_em))
+        .map((m) => horaLocal(m.registrado_em))
+        .join("  ");
+      const base = [dataBr(r.data), marcacoesDia];
+      if (modelo === "completo") {
+        return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.previsto_min), minutosParaTexto(r.atraso_min), minutosParaTexto(r.extra_min), minutosParaTexto(r.saldo_min), r.situacao];
+      }
+      if (modelo === "simplificado") {
+        return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.saldo_min)];
+      }
+      return [...base, ""];
+    });
+
+    const head = modelo === "completo"
+      ? [["Data", "Marcações", "Trabalhado", "Previsto", "Atraso", "Extra", "Saldo", "Situação"]]
+      : modelo === "simplificado"
+        ? [["Data", "Marcações", "Trabalhado", "Saldo"]]
+        : [["Data", "Marcações", "Conferido por (assinatura)"]];
+
+    const totaisLinha = modelo === "completo"
+      ? [["Totais", "", minutosParaTexto(totais.trabalhado), minutosParaTexto(totais.previsto), minutosParaTexto(totais.atraso), minutosParaTexto(totais.extra), minutosParaTexto(totais.saldo), ""]]
+      : modelo === "simplificado"
+        ? [["Totais", "", minutosParaTexto(totais.trabalhado), minutosParaTexto(totais.saldo)]]
+        : undefined;
+
     autoTable.default(doc, {
       startY: 28,
-      head: [["Data", "Marcações", "Trabalhado", "Previsto", "Extra", "Saldo"]],
-      body: resumos.map((r) => [
-        dataBr(r.data),
-        marcacoes
-          .filter((m) => m.data_ref === r.data && m.status !== "corrigido")
-          .map((m) => horaLocal(m.registrado_em))
-          .join("  "),
-        minutosParaTexto(r.trabalhado_min),
-        minutosParaTexto(r.previsto_min),
-        minutosParaTexto(r.extra_min),
-        minutosParaTexto(r.saldo_min),
-      ]),
+      head,
+      body: totaisLinha ? [...body, ...totaisLinha] : body,
+      foot: totaisLinha ? undefined : undefined,
+      styles: { fontSize: modelo === "completo" ? 8 : 9 },
     });
-    const y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 20;
-    doc.text("_______________________________", 14, y);
-    doc.text("Assinatura do funcionário", 14, y + 5);
-    doc.text("_______________________________", 120, y);
-    doc.text("Assinatura do responsável", 120, y + 5);
-    doc.save(`espelho-${mes}.pdf`);
+    const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
+    if (modelo !== "conferencia") {
+      const y = finalY + 20;
+      doc.text("_______________________________", 14, y);
+      doc.text("Assinatura do funcionário", 14, y + 5);
+      doc.text("_______________________________", 120, y);
+      doc.text("Assinatura do responsável", 120, y + 5);
+    } else {
+      doc.setFontSize(8);
+      doc.text("Eu declaro que conferi as marcações acima e que correspondem ao efetivamente trabalhado.", 14, finalY + 12);
+ecaminhamento:
+      const y = finalY + 28;
+      doc.setFontSize(10);
+      doc.text("_______________________________", 14, y);
+      doc.text("Assinatura do funcionário", 14, y + 5);
+ecaminhamento2:
+    }
+    doc.save(modelo === "conferencia" ? `ficha-conferencia-${mes}.pdf` : `espelho-${modelo}-${mes}.pdf`);
   };
 
   return (
