@@ -9,7 +9,6 @@ import { cadastrarConta, type CadastroRole } from "@/lib/cadastro.functions";
 import { entrarComUsuario } from "@/lib/auth.functions";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import loginBgAsset from "@/assets/video-autenticacao-claro.webm.asset.json";
-import logoAzul from "@/assets/logo-nxs-plus-azul.png.asset.json";
 import logoBranca from "@/assets/logo-nxs-plus-branca.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
