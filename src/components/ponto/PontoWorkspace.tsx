@@ -21,6 +21,7 @@ import {
   Trash2,
   Wifi,
   WifiOff,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -509,6 +510,30 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const linhasDoDia = (dia: string) =>
+    dados.marcacoes
+      .filter((m) => m.employee_id === alvo && m.data_ref === dia && m.status !== "corrigido")
+      .sort((a, b) => a.registrado_em.localeCompare(b.registrado_em))
+      .map((m) => ({ tipo: m.tipo as TipoMarcacao, horario: horaLocal(m.registrado_em).slice(0, 5) }));
+
+  const [remocao, setRemocao] = useState<{ data: string; index: number; linha: { tipo: TipoMarcacao; horario: string }; motivo: string } | null>(null);
+  const removerUma = useMutation({
+    mutationFn: () => {
+      if (!remocao) throw new Error("Nada para remover.");
+      if (!remocao.motivo.trim()) throw new Error("Descreva o motivo da remoção.");
+      const restantes = linhasDoDia(remocao.data);
+      restantes.splice(remocao.index, 1);
+      return editar({ data: { employeeId: alvo, dataRef: remocao.data, marcacoes: restantes, motivo: remocao.motivo } });
+    },
+    onSuccess: () => {
+      toast.success("Marcação removida.");
+      setRemocao(null);
+      void cliente.invalidateQueries({ queryKey: ["ponto"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
 
   const exportarPdf = async (modelo: ModeloPdf) => {
     const [{ jsPDF }, autoTable] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
@@ -648,11 +673,22 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
           <tr key={r.id}>
             <td className="px-3 py-2">{dataBr(r.data)}</td>
             <td className="px-3 py-2 font-mono text-xs">
-              {marcacoes
-                .filter((m) => m.data_ref === r.data && m.status !== "corrigido")
-                .sort((a, b) => a.registrado_em.localeCompare(b.registrado_em))
-                .map((m) => horaLocal(m.registrado_em))
-                .join(" · ")}
+              {linhasDoDia(r.data).map((l, i) => (
+                <span key={i} className="mr-1 inline-flex items-center gap-1 rounded border border-border bg-muted/40 px-1.5 py-0.5">
+                  {l.horario}
+                  {gestor && (
+                    <button
+                      type="button"
+                      aria-label={`Remover marcação ${l.horario}`}
+                      title="Remover esta marcação"
+                      className="text-muted-foreground transition hover:text-destructive"
+                      onClick={() => setRemocao({ data: r.data, index: i, linha: l, motivo: "" })}
+                    >
+                      <X className="size-3" />
+                    </button>
+                  )}
+                </span>
+              ))}
             </td>
             <td className="px-3 py-2">{minutosParaTexto(r.trabalhado_min)}</td>
             <td className="px-3 py-2">{minutosParaTexto(r.previsto_min)}</td>
