@@ -1,8 +1,10 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { AlarmClock, BarChart3, BriefcaseBusiness, Building2, CalendarDays, CheckCircle2, ChevronDown, Clock, Download, FileText, LogOut, MapPin, Menu, PanelLeftClose, PanelLeftOpen, PencilLine, Settings, ShieldCheck, Target, Users, X } from "lucide-react";
+import { ArrowLeft, ChevronRight, Download, LogOut, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { operacionalNavItems, rhNavItems } from "@/components/FloatingNav";
+import logoAzul from "@/assets/logo-nxs-plus-azul.png.asset.json";
+import logoBranca from "@/assets/logo-nxs-plus-branca.png.asset.json";
+import { operacionalNavItems } from "@/components/FloatingNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useMinhasPermissoes } from "@/hooks/use-minhas-permissoes";
@@ -12,47 +14,24 @@ import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "ciop:navegacao-recolhida";
 
-const itensComercial = [
-  { to: "/comercial-clientes", label: "Clientes", icon: Users },
-  { to: "/comercial-funil", label: "Funil", icon: Target },
-  { to: "/comercial-propostas", label: "Propostas", icon: FileText },
-  { to: "/comercial-agenda", label: "Agenda", icon: CalendarDays },
-  { to: "/comercial-contratos", label: "Contratos", icon: BriefcaseBusiness },
-  { to: "/comercial-relatorios", label: "Relatórios", icon: BarChart3 },
-] as const;
-
-const itensPonto = [
-  { to: "/ponto", label: "Registro de ponto", icon: Clock },
-  { to: "/ponto-espelho", label: "Meu espelho", icon: FileText },
-  { to: "/ponto-ajustes", label: "Solicitar ajuste", icon: PencilLine },
-  { to: "/ponto-painel", label: "Painel do ponto", icon: BarChart3 },
-  { to: "/ponto-aprovacoes", label: "Aprovações", icon: CheckCircle2 },
-  { to: "/ponto-funcionarios", label: "Funcionários", icon: Users },
-  { to: "/ponto-empresas", label: "Empresas e postos", icon: Building2 },
-  { to: "/ponto-escalas", label: "Escalas", icon: CalendarDays },
-  { to: "/ponto-banco-horas", label: "Banco de horas", icon: AlarmClock },
-  { to: "/ponto-faltas", label: "Faltas", icon: CalendarDays },
-  { to: "/ponto-fechamento", label: "Fechamento", icon: BriefcaseBusiness },
-  { to: "/ponto-relatorios", label: "Relatórios do ponto", icon: BarChart3 },
-  { to: "/ponto-configuracoes", label: "Configurações", icon: Settings },
-  { to: "/ponto-auditoria", label: "Auditoria", icon: ShieldCheck },
+/** Categorias do menu: o clique abre a página de cards da área (em vez de expandir o menu). */
+const CATEGORIAS_SIDEBAR = [
+  { slug: "comercial", categoria: "categoria-comercial", label: "Comercial", sigla: "COM" },
+  { slug: "departamento-pessoal", categoria: "categoria-departamento-pessoal", label: "Departamento pessoal", sigla: "DP" },
+  { slug: "ponto-nxs", categoria: "categoria-departamento-pessoal", label: "Ponto Nxs", sigla: "PN" },
+  { slug: "financeiro", categoria: "categoria-financeiro", label: "Financeiro", sigla: "FIN" },
+  { slug: "operacional", categoria: "categoria-operacional", label: "Operacional", sigla: "OP" },
+  { slug: "recursos-humanos", categoria: "categoria-recursos-humanos", label: "Recursos humanos", sigla: "RH" },
+  { slug: "suprimentos", categoria: "categoria-suprimentos", label: "Suprimentos", sigla: "SUP" },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const caminho = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
-  const { podeVer, podeVerCategoria } = useMinhasPermissoes();
+  const { podeVerCategoria } = useMinhasPermissoes();
   const { user } = useSessao();
   const [menuMobile, setMenuMobile] = useState(false);
   const [recolhida, setRecolhida] = useState(false);
-  const [operacionalAberta, setOperacionalAberta] = useState(false);
-  const [rhAberta, setRhAberta] = useState(false);
-  const [dpAberta, setDpAberta] = useState(false);
-  const [comercialAberta, setComercialAberta] = useState(false);
-  const [financeiroAberta, setFinanceiroAberta] = useState(false);
-  const [suprimentosAberta, setSuprimentosAberta] = useState(false);
-
-
 
   useEffect(() => {
     try {
@@ -77,251 +56,77 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   const inicioItem = operacionalNavItems.find((item) => item.to === "/");
-  const itensOperacional = operacionalNavItems.filter((item) => item.to !== "/" && podeVer(item.to));
-  const itensRh = rhNavItems.filter((item) => podeVer(item.to));
-  const ativo = (to: string) => (to === "/" ? caminho === "/" : caminho.startsWith(to));
+
+  const voltar = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigate({ to: "/" });
+    }
+  };
 
   const sair = async () => {
     await supabase.auth.signOut();
     await navigate({ to: "/auth" });
   };
 
+  // Na gaveta do celular o logo aparece sempre inteiro; no computador ele
+  // encolhe junto com o menu recolhido.
+  const compacta = recolhida && !menuMobile;
+
   const navigation = (
     <>
       <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-4">
-        <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="NXS — página inicial">
-          <span className="grid size-8 shrink-0 place-items-center rounded-md bg-sidebar-primary font-display text-xs text-sidebar-primary-foreground shadow-xs">N</span>
-          {!recolhida && <span className="truncate font-display text-sm text-sidebar-foreground">NXS</span>}
-          {!recolhida && <span className="border-l border-sidebar-border pl-3 text-[10px] font-semibold uppercase text-sidebar-foreground/55">Sistemas</span>}
+        <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="NXS Plus — página inicial">
+          {compacta ? (
+            <span className="grid size-8 shrink-0 place-items-center rounded-md bg-sidebar-primary font-display text-xs text-sidebar-primary-foreground shadow-xs">N</span>
+          ) : (
+            <img src={logoBranca.url} alt="NXS Plus Gestão" className="h-9 w-auto shrink-0 object-contain" draggable={false} />
+          )}
         </Link>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-5" aria-label="Navegação principal">
-        {!recolhida && <p className="px-3 pb-3 text-[10px] font-semibold uppercase text-sidebar-foreground/45">Índice de áreas</p>}
+        {!compacta && <p className="px-3 pb-3 text-[10px] font-semibold uppercase text-sidebar-foreground/45">Índice de áreas</p>}
         {inicioItem && (
           <Link
             to="/"
-            title={recolhida ? inicioItem.label : undefined}
-            aria-current={ativo("/") ? "page" : undefined}
+            title={compacta ? inicioItem.label : undefined}
+            aria-current={caminho === "/" ? "page" : undefined}
             className={cn(
               "group flex h-10 min-w-0 items-center gap-3 rounded-md border-l-2 px-3 text-sm font-medium transition-colors duration-150",
-              ativo("/")
+              caminho === "/"
                 ? "border-sidebar-primary bg-sidebar-accent text-sidebar-accent-foreground"
                 : "border-transparent text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
             )}
           >
-            <inicioItem.icon className={cn("size-4 shrink-0", ativo("/") && "text-primary")} />
-            {!recolhida && <span className="truncate">{inicioItem.label}</span>}
-            {ativo("/") && <span className="ml-auto text-[9px] font-semibold text-sidebar-foreground/55">01</span>}
+            <inicioItem.icon className={cn("size-4 shrink-0", caminho === "/" && "text-primary")} />
+            {!compacta && <span className="truncate">{inicioItem.label}</span>}
+            {caminho === "/" && <span className="ml-auto text-[9px] font-semibold text-sidebar-foreground/55">01</span>}
           </Link>
         )}
 
-        {podeVerCategoria("categoria-comercial") && (
-          <button
-            type="button"
-            onClick={() => setComercialAberta((v) => !v)}
-            aria-expanded={comercialAberta}
-             className="mt-3 flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-            title={recolhida ? "COM" : undefined}
-          >
-            <span className="truncate">{recolhida ? "COM" : "Comercial"}</span>
-            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", comercialAberta && "rotate-180")} />
-          </button>
-        )}
-
-        {podeVerCategoria("categoria-comercial") && comercialAberta && (
-          <ul className="mt-1 space-y-0.5">
-            {podeVer("/comercial") &&
-              itensComercial.map((item) => {
-                const selecionado = caminho === item.to;
-                return (
-                  <li key={item.to}>
-                    <Link
-                      to={item.to}
-                      title={recolhida ? item.label : undefined}
-                      aria-current={selecionado ? "page" : undefined}
-                      className={cn(
-                        "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                        selecionado
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                      )}
-                    >
-                      <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
-                      {!recolhida && <span className="truncate">{item.label}</span>}
-                      {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                    </Link>
-                  </li>
-                );
-              })}
-            <li>
-              <Link
-                to="/prospeccao-maps"
-                title={recolhida ? "Prospecção Google Maps" : undefined}
-                aria-current={ativo("/prospeccao-maps") ? "page" : undefined}
-                className={cn(
-                  "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                  ativo("/prospeccao-maps")
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                )}
-              >
-                <MapPin className={cn("size-4 shrink-0", ativo("/prospeccao-maps") && "text-primary")} />
-                {!recolhida && <span className="truncate">Prospecção Google Maps</span>}
-                {ativo("/prospeccao-maps") && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-              </Link>
-            </li>
-          </ul>
-        )}
-
-        {podeVerCategoria("categoria-departamento-pessoal") && (
-          <button
-            type="button"
-            onClick={() => setDpAberta((v) => !v)}
-            aria-expanded={dpAberta}
-            className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-            title={recolhida ? "DP" : undefined}
-          >
-            <span className="truncate">{recolhida ? "DP" : "Departamento pessoal"}</span>
-            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", dpAberta && "rotate-180")} />
-          </button>
-        )}
-
-        {podeVerCategoria("categoria-departamento-pessoal") && dpAberta && podeVer("/ponto") && (
-          <ul className="mt-1 space-y-0.5">
-            {itensPonto.map((item) => {
-              const selecionado = caminho === item.to;
-              return (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    title={recolhida ? item.label : undefined}
-                    aria-current={selecionado ? "page" : undefined}
-                    className={cn(
-                      "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                      selecionado
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                    )}
-                  >
-                    <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
-                    {!recolhida && <span className="truncate">{item.label}</span>}
-                    {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
-        {podeVerCategoria("categoria-financeiro") && (
-          <button
-            type="button"
-            onClick={() => setFinanceiroAberta((v) => !v)}
-            aria-expanded={financeiroAberta}
-            className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-            title={recolhida ? "FIN" : undefined}
-          >
-            <span className="truncate">{recolhida ? "FIN" : "Financeiro"}</span>
-            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", financeiroAberta && "rotate-180")} />
-          </button>
-        )}
-
-        {podeVerCategoria("categoria-operacional") && (
-          <>
-          <button
-            type="button"
-            onClick={() => setOperacionalAberta((v) => !v)}
-            aria-expanded={operacionalAberta}
-            className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-            title={recolhida ? "OP" : undefined}
-          >
-            <span className="truncate">{recolhida ? "OP" : "Operacional"}</span>
-            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", operacionalAberta && "rotate-180")} />
-          </button>
-          {operacionalAberta && (
-            <ul className="mt-1 space-y-0.5">
-              {itensOperacional.map((item) => {
-                const selecionado = ativo(item.to);
-                return (
-                  <li key={item.to}>
-                    <Link
-                      to={item.to}
-                      title={recolhida ? item.label : undefined}
-                      aria-current={selecionado ? "page" : undefined}
-                      className={cn(
-                        "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                        selecionado
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                      )}
-                    >
-                      <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
-                      {!recolhida && <span className="truncate">{item.label}</span>}
-                      {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          </>
-        )}
-
-        {podeVerCategoria("categoria-recursos-humanos") && itensRh.length > 0 && (
-          (
-            <>
-              <button
-                type="button"
-                onClick={() => setRhAberta((v) => !v)}
-                aria-expanded={rhAberta}
-                className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-                title={recolhida ? "RH" : undefined}
-              >
-                <span className="truncate">{recolhida ? "RH" : "Recursos humanos"}</span>
-                <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", rhAberta && "rotate-180")} />
-              </button>
-              {rhAberta && (
-                <ul className="mt-1 space-y-0.5">
-                  {itensRh.map((item) => {
-                    const selecionado = ativo(item.to);
-                    return (
-                      <li key={item.to}>
-                        <Link
-                          to={item.to}
-                          title={recolhida ? item.label : undefined}
-                          aria-current={selecionado ? "page" : undefined}
-                          className={cn(
-                              "group flex h-10 min-w-0 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
-                            selecionado
-                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                                : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
-                          )}
-                        >
-                          <item.icon className={cn("size-4 shrink-0", selecionado && "text-primary")} />
-                          {!recolhida && <span className="truncate">{item.label}</span>}
-                          {selecionado && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-primary" />}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
+        {CATEGORIAS_SIDEBAR.map((cat) => {
+          if (!podeVerCategoria(cat.categoria)) return null;
+          const selecionada = caminho === `/categoria/${cat.slug}`;
+          return (
+            <Link
+              key={cat.categoria}
+              to="/categoria/$cat"
+              params={{ cat: cat.slug }}
+              title={compacta ? cat.sigla : undefined}
+              aria-current={selecionada ? "page" : undefined}
+              className={cn(
+                "mt-3 flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                selecionada
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground/55",
               )}
-            </>
-          )
-        )}
-
-        {podeVerCategoria("categoria-suprimentos") && (
-          <button
-            type="button"
-            onClick={() => setSuprimentosAberta((v) => !v)}
-            aria-expanded={suprimentosAberta}
-            className="flex h-9 w-full items-center justify-between rounded-md px-3 text-xs font-semibold uppercase text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
-            title={recolhida ? "SUP" : undefined}
-          >
-            <span className="truncate">{recolhida ? "SUP" : "Suprimentos"}</span>
-            <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-150", suprimentosAberta && "rotate-180")} />
-          </button>
-        )}
+            >
+              <span className="truncate">{compacta ? cat.sigla : cat.label}</span>
+              {!compacta && <ChevronRight className="size-4 shrink-0 opacity-60" />}
+            </Link>
+          );
+        })}
       </nav>
 
 
@@ -329,22 +134,22 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Button
           asChild
           variant="ghost"
-          size={recolhida ? "icon" : "sm"}
+          size={compacta ? "icon" : "sm"}
           className={cn(
             "w-full border border-sidebar-border bg-sidebar-accent/55 text-sidebar-foreground shadow-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-            !recolhida && "justify-start",
+            !compacta && "justify-start",
           )}
         >
-          <Link to="/instalar" title="Instalar aplicativo"><Download />{!recolhida && "Instalar aplicativo"}</Link>
+          <Link to="/instalar" title="Instalar aplicativo"><Download />{!compacta && "Instalar aplicativo"}</Link>
         </Button>
-        {!recolhida && (
+        {!compacta && (
           <ThemeToggle className="h-9 w-full justify-start border-sidebar-border bg-sidebar-accent/55 px-3 text-xs text-sidebar-foreground shadow-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
         )}
-        <Button variant="ghost" size={recolhida ? "icon" : "sm"} className={cn("w-full text-destructive hover:bg-destructive/10 hover:text-destructive", !recolhida && "justify-start")} onClick={sair} title="Sair">
-          <LogOut />{!recolhida && "Sair"}
+        <Button variant="ghost" size={compacta ? "icon" : "sm"} className={cn("w-full text-destructive hover:bg-destructive/10 hover:text-destructive", !compacta && "justify-start")} onClick={sair} title="Sair">
+          <LogOut />{!compacta && "Sair"}
         </Button>
       </div>
-      {!recolhida && user && (
+      {!compacta && user && (
         <div className="border-t border-sidebar-border px-4 py-3">
           <p className="truncate text-xs font-medium text-sidebar-foreground">{nomeDoUsuario(user)}</p>
           <p className="truncate text-[11px] text-sidebar-foreground/50">Sessão ativa</p>
@@ -375,10 +180,25 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="min-w-0">
         <div className="sticky top-0 z-30 flex h-16 items-center border-b border-border bg-card/95 px-4 backdrop-blur lg:hidden">
           <Button variant="ghost" size="icon" onClick={() => setMenuMobile(true)} aria-label="Abrir menu"><Menu /></Button>
-          <span className="ml-3 grid size-8 place-items-center rounded-md bg-primary font-display text-xs text-primary-foreground">N</span>
-          <span className="ml-2 truncate font-display text-sm">NXS</span>
-          <span className="ml-2 border-l border-border pl-2 text-[10px] font-semibold uppercase text-muted-foreground">Sistemas</span>
+          <img src={logoAzul.url} alt="NXS Plus Gestão" className="ml-3 h-8 w-auto shrink-0 object-contain dark:hidden" draggable={false} />
+          <img src={logoBranca.url} alt="NXS Plus Gestão" className="ml-3 hidden h-8 w-auto shrink-0 object-contain dark:block" draggable={false} />
+          {caminho !== "/" && (
+            <Button variant="outline" size="sm" onClick={voltar} className="ml-auto gap-1.5" aria-label="Voltar">
+              <ArrowLeft className="size-4" /> Voltar
+            </Button>
+          )}
         </div>
+        {caminho !== "/" && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={voltar}
+            className="fixed right-4 top-4 z-40 hidden gap-1.5 shadow-panel lg:inline-flex"
+            aria-label="Voltar"
+          >
+            <ArrowLeft className="size-4" /> Voltar
+          </Button>
+        )}
         <div className="app-workspace min-w-0">{children}</div>
       </div>
     </div>

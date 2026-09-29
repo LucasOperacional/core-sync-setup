@@ -4,22 +4,29 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   AlarmClock,
+  ArrowLeft,
   CalendarClock,
   CheckCircle2,
   Clock,
   Coffee,
   Download,
+  FileText,
   LogIn,
   LogOut,
   MapPin,
+  Pencil,
+  Plus,
   RefreshCw,
   ShieldCheck,
+  Trash2,
   Wifi,
   WifiOff,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,6 +48,7 @@ import {
 } from "@/lib/ponto";
 import {
   decidirAjuste,
+  editarMarcacoesDia,
   fecharPeriodo,
   meuPapelPonto,
   recalcularPeriodo,
@@ -434,9 +442,33 @@ function Registro({
 
 /* --------------------------------- espelho -------------------------------- */
 
+type ModeloPdf = "completo" | "simplificado" | "conferencia";
+
+const MODELOS_PDF: { id: ModeloPdf; nome: string; colunas: string; descricao: string }[] = [
+  {
+    id: "completo",
+    nome: "Espelho completo",
+    colunas: "Data · Marcações · Trabalhado · Previsto · Atraso · Extra · Saldo · Situação",
+    descricao: "Todas as colunas do espelho, com linha de totais e campos de assinatura do funcionário e do responsável.",
+  },
+  {
+    id: "simplificado",
+    nome: "Espelho simplificado",
+    colunas: "Data · Marcações · Trabalhado · Saldo",
+    descricao: "Versão enxuta para conferência rápida, com linha de totais e campos de assinatura.",
+  },
+  {
+    id: "conferencia",
+    nome: "Ficha de conferência",
+    colunas: "Data · Marcações · Assinatura do dia",
+    descricao: "Uma linha por dia com espaço para o funcionário conferir e assinar as marcações daquele dia.",
+  },
+];
+
 function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId: string | null; gestor: boolean }) {
   const [funcionario, setFuncionario] = useState<string>(employeeId ?? "");
   const [mes, setMes] = useState(() => hojeLocal().slice(0, 7));
+  const [modelosAberto, setModelosAberto] = useState(false);
   const alvo = gestor ? funcionario || employeeId || "" : employeeId ?? "";
 
   const resumos = dados.resumos.filter((r) => r.employee_id === alvo && r.data.startsWith(mes)).sort((a, b) => b.data.localeCompare(a.data));
@@ -445,41 +477,137 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
     (acc, r) => ({
       trabalhado: acc.trabalhado + r.trabalhado_min,
       previsto: acc.previsto + r.previsto_min,
+      atraso: acc.atraso + r.atraso_min,
       extra: acc.extra + r.extra_min,
       saldo: acc.saldo + r.saldo_min,
     }),
-    { trabalhado: 0, previsto: 0, extra: 0, saldo: 0 },
+    { trabalhado: 0, previsto: 0, atraso: 0, extra: 0, saldo: 0 },
   );
 
-  const exportarPdf = async () => {
+  const cliente = useQueryClient();
+  const editar = useServerFn(editarMarcacoesDia);
+  const [diaNovo, setDiaNovo] = useState("");
+  const [edicao, setEdicao] = useState<{ data: string; linhas: { tipo: TipoMarcacao; horario: string }[]; motivo: string } | null>(null);
+  const abrirEdicao = (dia: string) => {
+    const linhas = dados.marcacoes
+      .filter((m) => m.employee_id === alvo && m.data_ref === dia && m.status !== "corrigido")
+      .sort((a, b) => a.registrado_em.localeCompare(b.registrado_em))
+      .map((m) => ({ tipo: m.tipo as TipoMarcacao, horario: horaLocal(m.registrado_em).slice(0, 5) }));
+    setEdicao({ data: dia, linhas, motivo: "" });
+  };
+  const atualizarLinha = (i: number, parcial: Partial<{ tipo: TipoMarcacao; horario: string }>) =>
+    setEdicao((e) => (e ? { ...e, linhas: e.linhas.map((l, j) => (j === i ? { ...l, ...parcial } : l)) } : e));
+  const salvarEdicao = useMutation({
+    mutationFn: () => {
+      if (!edicao) throw new Error("Nada para salvar.");
+      return editar({ data: { employeeId: alvo, dataRef: edicao.data, marcacoes: edicao.linhas, motivo: edicao.motivo } });
+    },
+    onSuccess: () => {
+      toast.success("Folha atualizada.");
+      setEdicao(null);
+      void cliente.invalidateQueries({ queryKey: ["ponto"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const linhasDoDia = (dia: string) =>
+    dados.marcacoes
+      .filter((m) => m.employee_id === alvo && m.data_ref === dia && m.status !== "corrigido")
+      .sort((a, b) => a.registrado_em.localeCompare(b.registrado_em))
+      .map((m) => ({ tipo: m.tipo as TipoMarcacao, horario: horaLocal(m.registrado_em).slice(0, 5) }));
+
+  /** Motivo real mais recente do dia: último pedido de ajuste do funcionário ou última correção do responsável. */
+  const motivosDoDia = (dia: string): string[] => {
+    const pedido = dados.pedidos.find((p) => p.employee_id === alvo && p.data_ref === dia);
+    const correcao = dados.marcacoes.find((m) => m.employee_id === alvo && m.data_ref === dia && m.observacao);
+    const limpar = (t: string) => t.replace(/^Editado pelo responsável:\s*/i, "").trim();
+    const lista: string[] = [];
+    if (pedido) lista.push(`${limpar(pedido.motivo)}${pedido.status === "aprovada" ? " (ajuste aprovado)" : pedido.status === "rejeitada" ? " (ajuste recusado)" : " (aguardando aprovação)"}`);
+    if (correcao?.observacao) {
+      const texto = limpar(correcao.observacao);
+      if (!lista.some((l) => l.startsWith(texto))) lista.push(texto);
+    }
+    return lista.slice(0, 2);
+  };
+
+  const [remocao, setRemocao] = useState<{ data: string; index: number; linha: { tipo: TipoMarcacao; horario: string }; motivo: string } | null>(null);
+  const removerUma = useMutation({
+    mutationFn: () => {
+      if (!remocao) throw new Error("Nada para remover.");
+      if (!remocao.motivo.trim()) throw new Error("Descreva o motivo da remoção.");
+      const restantes = linhasDoDia(remocao.data);
+      restantes.splice(remocao.index, 1);
+      return editar({ data: { employeeId: alvo, dataRef: remocao.data, marcacoes: restantes, motivo: remocao.motivo } });
+    },
+    onSuccess: () => {
+      toast.success("Marcação removida.");
+      setRemocao(null);
+      void cliente.invalidateQueries({ queryKey: ["ponto"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
+
+  const exportarPdf = async (modelo: ModeloPdf) => {
     const [{ jsPDF }, autoTable] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
     const doc = new jsPDF();
     const nome = dados.funcionarios.find((f) => f.id === alvo)?.nome ?? "Funcionário";
     doc.setFontSize(14);
-    doc.text(`Espelho de ponto — ${nome}`, 14, 16);
+    doc.text(`${modelo === "conferencia" ? "Ficha de conferência de ponto" : "Espelho de ponto"} — ${nome}`, 14, 16);
     doc.setFontSize(10);
     doc.text(`Período: ${mes}`, 14, 23);
+
+    const body = resumos.map((r) => {
+      const marcacoesDia = marcacoes
+        .filter((m) => m.data_ref === r.data && m.status !== "corrigido")
+        .sort((a, b) => a.registrado_em.localeCompare(b.registrado_em))
+        .map((m) => horaLocal(m.registrado_em))
+        .join("  ");
+      const base = [dataBr(r.data), marcacoesDia];
+      if (modelo === "completo") {
+        return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.previsto_min), minutosParaTexto(r.atraso_min), r.extra_min > 0 ? minutosParaTexto(r.extra_min) : "-", minutosParaTexto(r.saldo_min), r.situacao, motivosDoDia(r.data).join("; ")];
+      }
+      if (modelo === "simplificado") {
+        return [...base, minutosParaTexto(r.trabalhado_min), minutosParaTexto(r.saldo_min)];
+      }
+      return [...base, ""];
+    });
+
+    const head = modelo === "completo"
+      ? [["Data", "Marcações", "Trabalhado", "Previsto", "Atraso", "Extra", "Saldo", "Situação", "Motivo"]]
+      : modelo === "simplificado"
+        ? [["Data", "Marcações", "Trabalhado", "Saldo"]]
+        : [["Data", "Marcações", "Conferido por (assinatura)"]];
+
+    const totaisLinha = modelo === "completo"
+      ? [["Totais", "", minutosParaTexto(totais.trabalhado), minutosParaTexto(totais.previsto), minutosParaTexto(totais.atraso), minutosParaTexto(totais.extra), minutosParaTexto(totais.saldo), "", ""]]
+      : modelo === "simplificado"
+        ? [["Totais", "", minutosParaTexto(totais.trabalhado), minutosParaTexto(totais.saldo)]]
+        : undefined;
+
     autoTable.default(doc, {
       startY: 28,
-      head: [["Data", "Marcações", "Trabalhado", "Previsto", "Extra", "Saldo"]],
-      body: resumos.map((r) => [
-        dataBr(r.data),
-        marcacoes
-          .filter((m) => m.data_ref === r.data && m.status !== "corrigido")
-          .map((m) => horaLocal(m.registrado_em))
-          .join("  "),
-        minutosParaTexto(r.trabalhado_min),
-        minutosParaTexto(r.previsto_min),
-        minutosParaTexto(r.extra_min),
-        minutosParaTexto(r.saldo_min),
-      ]),
+      head,
+      body: totaisLinha ? [...body, ...totaisLinha] : body,
+      styles: { fontSize: modelo === "completo" ? 8 : 9 },
     });
-    const y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 20;
-    doc.text("_______________________________", 14, y);
-    doc.text("Assinatura do funcionário", 14, y + 5);
-    doc.text("_______________________________", 120, y);
-    doc.text("Assinatura do responsável", 120, y + 5);
-    doc.save(`espelho-${mes}.pdf`);
+    const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
+    if (modelo !== "conferencia") {
+      const y = finalY + 20;
+      doc.text("_______________________________", 14, y);
+      doc.text("Assinatura do funcionário", 14, y + 5);
+      doc.text("_______________________________", 120, y);
+      doc.text("Assinatura do responsável", 120, y + 5);
+    } else {
+      doc.setFontSize(8);
+      doc.text("Eu declaro que conferi as marcações acima e que correspondem ao efetivamente trabalhado.", 14, finalY + 12);
+      doc.setFontSize(10);
+      const y = finalY + 28;
+      doc.text("_______________________________", 14, y);
+      doc.text("Assinatura do funcionário", 14, y + 5);
+    }
+    doc.save(modelo === "conferencia" ? `ficha-conferencia-${mes}.pdf` : `espelho-${modelo}-${mes}.pdf`);
   };
 
   return (
@@ -502,10 +630,37 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
           <Label>Mês</Label>
           <Input type="month" value={mes} onChange={(e) => setMes(e.target.value)} />
         </div>
-        <Button variant="outline" onClick={exportarPdf} disabled={resumos.length === 0}>
+        <Button variant="outline" onClick={() => setModelosAberto(true)} disabled={resumos.length === 0}>
           <Download className="size-4" /> Espelho em PDF
         </Button>
       </div>
+
+      <Dialog open={modelosAberto} onOpenChange={setModelosAberto}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modelos do PDF</DialogTitle>
+            <DialogDescription>Escolha o modelo do espelho que será gerado para {mes}.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {MODELOS_PDF.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => {
+                  setModelosAberto(false);
+                  void exportarPdf(m.id);
+                }}
+                className="flex flex-col items-start gap-2 rounded-lg border border-border bg-background p-4 text-left transition hover:border-primary/40 hover:shadow-md"
+              >
+                <FileText className="size-5 text-primary" />
+                <span className="text-sm font-semibold">{m.nome}</span>
+                <span className="rounded border border-border bg-muted/50 px-2 py-1 font-mono text-[10px] leading-snug text-muted-foreground">{m.colunas}</span>
+                <span className="text-xs text-muted-foreground">{m.descricao}</span>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi titulo="Horas trabalhadas" valor={minutosParaTexto(totais.trabalhado)} icone={Clock} />
@@ -514,27 +669,190 @@ function Espelho({ dados, employeeId, gestor }: { dados: DadosPonto; employeeId:
         <Kpi titulo="Saldo do período" valor={minutosParaTexto(totais.saldo)} icone={ShieldCheck} />
       </div>
 
-      <Tabela cabecalho={["Data", "Marcações", "Trabalhado", "Previsto", "Atraso", "Extra", "Saldo", "Situação"]}>
-        {resumos.length === 0 && <Vazio colunas={8} texto="Nenhum dia apurado neste mês." />}
+      {gestor && alvo && (
+        <div className="flex flex-wrap items-end gap-2">
+          <div>
+            <Label>Editar outro dia</Label>
+            <Input type="date" value={diaNovo} onChange={(e) => setDiaNovo(e.target.value)} />
+          </div>
+          <Button variant="outline" disabled={!diaNovo} onClick={() => abrirEdicao(diaNovo)}>
+            <Pencil className="size-4" /> Editar marcações
+          </Button>
+        </div>
+      )}
+
+      <Tabela cabecalho={["Data", "Marcações", "Trabalhado", "Previsto", "Atraso", "Extra", "Saldo", "Situação", ...(gestor ? [""] : [])]}>
+        {resumos.length === 0 && <Vazio colunas={gestor ? 9 : 8} texto="Nenhum dia apurado neste mês." />}
         {resumos.map((r) => (
           <tr key={r.id}>
             <td className="px-3 py-2">{dataBr(r.data)}</td>
             <td className="px-3 py-2 font-mono text-xs">
-              {marcacoes
-                .filter((m) => m.data_ref === r.data && m.status !== "corrigido")
-                .sort((a, b) => a.registrado_em.localeCompare(b.registrado_em))
-                .map((m) => horaLocal(m.registrado_em))
-                .join(" · ")}
+              {linhasDoDia(r.data).map((l, i) => (
+                <span key={i} className="mr-1 inline-flex items-center gap-1 rounded border border-border bg-muted/40 px-1.5 py-0.5">
+                  {l.horario}
+                  {gestor && (
+                    <button
+                      type="button"
+                      aria-label={`Remover marcação ${l.horario}`}
+                      title="Remover esta marcação"
+                      className="text-muted-foreground transition hover:text-destructive"
+                      onClick={() => setRemocao({ data: r.data, index: i, linha: l, motivo: "" })}
+                    >
+                      <X className="size-3" />
+                    </button>
+                  )}
+                </span>
+              ))}
             </td>
             <td className="px-3 py-2">{minutosParaTexto(r.trabalhado_min)}</td>
             <td className="px-3 py-2">{minutosParaTexto(r.previsto_min)}</td>
-            <td className="px-3 py-2">{minutosParaTexto(r.atraso_min)}</td>
-            <td className="px-3 py-2">{minutosParaTexto(r.extra_min)}</td>
+            <td className="px-3 py-2">
+              {minutosParaTexto(r.atraso_min)}
+              {r.atraso_min > 0 && motivosDoDia(r.data).length > 0 && (
+                <div className="mt-0.5 max-w-52 text-[11px] leading-snug text-muted-foreground">{motivosDoDia(r.data).join(" · ")}</div>
+              )}
+            </td>
+            <td className={`px-3 py-2 ${r.extra_min > 0 ? "font-semibold text-primary" : "text-muted-foreground"}`}>
+              {r.extra_min > 0 ? minutosParaTexto(r.extra_min) : "—"}
+              {r.extra_min > 0 && motivosDoDia(r.data).length > 0 && (
+                <div className="mt-0.5 max-w-52 text-[11px] font-normal leading-snug text-muted-foreground">{motivosDoDia(r.data).join(" · ")}</div>
+              )}
+            </td>
             <td className={r.saldo_min < 0 ? "px-3 py-2 text-destructive" : "px-3 py-2"}>{minutosParaTexto(r.saldo_min)}</td>
             <td className="px-3 py-2">{r.situacao}</td>
+            {gestor && (
+              <td className="px-3 py-2">
+                <Button size="sm" variant="ghost" onClick={() => abrirEdicao(r.data)}>
+                  <Pencil className="size-4" /> Editar
+                </Button>
+              </td>
+            )}
           </tr>
         ))}
       </Tabela>
+
+      <Dialog open={!!edicao} onOpenChange={(v) => !v && setEdicao(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar marcações — {edicao ? dataBr(edicao.data) : ""}</DialogTitle>
+            <DialogDescription>Ajuste, remova ou inclua marcações. Os registros originais ficam guardados no histórico.</DialogDescription>
+          </DialogHeader>
+          {edicao && (
+            <div className="space-y-3">
+              {edicao.linhas.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma marcação neste dia.</p>}
+              {edicao.linhas.map((l, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <select
+                    className="h-10 flex-1 rounded-md border border-border bg-background px-3 text-sm"
+                    value={l.tipo}
+                    onChange={(e) => atualizarLinha(i, { tipo: e.target.value as TipoMarcacao })}
+                  >
+                    {(Object.keys(ROTULO_TIPO) as TipoMarcacao[]).map((t) => (
+                      <option key={t} value={t}>{ROTULO_TIPO[t]}</option>
+                    ))}
+                  </select>
+                  <Input type="time" className="w-32" value={l.horario} onChange={(e) => atualizarLinha(i, { horario: e.target.value })} />
+                  <Button size="icon" variant="ghost" aria-label="Remover marcação" onClick={() => setEdicao({ ...edicao, linhas: edicao.linhas.filter((_, j) => j !== i) })}>
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              ))}
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => setEdicao({ ...edicao, linhas: [...edicao.linhas, { tipo: "entrada", horario: "08:00" }] })}>
+                  <Plus className="size-4" /> Adicionar marcação
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setEdicao({ ...edicao, linhas: [...edicao.linhas].sort((a, b) => a.horario.localeCompare(b.horario)) })}>
+                  Organizar por horário
+                </Button>
+                {edicao.linhas.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-destructive"
+                    onClick={() => {
+                      if (window.confirm("Remover todas as marcações deste dia? As originais ficam guardadas no histórico.")) {
+                        setEdicao({ ...edicao, linhas: [] });
+                      }
+                    }}
+                  >
+                    <Trash2 className="size-4" /> Remover todas
+                  </Button>
+                )}
+              </div>
+              {(() => {
+                const ordenadas = [...edicao.linhas].filter((l) => /^\d{2}:\d{2}$/.test(l.horario)).sort((a, b) => a.horario.localeCompare(b.horario));
+                const paraMin = (h: string) => Number(h.slice(0, 2)) * 60 + Number(h.slice(3, 5));
+                let trab = 0;
+                let inicio: number | null = null;
+                for (const l of ordenadas) {
+                  const t = paraMin(l.horario);
+                  if (l.tipo === "entrada" || l.tipo === "intervalo_fim") inicio = t;
+                  else if (inicio !== null) {
+                    trab += Math.max(0, t - inicio);
+                    inicio = null;
+                  }
+                }
+                const previsto = resumos.find((r) => r.data === edicao.data)?.previsto_min ?? 0;
+                const extra = previsto > 0 ? Math.max(0, trab - previsto) : 0;
+                const atraso = previsto > 0 ? Math.max(0, previsto - trab) : 0;
+                const saldo = previsto > 0 ? trab - previsto : 0;
+                const itens: [string, string, string?][] = [
+                  ["Trabalhado", minutosParaTexto(trab)],
+                  ["Previsto", minutosParaTexto(previsto)],
+                  ["Atraso", minutosParaTexto(atraso)],
+                  ["Extra", extra > 0 ? minutosParaTexto(extra) : "—", extra > 0 ? "text-primary font-semibold" : ""],
+                  ["Saldo", minutosParaTexto(saldo), saldo < 0 ? "text-destructive" : ""],
+                ];
+                return (
+                  <div className="grid grid-cols-5 gap-2 rounded-md border border-border bg-muted/40 p-2 text-center">
+                    {itens.map(([rot, val, cls]) => (
+                      <div key={rot}>
+                        <div className="text-[10px] uppercase text-muted-foreground">{rot}</div>
+                        <div className={`text-sm ${cls ?? ""}`}>{val}</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+              <div>
+                <Label>Motivo da correção</Label>
+                <Textarea value={edicao.motivo} onChange={(e) => setEdicao({ ...edicao, motivo: e.target.value })} placeholder="Ex.: funcionário esqueceu de marcar a saída do intervalo" />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setEdicao(null)}>Cancelar</Button>
+                <Button disabled={salvarEdicao.isPending || !edicao.motivo.trim()} onClick={() => salvarEdicao.mutate()}>
+                  {salvarEdicao.isPending ? "Salvando..." : "Salvar folha"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!remocao} onOpenChange={(v) => !v && setRemocao(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remover marcação — {remocao ? `${dataBr(remocao.data)} · ${remocao.linha.horario}` : ""}</DialogTitle>
+            <DialogDescription>
+              {remocao ? `${ROTULO_TIPO[remocao.linha.tipo]} será retirada da folha. O registro original fica guardado no histórico e na auditoria.` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          {remocao && (
+            <div className="space-y-3">
+              <div>
+                <Label>Motivo da remoção</Label>
+                <Textarea value={remocao.motivo} onChange={(e) => setRemocao({ ...remocao, motivo: e.target.value })} placeholder="Ex.: marcação registrada no horário errado" />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setRemocao(null)}>Cancelar</Button>
+                <Button variant="destructive" disabled={removerUma.isPending || !remocao.motivo.trim()} onClick={() => removerUma.mutate()}>
+                  {removerUma.isPending ? "Removendo..." : "Remover marcação"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -618,9 +936,17 @@ function Ajustes({ dados, employeeId, aoSalvar }: { dados: DadosPonto; employeeI
 
 function Painel({ dados }: { dados: DadosPonto }) {
   const [empresa, setEmpresa] = useState("");
+  const [posto, setPosto] = useState("");
+  const [postoAberto, setPostoAberto] = useState<string | null>(null);
+  const [folhaAberta, setFolhaAberta] = useState<string | null>(null);
   const hoje = hojeLocal();
 
-  const funcionarios = dados.funcionarios.filter((f) => f.ativo && (!empresa || f.company_id === empresa));
+  const funcionarios = dados.funcionarios.filter(
+    (f) =>
+      f.ativo &&
+      (!empresa || f.company_id === empresa) &&
+      (!posto || (posto === "__sem" ? !f.unit_id : f.unit_id === posto)),
+  );
   const ids = new Set(funcionarios.map((f) => f.id));
   const doDia = dados.marcacoes.filter((m) => m.data_ref === hoje && ids.has(m.employee_id));
   const resumos = dados.resumos.filter((r) => r.data === hoje && ids.has(r.employee_id));
@@ -638,19 +964,106 @@ function Painel({ dados }: { dados: DadosPonto }) {
   const extras = resumos.reduce((s, r) => s + r.extra_min, 0);
   const saldoBanco = dados.banco.filter((b) => ids.has(b.employee_id)).reduce((s, b) => s + b.minutos, 0);
 
+  const unidadesVisiveis = dados.unidades.filter((u) => !empresa || (u as { company_id?: string | null }).company_id === empresa || funcionarios.some((f) => f.unit_id === u.id));
+  const grupos = [
+    ...unidadesVisiveis.map((u) => ({ id: u.id, nome: u.nome, pessoas: funcionarios.filter((f) => f.unit_id === u.id) })),
+    { id: "__sem", nome: "Sem posto definido", pessoas: funcionarios.filter((f) => !f.unit_id) },
+  ].filter((g) => (posto ? g.id === posto : g.pessoas.length > 0 || g.id !== "__sem"));
+
+  const grupoAberto = postoAberto ? grupos.find((g) => g.id === postoAberto) ?? null : null;
+
+  if (grupoAberto) {
+    const funcionarioFolha = folhaAberta ? dados.funcionarios.find((f) => f.id === folhaAberta) ?? null : null;
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => (folhaAberta ? setFolhaAberta(null) : setPostoAberto(null))}
+          >
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            {folhaAberta ? `Voltar para ${grupoAberto.nome}` : "Voltar ao painel"}
+          </Button>
+          <h3 className="flex items-center gap-2 text-base font-semibold">
+            <MapPin className="h-4 w-4 text-primary" />
+            {grupoAberto.nome}
+            {funcionarioFolha ? <span className="text-muted-foreground">/ {funcionarioFolha.nome}</span> : null}
+          </h3>
+        </div>
+
+        {funcionarioFolha ? (
+          <Espelho key={funcionarioFolha.id} dados={dados} employeeId={funcionarioFolha.id} gestor />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">
+                Funcionários lotados ({grupoAberto.pessoas.filter((p) => presentes.has(p.id)).length}/{grupoAberto.pessoas.length} presentes hoje)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {grupoAberto.pessoas.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Ninguém lotado neste posto.</p>
+              ) : (
+                <ul className="divide-y divide-border/60 text-sm">
+                  {grupoAberto.pessoas
+                    .slice()
+                    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+                    .map((p) => (
+                      <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span
+                            className={`h-2 w-2 shrink-0 rounded-full ${presentes.has(p.id) ? "bg-primary" : "bg-muted-foreground/40"}`}
+                            title={presentes.has(p.id) ? "Presente hoje" : "Sem entrada hoje"}
+                          />
+                          <span className="truncate">
+                            {p.nome}
+                            {p.cargo ? <span className="text-muted-foreground"> · {p.cargo}</span> : null}
+                          </span>
+                        </span>
+                        <Button variant="outline" size="sm" onClick={() => setFolhaAberta(p.id)}>
+                          <FileText className="mr-1 h-4 w-4" />
+                          Folha de ponto
+                        </Button>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="max-w-xs">
-        <Label>Empresa</Label>
-        <select className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm" value={empresa} onChange={(e) => setEmpresa(e.target.value)}>
-          <option value="">Todas</option>
-          {dados.empresas.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.nome}
-            </option>
-          ))}
-        </select>
+      <div className="grid max-w-2xl gap-3 sm:grid-cols-2">
+        <div>
+          <Label>Empresa</Label>
+          <select className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm" value={empresa} onChange={(e) => setEmpresa(e.target.value)}>
+            <option value="">Todas</option>
+            {dados.empresas.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <Label>Posto</Label>
+          <select className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm" value={posto} onChange={(e) => setPosto(e.target.value)}>
+            <option value="">Todos</option>
+            {dados.unidades.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.nome}
+              </option>
+            ))}
+            <option value="__sem">Sem posto definido</option>
+          </select>
+        </div>
       </div>
+
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi titulo="Funcionários ativos" valor={String(funcionarios.length)} icone={ShieldCheck} />
@@ -663,7 +1076,63 @@ function Painel({ dados }: { dados: DadosPonto }) {
         <Kpi titulo="Saldo do banco de horas" valor={minutosParaTexto(saldoBanco)} icone={ShieldCheck} />
       </div>
 
+      <div>
+        <h3 className="mb-3 text-base font-semibold">Lotação por posto</h3>
+        {grupos.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhum posto cadastrado.</p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {grupos.map((g) => {
+               const presentesPosto = g.pessoas.filter((p) => presentes.has(p.id)).length;
+               return (
+                 <Card
+                   key={g.id}
+                   className="cursor-pointer"
+                   onClick={() => {
+                     setPostoAberto(g.id);
+                     setFolhaAberta(null);
+                   }}
+                 >
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-start justify-between gap-2 text-sm">
+                      <span className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        {g.nome}
+                      </span>
+                      <span className="whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                        {presentesPosto}/{g.pessoas.length} presentes
+                      </span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {g.pessoas.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Ninguém lotado neste posto.</p>
+                    ) : (
+                      <ul className="max-h-56 space-y-1 overflow-y-auto text-sm">
+                        {g.pessoas
+                          .slice()
+                          .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+                          .map((p) => (
+                            <li key={p.id} className="flex items-center justify-between gap-2 border-b border-border/60 py-1 last:border-0">
+                              <span className="truncate">
+                                {p.nome}
+                                {p.cargo ? <span className="text-muted-foreground"> · {p.cargo}</span> : null}
+                              </span>
+                              <span className={`h-2 w-2 shrink-0 rounded-full ${presentes.has(p.id) ? "bg-primary" : "bg-muted-foreground/40"}`} title={presentes.has(p.id) ? "Presente hoje" : "Sem entrada hoje"} />
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       <Card>
+
         <CardHeader>
           <CardTitle>Movimento de hoje</CardTitle>
         </CardHeader>

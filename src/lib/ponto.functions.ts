@@ -280,8 +280,8 @@ async function calcularDiaInterno(sb: Ctx["supabase"], employeeId: string, data:
     .eq("data_ref", data)
     .order("registrado_em", { ascending: true });
 
-  const lista = ((entradas ?? []) as { tipo: TipoMarcacaoServidor; registrado_em: string }[]).filter(
-    (e) => e.tipo !== "saida_extraordinaria",
+  const lista = ((entradas ?? []) as { tipo: TipoMarcacaoServidor; registrado_em: string; status: string }[]).filter(
+    (e) => e.tipo !== "saida_extraordinaria" && e.status !== "corrigido",
   );
 
   const { data: vinculo } = await sb
@@ -355,20 +355,22 @@ async function calcularDiaInterno(sb: Ctx["supabase"], employeeId: string, data:
   const primeira = lista.find((e) => e.tipo === "entrada");
   const ultima = [...lista].reverse().find((e) => e.tipo === "saida");
   if (escala?.entrada && primeira) {
-    const esperada = new Date(`${data}T${escala.entrada}`);
+    const esperada = new Date(`${data}T${escala.entrada.slice(0, 8).padEnd(8, ":00")}-03:00`);
     const real = new Date(primeira.registrado_em);
     const diff = (real.getTime() - esperada.getTime()) / 60000;
     if (diff > tolerancia) atraso = Math.round(diff);
   }
   if (escala?.saida && ultima) {
-    const esperada = new Date(`${data}T${escala.saida}`);
+    const esperada = new Date(`${data}T${escala.saida.slice(0, 8).padEnd(8, ":00")}-03:00`);
     const real = new Date(ultima.registrado_em);
     const diff = (esperada.getTime() - real.getTime()) / 60000;
     if (diff > tolerancia) antecipada = Math.round(diff);
   }
 
   const trabalhadoMin = Math.max(0, Math.round(trabalhado));
-  const extra = Math.max(0, trabalhadoMin - previsto);
+  // Só há hora extra quando existe escala para comparar: sem escala atribuída,
+  // a jornada inteira não pode ser tratada como extra.
+  const extra = escala ? Math.max(0, trabalhadoMin - previsto) : 0;
   const saldo = trabalhadoMin - previsto;
   const situacao = incompleto ? "incompleto" : extra > 0 ? "extra" : saldo < 0 ? "debito" : "ok";
 
@@ -586,6 +588,103 @@ export const decidirAjuste = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+/** Responsável reorganiza as marcações de um dia. Originais são preservados como "corrigido". */
+export const editarMarcacoesDia = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      employeeId: string;
+      dataRef: string;
+      marcacoes: { tipo: TipoMarcacaoServidor; horario: string }[];
+      motivo: string;
+    }) => {
+      if (!input.employeeId || !input.dataRef) throw new Error("Informe funcionário e data.");
+      if (!input.motivo?.trim()) throw new Error("Descreva o motivo da correção.");
+      for (const m of input.marcacoes) {
+        if (!TIPOS.includes(m.tipo)) throw new Error("Tipo de marcação inválido.");
+        if (!/^\d{2}:\d{2}$/.test(m.horario)) throw new Error("Horário inválido.");
+      }
+      return input;
+    },
+  )
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase as unknown as Ctx["supabase"];
+    const userId = context.userId as string;
+    const [{ data: gestor }, { data: admin }] = await Promise.all([
+      sb.rpc("pnt_eh_gestor", { _user_id: userId }),
+      sb.rpc("has_role", { _user_id: userId, _role: "admin" }),
+    ]);
+    if (!gestor && !admin) throw new Error("Apenas o responsável pode editar a folha.");
+
+    const ordenadas = [...data.marcacoes].sort((a, b) => a.horario.localeCompare(b.horario));
+    // Correção feita pelo responsável: permite deixar o dia incompleto
+    // (ex.: remover a entrada). O cálculo marca o dia como "incompleto".
+
+    const { data: func } = await sb
+      .from("pnt_employees")
+      .select("organization_id")
+      .eq("id", data.employeeId)
+      .maybeSingle();
+    if (!func) throw new Error("Funcionário não encontrado.");
+
+    const { data: atuais } = await sb
+      .from("pnt_time_entries")
+      .select("id, tipo, registrado_em, status")
+      .eq("employee_id", data.employeeId)
+      .eq("data_ref", data.dataRef)
+      .neq("status", "corrigido");
+    const anteriores = (atuais ?? []) as { id: string; tipo: string; registrado_em: string }[];
+
+    if (anteriores.length) {
+      const { error } = await sb
+        .from("pnt_time_entries")
+        .update({ status: "corrigido" })
+        .in("id", anteriores.map((a) => a.id));
+      if (error) throw new Error(error.message);
+    }
+
+    const lote = Date.now().toString(36);
+    if (ordenadas.length) {
+      const { error } = await sb.from("pnt_time_entries").insert(
+        ordenadas.map((m, i) => ({
+          organization_id: func.organization_id,
+          employee_id: data.employeeId,
+          tipo: m.tipo,
+          registrado_em: new Date(`${data.dataRef}T${m.horario}:00-03:00`).toISOString(),
+          data_ref: data.dataRef,
+          origem: "ajuste",
+          status: "valido",
+          comprovante: `EDT-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+          idempotency_key: `edicao-${data.employeeId}-${data.dataRef}-${lote}-${i}`,
+          observacao: `Editado pelo responsável: ${data.motivo.trim()}`,
+          criado_por: userId,
+        })),
+      );
+      if (error) throw new Error(error.message);
+    }
+
+    const valorNovo = ordenadas.map((m) => ({ tipo: m.tipo, horario: m.horario }));
+    await sb.from("pnt_time_adjustments").insert({
+      organization_id: func.organization_id,
+      request_id: null,
+      entry_id: null,
+      employee_id: data.employeeId,
+      valor_anterior: anteriores,
+      valor_novo: valorNovo,
+      aplicado_por: userId,
+    });
+    await sb.from("pnt_audit_logs").insert({
+      organization_id: func.organization_id,
+      user_id: userId,
+      acao: "edicao_folha",
+      recurso: "pnt_time_entries",
+      detalhes: { employeeId: data.employeeId, dataRef: data.dataRef, motivo: data.motivo.trim(), anteriores, novas: valorNovo },
+    });
+
+    await calcularDiaInterno(sb, data.employeeId, data.dataRef);
+    return { ok: true as const };
+  });
+
 /** Fecha (ou reabre) o período de apuração. */
 export const fecharPeriodo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -633,8 +732,11 @@ export const meuPapelPonto = createServerFn({ method: "GET" })
     const userId = context.userId as string;
     const { data } = await sb.rpc("pnt_papel_do_usuario", { _user_id: userId });
     const funcionario = await funcionarioDoUsuario(sb, userId);
+    // Superadmin sempre enxerga todos os registros de ponto.
+    const email = String((context as { claims?: { email?: string } }).claims?.email ?? "").toLowerCase();
+    const superadmin = email === "lucasdallan@gmail.com";
     return {
-      papel: (data as string | null) ?? "funcionario",
+      papel: superadmin ? "admin" : ((data as string | null) ?? "funcionario"),
       employeeId: funcionario?.id ?? null,
       nome: funcionario?.nome ?? null,
     };
