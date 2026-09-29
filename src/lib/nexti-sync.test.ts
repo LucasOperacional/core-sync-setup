@@ -30,9 +30,9 @@ describe("gravarLinhas", () => {
   });
 
   it("preserva os válidos quando um item do lote é recusado", async () => {
-    const { admin, gravadas } = fakeAdmin((l) => l.nexti_id === 2);
+    const { admin, gravadas } = fakeAdmin((l) => l["nexti_id"] === 2);
     await expect(gravarLinhas(admin as never, "t", linhas([1, 2, 3]))).resolves.toBe(2);
-    expect(gravadas.map((l) => l.nexti_id)).toEqual([1, 3]);
+    expect(gravadas.map((l) => l["nexti_id"])).toEqual([1, 3]);
   });
 
   it("falha somente quando nenhum item pode ser salvo", async () => {
