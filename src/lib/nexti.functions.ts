@@ -84,16 +84,31 @@ type DbConfigRow = {
  * outro papel (diretor, supervisor, coordenador, usuário) ficava sem
  * credenciais e a integração falhava. O acesso continua só no servidor.
  */
-async function configClient(): Promise<any> {
+type RespostaDb<T = unknown> = { data: T | null; error: { message: string } | null };
+
+/** Só o que este arquivo usa da tabela `nexti_config`: um select filtrado e um upsert. */
+type ConfigClient = {
+  from: (tabela: string) => {
+    select: (colunas: string) => {
+      eq: (
+        coluna: string,
+        valor: boolean,
+      ) => { maybeSingle: () => PromiseLike<RespostaDb<DbConfigRow>> };
+    };
+    upsert: (payload: Record<string, unknown>) => PromiseLike<RespostaDb>;
+  };
+};
+
+async function configClient(): Promise<ConfigClient> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin as any;
+  return supabaseAdmin as unknown as ConfigClient;
 }
 
 export async function loadConfig(_supabase?: unknown): Promise<NextiConfig> {
   let row: DbConfigRow | null = null;
   try {
     const supabase = await configClient();
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from("nexti_config")
       .select(
         "enabled, base_url, client_id, client_secret, username, token, token_endpoint, test_endpoint",
@@ -348,7 +363,69 @@ function parseBody(text: string): unknown {
   }
 }
 
-async function authenticate(config: NextiConfig): Promise<string> {
+/**
+ * Cache do access_token por credencial. Sem ele, cada página de cada módulo
+ * refazia o fluxo OAuth inteiro — uma sincronização completa chegava a
+ * centenas de autenticações, deixando o processo lento e esbarrando no
+ * limite de requisições (429) da NEXTI.
+ *
+ * A expiração real vem do `expires_in` da resposta, com uma margem de
+ * segurança para não usar um token prestes a vencer.
+ */
+const MARGEM_EXPIRACAO_MS = 60_000;
+const TTL_TOKEN_PADRAO_MS = 5 * 60 * 1000;
+
+type TokenCacheado = { token: string; expiraEm: number };
+const tokenCache = new Map<string, TokenCacheado>();
+/** Autenticações em voo, para que chamadas simultâneas não dupliquem o login. */
+const autenticacoesEmVoo = new Map<string, Promise<string>>();
+
+function chaveCacheToken(config: NextiConfig): string {
+  return [config.baseUrl, config.clientId, config.username, config.tokenEndpoint].join("|");
+}
+
+export function invalidarTokenNexti(config?: NextiConfig) {
+  if (!config) {
+    tokenCache.clear();
+    return;
+  }
+  tokenCache.delete(chaveCacheToken(config));
+}
+
+/** Obtém um token válido, reaproveitando o cache e evitando logins paralelos. */
+async function obterToken(config: NextiConfig, forcar = false): Promise<string> {
+  const chave = chaveCacheToken(config);
+
+  if (forcar) {
+    tokenCache.delete(chave);
+  } else {
+    const cacheado = tokenCache.get(chave);
+    if (cacheado && cacheado.expiraEm > Date.now()) return cacheado.token;
+  }
+
+  const emVoo = autenticacoesEmVoo.get(chave);
+  if (emVoo && !forcar) return emVoo;
+
+  const promessa = authenticate(config)
+    .then(({ token, expiresInMs }) => {
+      tokenCache.set(chave, {
+        token,
+        expiraEm: Date.now() + Math.max(expiresInMs - MARGEM_EXPIRACAO_MS, 30_000),
+      });
+      return token;
+    })
+    .finally(() => {
+      autenticacoesEmVoo.delete(chave);
+    });
+
+  autenticacoesEmVoo.set(chave, promessa);
+  return promessa;
+}
+
+async function authenticate(config: NextiConfig): Promise<{
+  token: string;
+  expiresInMs: number;
+}> {
   const baseUrl = config.baseUrl;
   const clientId = requireConfigValue(config, "clientId", "NEXTI_CLIENT_ID");
   const clientSecret = requireConfigValue(config, "clientSecret", "NEXTI_CLIENT_SECRET");
@@ -464,7 +541,20 @@ async function authenticate(config: NextiConfig): Promise<string> {
     throw fail("A NEXTI respondeu à autenticação sem access_token/token.", "authentication", 502);
   }
 
-  return accessToken;
+  // `expires_in` vem em segundos no padrão OAuth2; quando ausente, usa um TTL
+  // curto para não segurar um token que o servidor já pode ter descartado.
+  const expiresInRaw = data["expires_in"];
+  const expiresInSeg =
+    typeof expiresInRaw === "number"
+      ? expiresInRaw
+      : typeof expiresInRaw === "string" && Number.isFinite(Number(expiresInRaw))
+        ? Number(expiresInRaw)
+        : 0;
+
+  return {
+    token: accessToken,
+    expiresInMs: expiresInSeg > 0 ? expiresInSeg * 1000 : TTL_TOKEN_PADRAO_MS,
+  };
 }
 
 export async function requestNexti(options: {
@@ -485,7 +575,7 @@ export async function requestNexti(options: {
   const baseUrl = config.baseUrl;
   const url = buildUrl(baseUrl, endpoint, query);
   const start = Date.now();
-  let token = await authenticate(config);
+  let token = await obterToken(config);
   let refreshed = false;
   let lastStatus = 0;
   let lastBody = "";
@@ -506,9 +596,11 @@ export async function requestNexti(options: {
       lastStatus = response.status;
       lastBody = text;
 
+      // 401 pode significar token expirado: descarta o cacheado e refaz o login
+      // uma única vez antes de considerar a credencial inválida.
       if (response.status === 401 && !refreshed) {
         refreshed = true;
-        token = await authenticate(config);
+        token = await obterToken(config, true);
         continue;
       }
 
@@ -576,7 +668,7 @@ export const callNexti = createServerFn({ method: "POST" })
     const checkedAt = new Date().toISOString();
 
     try {
-      const config = await loadConfig((context as any).supabase);
+      const config = await loadConfig((context as { supabase?: unknown }).supabase);
       const baseUrl = normalizeBaseUrl(requireConfigValue(config, "baseUrl", "NEXTI_BASE_URL"));
       config.baseUrl = baseUrl;
 
@@ -644,7 +736,7 @@ export const callNexti = createServerFn({ method: "POST" })
       const err = error as NextiError;
       let diag: ReturnType<typeof diagnostics> | undefined;
       try {
-        diag = diagnostics(await loadConfig((context as any).supabase));
+        diag = diagnostics(await loadConfig((context as { supabase?: unknown }).supabase));
       } catch {
         diag = undefined;
       }

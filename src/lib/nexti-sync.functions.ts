@@ -80,6 +80,34 @@ const MAX_PAGES = 25;
 
 type Rec = Record<string, unknown>;
 
+/**
+ * Superfície mínima do cliente admin do Supabase usada aqui. Evita `any` solto
+ * sem arrastar os tipos gerados do banco para dentro deste módulo.
+ */
+type RespostaDb<T = unknown> = { data: T | null; error: { message: string } | null };
+type SupabaseAdmin = {
+  from: (tabela: string) => {
+    upsert: (linhas: Rec[], opcoes?: { onConflict?: string }) => PromiseLike<RespostaDb>;
+    insert: (payload: Rec | Rec[]) => PromiseLike<RespostaDb> & {
+      select: (colunas: string) => { maybeSingle: () => PromiseLike<RespostaDb<Rec>> };
+    };
+    update: (payload: Rec) => {
+      eq: (coluna: string, valor: string) => PromiseLike<RespostaDb>;
+    };
+    select: (colunas: string) => {
+      not: (
+        coluna: string,
+        operador: string,
+        valor: null,
+      ) => { limit: (n: number) => PromiseLike<RespostaDb<Rec[]>> };
+      in: (
+        coluna: string,
+        valores: number[],
+      ) => { limit: (n: number) => PromiseLike<RespostaDb<Rec[]>> };
+    };
+  };
+};
+
 function isRec(value: unknown): value is Rec {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -327,10 +355,16 @@ function janelas(modulo: NextiModulo): Array<{ start: string; finish: string }> 
   return lista;
 }
 
-let situacoesCache: Map<number, string> | null = null;
+/**
+ * Nomes das situações de ausência mudam raramente, mas o cache era eterno:
+ * uma alteração na NEXTI só aparecia depois de reiniciar o servidor. Um TTL
+ * de 1 hora mantém o ganho de desempenho sem congelar os dados.
+ */
+const TTL_SITUACOES_MS = 60 * 60 * 1000;
+let situacoesCache: { mapa: Map<number, string>; expiraEm: number } | null = null;
 
 async function carregarSituacoes(config: NextiConfig): Promise<Map<number, string>> {
-  if (situacoesCache) return situacoesCache;
+  if (situacoesCache && situacoesCache.expiraEm > Date.now()) return situacoesCache.mapa;
   const mapa = new Map<number, string>();
   try {
     const resposta = await requestNexti({
@@ -347,7 +381,11 @@ async function carregarSituacoes(config: NextiConfig): Promise<Map<number, strin
   } catch {
     /* segue sem nomes de situação */
   }
-  situacoesCache = mapa;
+  // Só memoriza quando veio algo; uma falha de rede não deve mascarar os nomes
+  // pela hora seguinte.
+  if (mapa.size > 0) {
+    situacoesCache = { mapa, expiraEm: Date.now() + TTL_SITUACOES_MS };
+  }
   return mapa;
 }
 
@@ -360,7 +398,7 @@ async function carregarSituacoes(config: NextiConfig): Promise<Map<number, strin
  */
 type EscopoGerentes = { postos: Set<number>; pessoas: Set<number>; conhecido: boolean };
 
-async function carregarEscopoGerentes(supabaseAdmin: any): Promise<EscopoGerentes> {
+async function carregarEscopoGerentes(supabaseAdmin: SupabaseAdmin): Promise<EscopoGerentes> {
   const postos = new Set<number>();
   const pessoas = new Set<number>();
 
@@ -414,10 +452,52 @@ function dentroDoEscopo(modulo: NextiModulo, linha: Rec, escopo: EscopoGerentes)
   }
 }
 
+/**
+ * Grava um lote tolerando registros ruins.
+ *
+ * Antes, um único item recusado pelo banco (valor fora do domínio, chave
+ * estrangeira inexistente) derrubava o lote inteiro de 200 e, em seguida, o
+ * módulo todo era marcado como falho. Agora o lote é reprocessado item a item
+ * apenas quando falha, preservando os registros válidos.
+ */
+export async function gravarLinhas(
+  supabaseAdmin: SupabaseAdmin,
+  tabela: string,
+  linhas: Rec[],
+): Promise<number> {
+  const { error } = await supabaseAdmin.from(tabela).upsert(linhas, { onConflict: "nexti_id" });
+  if (!error) return linhas.length;
+
+  // Lote recusado: isola o problema salvando um a um.
+  if (linhas.length === 1) {
+    throw new Error(error.message);
+  }
+
+  let gravados = 0;
+  let ultimoErro: string | null = null;
+  for (const linha of linhas) {
+    const { error: erroItem } = await supabaseAdmin
+      .from(tabela)
+      .upsert([linha], { onConflict: "nexti_id" });
+    if (erroItem) {
+      ultimoErro = erroItem.message;
+      continue;
+    }
+    gravados += 1;
+  }
+
+  // Só falha de fato se nenhum registro do lote pôde ser salvo.
+  if (gravados === 0) {
+    throw new Error(ultimoErro ?? error.message);
+  }
+
+  return gravados;
+}
+
 async function sincronizarModulo(
   modulo: NextiModulo,
   config: NextiConfig,
-  supabaseAdmin: any,
+  supabaseAdmin: SupabaseAdmin,
   escopo: EscopoGerentes,
 ): Promise<NextiModuloResultado> {
   const candidatos = ENDPOINTS[modulo];
@@ -439,8 +519,9 @@ async function sincronizarModulo(
             query: { page, size: PAGE_SIZE },
           });
           const lista = extrairLista(resposta.data);
-          paginas += 1;
           if (lista.length === 0) break;
+          // Conta só páginas com conteúdo: a vazia apenas encerra a paginação.
+          paginas += 1;
 
           const agora = new Date().toISOString();
           const linhas = lista
@@ -456,11 +537,7 @@ async function sincronizarModulo(
             .filter((linha) => dentroDoEscopo(modulo, linha, escopo));
 
           if (linhas.length > 0) {
-            const { error } = await supabaseAdmin
-              .from(TABELAS[modulo])
-              .upsert(linhas, { onConflict: "nexti_id" });
-            if (error) throw new Error(error.message);
-            registros += linhas.length;
+            registros += await gravarLinhas(supabaseAdmin, TABELAS[modulo], linhas);
           }
 
           if (lista.length < PAGE_SIZE) break;
@@ -476,17 +553,44 @@ async function sincronizarModulo(
   return { modulo, ok: false, registros: 0, paginas: 0, erro: ultimoErro };
 }
 
+/**
+ * Trava de execução única.
+ *
+ * A página liga a sincronização automática a cada 2 minutos e vários usuários
+ * abrem a tela ao mesmo tempo. Sem trava, sincronizações idênticas rodavam em
+ * paralelo, multiplicando chamadas à NEXTI e disputando os mesmos upserts.
+ * Quem chega durante uma execução recebe o resultado dela em vez de iniciar outra.
+ */
+let sincronizacaoEmAndamento: Promise<NextiSyncResultado> | null = null;
+
 export const syncNexti = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { modulos?: NextiModulo[]; modo?: string } | undefined) => input ?? {})
   .handler(async ({ data, context }): Promise<NextiSyncResultado> => {
+    if (sincronizacaoEmAndamento) return sincronizacaoEmAndamento;
+
+    const execucao = executarSync(data, context).finally(() => {
+      sincronizacaoEmAndamento = null;
+    });
+    sincronizacaoEmAndamento = execucao;
+    return execucao;
+  });
+
+async function executarSync(
+  data: { modulos?: NextiModulo[]; modo?: string },
+  context: unknown,
+): Promise<NextiSyncResultado> {
+  {
     const iniciadoEm = new Date().toISOString();
     const modulos = (data.modulos && data.modulos.length > 0 ? data.modulos : NEXTI_MODULOS).filter(
       (m) => NEXTI_MODULOS.includes(m),
     );
     const modo = data.modo === "manual" ? "manual" : "automatico";
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Os tipos gerados do Supabase são profundos demais para casar
+    // estruturalmente com SupabaseAdmin (TS2589), por isso o cast aqui.
+    const { supabaseAdmin: cliente } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = cliente as unknown as SupabaseAdmin;
 
     let runId: string | undefined;
     try {
@@ -591,4 +695,5 @@ export const syncNexti = createServerFn({ method: "POST" })
         erro: mensagem,
       };
     }
-  });
+  }
+}
