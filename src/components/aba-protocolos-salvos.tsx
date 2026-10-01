@@ -227,6 +227,7 @@ export function AbaProtocolosSalvos() {
         matricula: "",
         admissao: "",
         conferido: false,
+        folhaManual: false,
       })),
     });
   }
@@ -283,6 +284,7 @@ export function AbaProtocolosSalvos() {
           cargo: f.cargo,
           matricula: f.matricula,
           admissao: f.admissao,
+          folhaManual: false,
           conferido: false,
         })),
       });

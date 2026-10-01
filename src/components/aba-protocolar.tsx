@@ -115,6 +115,8 @@ export function AbaProtocolar() {
 
   const [folhasPdf, setFolhasPdf] = useState<FolhaPonto[]>([]);
   const [lendoPdf, setLendoPdf] = useState(false);
+  /** Ids das folhas do PDF que o usuário optou por excluir antes de protocolar. */
+  const [excluidasPdf, setExcluidasPdf] = useState<Set<string>>(new Set());
 
   const [folhasManuais, setFolhasManuais] = useState<FolhaManual[]>([]);
   const [form, setForm] = useState<Omit<FolhaManual, "id">>({ ...CAMPO_VAZIO });
@@ -122,6 +124,7 @@ export function AbaProtocolar() {
   useEffect(() => {
     if (!file) {
       setFolhasPdf([]);
+      setExcluidasPdf(new Set());
       return;
     }
     let cancelado = false;
@@ -159,18 +162,38 @@ export function AbaProtocolar() {
     setFolhasManuais((prev) => prev.filter((f) => f.id !== id));
   }
 
+  function alternarExclusaoPdf(id: string) {
+    setExcluidasPdf((prev) => {
+      const prox = new Set(prev);
+      if (prox.has(id)) prox.delete(id);
+      else prox.add(id);
+      return prox;
+    });
+  }
+
+  function excluirFolhasManuaisDetectadas() {
+    setExcluidasPdf((prev) => {
+      const prox = new Set(prev);
+      for (const f of folhasPdf) if (f.folhaManual) prox.add(f.id);
+      return prox;
+    });
+    toast.success("Folhas com motivo FOLHA MANUAL foram excluídas do envio.");
+  }
+
   const todasFolhasPreview = useMemo<FolhaPreparada[]>(
     () => [
-      ...folhasPdf.map((f) => ({
+      ...folhasPdf
+        .filter((f) => !excluidasPdf.has(f.id))
+        .map((f) => ({
         colaborador: f.colaborador,
         empresa: f.empresa,
         cargo: f.cargo,
         matricula: f.matricula,
         posto: f.posto,
         admissao: f.admissao,
-        pagina: f.pagina,
-        arquivo: f.arquivo,
-      })),
+          pagina: f.pagina,
+          arquivo: f.arquivo,
+        })),
       ...folhasManuais.map((f) => ({
         colaborador: f.colaborador,
         empresa: f.empresa || "",
@@ -182,7 +205,7 @@ export function AbaProtocolar() {
         arquivo: null,
       })),
     ],
-    [folhasPdf, folhasManuais],
+    [folhasPdf, folhasManuais, excluidasPdf],
   );
 
   const previewDeduplicado = useMemo(
@@ -358,6 +381,7 @@ export function AbaProtocolar() {
       }
       setFile(null);
       setFolhasPdf([]);
+      setExcluidasPdf(new Set());
       setFolhasManuais([]);
       setForm({ ...CAMPO_VAZIO });
       if (inputRef.current) inputRef.current.value = "";
@@ -371,7 +395,9 @@ export function AbaProtocolar() {
 
   const qtdPdf = folhasPdf.length;
   const qtdManual = folhasManuais.length;
-  const totalGeral = qtdPdf + qtdManual;
+  const qtdFolhaManualDetectada = folhasPdf.filter((f) => f.folhaManual).length;
+  const qtdExcluidas = excluidasPdf.size;
+  const totalGeral = qtdPdf + qtdManual - qtdExcluidas;
   const totalUnicoPreview = previewDeduplicado.unicas.length;
   const duplicadasPreview = previewDeduplicado.duplicadas.length;
   const resumoFontes = [
@@ -419,13 +445,24 @@ export function AbaProtocolar() {
       {(lendoPdf || folhasPdf.length > 0) && (
         <Card className="border-border/50 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle className="flex flex-wrap items-center gap-2 text-base">
               <Eye className="h-5 w-5 text-primary" />
               Folhas encontradas no PDF
               {!lendoPdf && folhasPdf.length > 0 && (
                 <Badge variant="secondary" className="ml-auto text-xs">
                   {folhasPdf.length} folha{folhasPdf.length !== 1 ? "s" : ""}
                 </Badge>
+              )}
+              {!lendoPdf && qtdFolhaManualDetectada > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-xs"
+                  onClick={excluirFolhasManuaisDetectadas}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Excluir FOLHA MANUAL ({qtdFolhaManualDetectada})
+                </Button>
               )}
             </CardTitle>
           </CardHeader>
@@ -452,6 +489,8 @@ export function AbaProtocolar() {
                         "Matrícula",
                         "Posto",
                         "Admissão",
+                        "Motivo",
+                        "",
                       ].map((c) => (
                         <th key={c} className="px-3 py-2 font-semibold text-muted-foreground">
                           {c}
@@ -460,17 +499,59 @@ export function AbaProtocolar() {
                     </tr>
                   </thead>
                   <tbody>
-                    {folhasPdf.map((f, idx) => (
-                      <tr key={f.id} className="border-t border-border hover:bg-muted/30">
-                        <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
-                        <td className="px-3 py-2 font-medium text-foreground">{f.colaborador}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{f.empresa || "—"}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{f.cargo || "—"}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{f.matricula || "—"}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{f.posto || "—"}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{f.admissao || "—"}</td>
-                      </tr>
-                    ))}
+                    {folhasPdf.map((f, idx) => {
+                      const excluida = excluidasPdf.has(f.id);
+                      return (
+                        <tr
+                          key={f.id}
+                          className={`border-t border-border hover:bg-muted/30 ${excluida ? "opacity-50" : ""}`}
+                        >
+                          <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
+                          <td
+                            className={`px-3 py-2 font-medium text-foreground ${excluida ? "line-through" : ""}`}
+                          >
+                            {f.colaborador}
+                          </td>
+                          <td className="px-3 py-2 text-muted-foreground">{f.empresa || "—"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{f.cargo || "—"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{f.matricula || "—"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{f.posto || "—"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{f.admissao || "—"}</td>
+                          <td className="px-3 py-2">
+                            {f.folhaManual ? (
+                              <Badge
+                                variant="outline"
+                                className="border-amber-500/50 text-xs text-amber-600 dark:text-amber-400"
+                              >
+                                FOLHA MANUAL
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className={`h-7 w-7 ${
+                                excluida
+                                  ? "text-primary hover:bg-primary/10"
+                                  : "text-destructive hover:bg-destructive/10"
+                              }`}
+                              onClick={() => alternarExclusaoPdf(f.id)}
+                              aria-label={
+                                excluida
+                                  ? `Reincluir folha de ${f.colaborador}`
+                                  : `Excluir folha de ${f.colaborador} do envio`
+                              }
+                              title={excluida ? "Reincluir no envio" : "Excluir do envio"}
+                            >
+                              {excluida ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -612,6 +693,11 @@ export function AbaProtocolar() {
               {duplicadasPreview > 0 && (
                 <p className="text-amber-600 dark:text-amber-400">
                   {duplicadasPreview} duplicidade(s) no arquivo/formulário serão ignorada(s).
+                </p>
+              )}
+              {qtdExcluidas > 0 && (
+                <p className="text-amber-600 dark:text-amber-400">
+                  {qtdExcluidas} folha(s) excluída(s) manualmente não serão enviada(s).
                 </p>
               )}
             </div>
