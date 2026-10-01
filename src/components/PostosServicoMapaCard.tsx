@@ -5,7 +5,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Building2, Eye, Loader2, MapPin, Navigation, RefreshCw, Search } from "lucide-react";
+import { Building2, ExternalLink, Loader2, MapPin, Navigation, RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -213,13 +213,13 @@ export function PostosServicoMapaCard() {
                           className="gap-1"
                           onClick={() =>
                             window.open(
-                              `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.latitude},${p.longitude}`,
+                              `https://www.openstreetmap.org/?mlat=${p.latitude}&mlon=${p.longitude}#map=17/${p.latitude}/${p.longitude}`,
                               "_blank",
                               "noopener,noreferrer",
                             )
                           }
                         >
-                          <Eye className="size-4" /> Street View
+                          <ExternalLink className="size-4" /> Abrir mapa
                         </Button>
                       </div>
                     ) : (
