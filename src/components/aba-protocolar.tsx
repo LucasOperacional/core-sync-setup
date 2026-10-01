@@ -124,6 +124,7 @@ export function AbaProtocolar() {
   useEffect(() => {
     if (!file) {
       setFolhasPdf([]);
+      setExcluidasPdf(new Set());
       return;
     }
     let cancelado = false;
@@ -159,6 +160,24 @@ export function AbaProtocolar() {
 
   function removerFolhaManual(id: string) {
     setFolhasManuais((prev) => prev.filter((f) => f.id !== id));
+  }
+
+  function alternarExclusaoPdf(id: string) {
+    setExcluidasPdf((prev) => {
+      const prox = new Set(prev);
+      if (prox.has(id)) prox.delete(id);
+      else prox.add(id);
+      return prox;
+    });
+  }
+
+  function excluirFolhasManuaisDetectadas() {
+    setExcluidasPdf((prev) => {
+      const prox = new Set(prev);
+      for (const f of folhasPdf) if (f.folhaManual) prox.add(f.id);
+      return prox;
+    });
+    toast.success("Folhas com motivo FOLHA MANUAL foram excluídas do envio.");
   }
 
   const todasFolhasPreview = useMemo<FolhaPreparada[]>(
