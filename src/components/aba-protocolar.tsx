@@ -205,7 +205,7 @@ export function AbaProtocolar() {
         arquivo: null,
       })),
     ],
-    [folhasPdf, folhasManuais],
+    [folhasPdf, folhasManuais, excluidasPdf],
   );
 
   const previewDeduplicado = useMemo(
@@ -381,6 +381,7 @@ export function AbaProtocolar() {
       }
       setFile(null);
       setFolhasPdf([]);
+      setExcluidasPdf(new Set());
       setFolhasManuais([]);
       setForm({ ...CAMPO_VAZIO });
       if (inputRef.current) inputRef.current.value = "";
