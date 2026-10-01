@@ -69,11 +69,9 @@ export default function RastreioMapa({
     if (!mapa) return;
     camadaRef.current?.remove();
     camadaRef.current = L.tileLayer(
-      tema === "escuro"
-        ? "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-        : "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',
         maxZoom: 19,
       },
     ).addTo(mapa);
@@ -161,7 +159,7 @@ export default function RastreioMapa({
 
   return (
     <div className="relative">
-      <div ref={containerRef} className={`${altura} w-full overflow-hidden bg-muted`} />
+      <div ref={containerRef} className={`${altura} ${tema === "escuro" ? "osm-map-dark" : ""} w-full overflow-hidden bg-muted`} />
       <div className="absolute right-3 top-3 z-[500] flex overflow-hidden rounded-md border border-border bg-card shadow-md">
         {(["claro", "escuro"] as TemaMapa[]).map((opcao) => (
           <Button

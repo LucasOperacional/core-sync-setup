@@ -203,6 +203,10 @@
 }
 
 @layer components {
+  .osm-map-dark .leaflet-tile-pane {
+    filter: brightness(0.68) invert(1) hue-rotate(180deg);
+  }
+
   .app-shell,
   .app-shell aside,
   .app-workspace {
