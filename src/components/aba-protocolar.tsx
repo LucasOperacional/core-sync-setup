@@ -489,6 +489,8 @@ export function AbaProtocolar() {
                         "Matrícula",
                         "Posto",
                         "Admissão",
+                        "Motivo",
+                        "",
                       ].map((c) => (
                         <th key={c} className="px-3 py-2 font-semibold text-muted-foreground">
                           {c}
