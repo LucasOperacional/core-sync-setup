@@ -182,7 +182,9 @@ export function AbaProtocolar() {
 
   const todasFolhasPreview = useMemo<FolhaPreparada[]>(
     () => [
-      ...folhasPdf.map((f) => ({
+      ...folhasPdf
+        .filter((f) => !excluidasPdf.has(f.id))
+        .map((f) => ({
         colaborador: f.colaborador,
         empresa: f.empresa,
         cargo: f.cargo,
