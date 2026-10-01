@@ -395,7 +395,9 @@ export function AbaProtocolar() {
 
   const qtdPdf = folhasPdf.length;
   const qtdManual = folhasManuais.length;
-  const totalGeral = qtdPdf + qtdManual;
+  const qtdFolhaManualDetectada = folhasPdf.filter((f) => f.folhaManual).length;
+  const qtdExcluidas = excluidasPdf.size;
+  const totalGeral = qtdPdf + qtdManual - qtdExcluidas;
   const totalUnicoPreview = previewDeduplicado.unicas.length;
   const duplicadasPreview = previewDeduplicado.duplicadas.length;
   const resumoFontes = [
@@ -443,13 +445,24 @@ export function AbaProtocolar() {
       {(lendoPdf || folhasPdf.length > 0) && (
         <Card className="border-border/50 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle className="flex flex-wrap items-center gap-2 text-base">
               <Eye className="h-5 w-5 text-primary" />
               Folhas encontradas no PDF
               {!lendoPdf && folhasPdf.length > 0 && (
                 <Badge variant="secondary" className="ml-auto text-xs">
                   {folhasPdf.length} folha{folhasPdf.length !== 1 ? "s" : ""}
                 </Badge>
+              )}
+              {!lendoPdf && qtdFolhaManualDetectada > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-xs"
+                  onClick={excluirFolhasManuaisDetectadas}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Excluir FOLHA MANUAL ({qtdFolhaManualDetectada})
+                </Button>
               )}
             </CardTitle>
           </CardHeader>
