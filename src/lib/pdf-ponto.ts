@@ -15,6 +15,8 @@ export type FolhaPonto = {
   matricula: string;
   admissao: string;
   conferido: boolean;
+  /** true quando a coluna Motivo da folha indica "FOLHA MANUAL". */
+  folhaManual: boolean;
 };
 
 const LIMPA = (v: string) =>
@@ -148,6 +150,7 @@ export async function lerFolhasDoPdf(file: File, ordemInicial = 0): Promise<Folh
       matricula: campos.matricula,
       admissao: campos.admissao,
       conferido: false,
+      folhaManual: /folha\s*manual/i.test(texto),
     });
   }
 
