@@ -12,7 +12,7 @@ import {
   SprayCan,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCategoriasPostos } from "@/lib/postos-cards";
+import { useCategoriasPostos, legendaPosto } from "@/lib/postos-cards";
 
 const CATEGORIAS_FIXAS = [
   {
@@ -101,7 +101,9 @@ function CardContador({
   corValor,
   carregando,
   nomes,
+  legenda,
 }: {
+  legenda?: string;
   titulo: string;
   valor: number;
   icone: React.ReactNode;
@@ -156,6 +158,9 @@ function CardContador({
           {valor.toLocaleString("pt-BR")}
         </p>
       )}
+      {legenda && !carregando && (
+        <p className="mt-1.5 text-[11px] text-muted-foreground">{legenda}</p>
+      )}
       {temNomes && (
         <div className="mt-2">
           {nomesExistentes ? (
@@ -182,7 +187,7 @@ function CardContador({
             )
           ) : (
             <p className="text-[11px] text-muted-foreground">
-              Nenhuma folha protocolada neste posto
+              Todos deste posto já foram protocolados
             </p>
           )}
         </div>
@@ -192,7 +197,7 @@ function CardContador({
 }
 
 export function OutrasLotacoesCards() {
-  const { categorias, carregando: isLoading } = useCategoriasPostos();
+  const { categorias, totais, carregando: isLoading } = useCategoriasPostos();
 
   return (
     <div className="space-y-4 rounded-xl border border-border bg-card p-4">
@@ -209,6 +214,7 @@ export function OutrasLotacoesCards() {
             titulo={cat.titulo}
             valor={categorias[cat.chave]?.length ?? 0}
             nomes={categorias[cat.chave]}
+            legenda={legendaPosto(categorias[cat.chave]?.length ?? 0, totais[cat.chave]?.length ?? 0)}
             carregando={isLoading}
             icone={cat.icone}
             corBorda={cat.corBorda}
@@ -222,6 +228,7 @@ export function OutrasLotacoesCards() {
             titulo={res.titulo}
             valor={categorias[res.chave]?.length ?? 0}
             nomes={categorias[res.chave]}
+            legenda={legendaPosto(categorias[res.chave]?.length ?? 0, totais[res.chave]?.length ?? 0)}
             carregando={isLoading}
             icone={res.icone}
             corBorda={res.corBorda}

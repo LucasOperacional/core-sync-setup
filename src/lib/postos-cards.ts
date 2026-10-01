@@ -361,13 +361,32 @@ export function useReservasNextiCards() {
 export function useCategoriasPostos() {
   const pessoasQuery = usePessoasPostos();
   const nextiQuery = useReservasNextiCards();
+  // Nomes que já têm folha protocolada: atualiza junto com os cards (mesma
+  // família de chave, invalidada em tempo real ao salvar um protocolo).
+  const protocoladosQuery = useQuery({
+    queryKey: [...POSTOS_CARDS_QUERY_KEY, "protocolados"],
+    queryFn: async () => {
+      const linhas = await paginado<{ colaborador: string | null }>(async (i, f) => {
+        const { data, error } = await supabase
+          .from("protocolo_folhas")
+          .select("colaborador")
+          .range(i, f);
+        return { data: (data ?? []) as { colaborador: string | null }[], error };
+      });
+      return [...new Set(linhas.map((l) => normalizar(texto(l.colaborador))).filter(Boolean))];
+    },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
 
-  const categorias = useMemo(() => {
+  const { totais, pendentes } = useMemo(() => {
     const doBanco = agruparPorCategoria(pessoasQuery.data ?? []);
     const aoVivo = new Map((nextiQuery.data?.grupos ?? []).map((g) => [g.chave, g]));
-    const resultado: Record<string, PessoaCard[]> = {};
+    const protocolados = new Set(protocoladosQuery.data ?? []);
+    const tot: Record<string, PessoaCard[]> = {};
+    const pend: Record<string, PessoaCard[]> = {};
     for (const c of CATEGORIAS_POSTO) {
-      resultado[c.chave] = mesclarPessoasCard(
+      tot[c.chave] = mesclarPessoasCard(
         doBanco[c.chave],
         aoVivo.get(c.chave)?.pessoas.map((p) => ({
           nome: p.nome || "Sem nome",
@@ -376,16 +395,27 @@ export function useCategoriasPostos() {
           cargo: p.cargo,
         })),
       );
+      pend[c.chave] = tot[c.chave]!.filter((p) => !protocolados.has(normalizar(p.nome)));
     }
-    return resultado;
-  }, [pessoasQuery.data, nextiQuery.data]);
+    return { totais: tot, pendentes: pend };
+  }, [pessoasQuery.data, nextiQuery.data, protocoladosQuery.data]);
 
   return {
-    categorias,
+    /** Pessoas do posto que AINDA não tiveram a folha protocolada (contagem diminui ao protocolar). */
+    categorias: pendentes,
+    /** Todas as pessoas lotadas no posto. */
+    totais,
     // A consulta ao vivo da NEXTI é lenta (API externa) e NÃO deve segurar a tela:
     // os cards aparecem com os dados do banco e são completados quando ela chega.
     carregando: pessoasQuery.isLoading && !pessoasQuery.data,
-    atualizando: pessoasQuery.isFetching || nextiQuery.isFetching,
+    atualizando: pessoasQuery.isFetching || nextiQuery.isFetching || protocoladosQuery.isFetching,
     erroNexti: nextiQuery.isError || nextiQuery.data?.ok === false,
   };
+}
+
+/** Texto "X protocolada(s) de Y no posto" para os cards. */
+export function legendaPosto(pendentes: number, total: number): string {
+  if (total === 0) return "Ninguém lotado no posto";
+  if (pendentes === 0) return `Tudo protocolado · ${total} no posto`;
+  return `${total - pendentes} protocolada(s) de ${total} no posto`;
 }
