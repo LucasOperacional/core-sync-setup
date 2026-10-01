@@ -695,6 +695,11 @@ export function AbaProtocolar() {
                   {duplicadasPreview} duplicidade(s) no arquivo/formulário serão ignorada(s).
                 </p>
               )}
+              {qtdExcluidas > 0 && (
+                <p className="text-amber-600 dark:text-amber-400">
+                  {qtdExcluidas} folha(s) excluída(s) manualmente não serão enviada(s).
+                </p>
+              )}
             </div>
           )}
           <Button
