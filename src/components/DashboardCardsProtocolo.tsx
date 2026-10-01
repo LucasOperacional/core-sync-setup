@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -283,29 +283,6 @@ export function DashboardCardsProtocolo({ tempoReal }: { tempoReal?: Sincronizac
     ESTADOS_TEMPO_REAL[tempoReal?.status ?? "conectado"] ?? ESTADOS_TEMPO_REAL.conectado;
   const { data, isLoading, isFetching, isError, error, refetch } = useResumoDashboardProtocolo();
 
-  // Atualiza todos os cards de posto automaticamente a cada movimentação (entrada/saída de posto).
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    const atualizar = () => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-        void queryClient.invalidateQueries({ queryKey: ["dashboard-protocolo"] });
-        void queryClient.invalidateQueries({ queryKey: protocoloFolhasQueryKeys.dashboardResumo });
-        void queryClient.invalidateQueries({ queryKey: protocoloFolhasQueryKeys.postosCards });
-        void queryClient.invalidateQueries({ queryKey: protocoloFolhasQueryKeys.reservasNexti });
-      }, 800);
-    };
-    const tabelas = ["movimentacoes_posto", "funcionarios_ativos", "protocolo_folhas", "nexti_persons", "nexti_workplaces"];
-    let canal = supabase.channel(`cards-postos-rt:${Math.random().toString(36).slice(2)}`);
-    for (const table of tabelas) {
-      canal = canal.on("postgres_changes" as any, { event: "*", schema: "public", table }, atualizar);
-    }
-    canal.subscribe();
-    return () => {
-      if (timer) clearTimeout(timer);
-      void supabase.removeChannel(canal);
-    };
-  }, [queryClient]);
   const {
     categorias,
     carregando: carregandoPessoas,

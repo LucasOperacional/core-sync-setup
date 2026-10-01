@@ -110,7 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           const selecionada = caminho === `/categoria/${cat.slug}`;
           return (
             <Link
-              key={cat.categoria}
+              key={cat.slug}
               to="/categoria/$cat"
               params={{ cat: cat.slug }}
               title={compacta ? cat.sigla : undefined}

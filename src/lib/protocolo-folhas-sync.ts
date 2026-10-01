@@ -271,7 +271,7 @@ export function useProtocoloFolhasRealtimeSync(queryClient: QueryClient): Sincro
       "protocolo_ponto_itens",
       "nexti_persons",
       "nexti_workplaces",
-      "nexti_companies",
+      "movimentacoes_posto",
     ] as const;
 
     let realtimeChannel = supabase.channel("protocolo-folhas-tempo-real");
