@@ -163,21 +163,15 @@ export function AbaProtocolar() {
   }
 
   function alternarExclusaoPdf(id: string) {
-    setExcluidasPdf((prev) => {
-      const prox = new Set(prev);
-      if (prox.has(id)) prox.delete(id);
-      else prox.add(id);
-      return prox;
-    });
+    // Remove a linha de verdade da lista: ela não vai para os protocolos salvos.
+    setFolhasPdf((prev) => prev.filter((f) => f.id !== id));
+    toast.success("Linha excluída do envio.");
   }
 
   function excluirFolhasManuaisDetectadas() {
-    setExcluidasPdf((prev) => {
-      const prox = new Set(prev);
-      for (const f of folhasPdf) if (f.folhaManual) prox.add(f.id);
-      return prox;
-    });
-    toast.success("Folhas com motivo FOLHA MANUAL foram excluídas do envio.");
+    const qtd = folhasPdf.filter((f) => f.folhaManual).length;
+    setFolhasPdf((prev) => prev.filter((f) => !f.folhaManual));
+    toast.success(`${qtd} folha(s) com motivo FOLHA MANUAL foram excluídas do envio.`);
   }
 
   const todasFolhasPreview = useMemo<FolhaPreparada[]>(
