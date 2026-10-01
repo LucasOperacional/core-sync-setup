@@ -7,3 +7,5 @@
 - [x] Criar o departamento Comercial completo: dashboard, clientes, funil, propostas, agenda, contratos, relatórios, permissões e auditoria
 - [x] Tornar o layout mais autoral e corporativo, preservando todas as funções
 - [x] Substituir o vídeo da página de autenticação pelo arquivo enviado
+
+- [x] Trocar os mapas visuais de postos e rastreio e seus links por OpenStreetMap, preservando dados NEXTI.

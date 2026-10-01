@@ -65,7 +65,7 @@ export function RelatorioAcompanhamentoCard() {
       "Tempo parado",
       "Latitude",
       "Longitude",
-      "Street View",
+      "OpenStreetMap",
     ];
     const linhasCsv: string[][] = [];
     for (const l of linhas) {
@@ -97,7 +97,7 @@ export function RelatorioAcompanhamentoCard() {
           duracao(p.minutos),
           p.latitude.toFixed(6),
           p.longitude.toFixed(6),
-          `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.latitude},${p.longitude}`,
+          `https://www.openstreetmap.org/?mlat=${p.latitude}&mlon=${p.longitude}#map=17/${p.latitude}/${p.longitude}`,
         ]);
       }
     }
@@ -203,7 +203,7 @@ export function RelatorioAcompanhamentoCard() {
                     </span>
                     <span className="text-muted-foreground">permaneceu {duracao(p.minutos)}</span>
                     <a
-                      href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.latitude},${p.longitude}`}
+                      href={`https://www.openstreetmap.org/?mlat=${p.latitude}&mlon=${p.longitude}#map=17/${p.latitude}/${p.longitude}`}
                       target="_blank"
                       rel="noreferrer"
                       className="font-semibold text-primary hover:underline"
