@@ -115,6 +115,8 @@ export function AbaProtocolar() {
 
   const [folhasPdf, setFolhasPdf] = useState<FolhaPonto[]>([]);
   const [lendoPdf, setLendoPdf] = useState(false);
+  /** Ids das folhas do PDF que o usuário optou por excluir antes de protocolar. */
+  const [excluidasPdf, setExcluidasPdf] = useState<Set<string>>(new Set());
 
   const [folhasManuais, setFolhasManuais] = useState<FolhaManual[]>([]);
   const [form, setForm] = useState<Omit<FolhaManual, "id">>({ ...CAMPO_VAZIO });
