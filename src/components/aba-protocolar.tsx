@@ -191,9 +191,9 @@ export function AbaProtocolar() {
         matricula: f.matricula,
         posto: f.posto,
         admissao: f.admissao,
-        pagina: f.pagina,
-        arquivo: f.arquivo,
-      })),
+          pagina: f.pagina,
+          arquivo: f.arquivo,
+        })),
       ...folhasManuais.map((f) => ({
         colaborador: f.colaborador,
         empresa: f.empresa || "",
