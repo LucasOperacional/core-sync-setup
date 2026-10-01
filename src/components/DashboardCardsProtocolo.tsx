@@ -285,6 +285,7 @@ export function DashboardCardsProtocolo({ tempoReal }: { tempoReal?: Sincronizac
 
   const {
     categorias,
+    totais,
     carregando: carregandoPessoas,
     atualizando: atualizandoPessoas,
   } = useCategoriasPostos();
@@ -375,7 +376,7 @@ export function DashboardCardsProtocolo({ tempoReal }: { tempoReal?: Sincronizac
         "text-cyan-600 dark:text-cyan-400",
       ),
     ];
-  }, [categorias]);
+  }, [categorias, totais]);
 
   /** Contadores de folhas já protocoladas agrupadas por lotação (posto). */
   const folhasPorLotacao = useMemo(() => {
