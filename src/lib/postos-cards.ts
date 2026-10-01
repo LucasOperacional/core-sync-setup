@@ -210,6 +210,8 @@ export function usePessoasPostos() {
     queryKey: POSTOS_CARDS_QUERY_KEY,
     queryFn: carregarPessoasPostos,
     staleTime: 60_000,
+    refetchInterval: 2 * 60 * 1000,
+    placeholderData: (anterior) => anterior,
     gcTime: 1000 * 60 * 10,
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
@@ -347,7 +349,12 @@ export function useReservasNextiCards() {
   return useQuery({
     queryKey: protocoloFolhasQueryKeys.reservasNexti,
     queryFn: () => contarNexti({ data: {} as never }),
-    staleTime: 5 * 60 * 1000,
+    // Atualiza sozinho via API NEXTI a cada 2 minutos, mantendo os dados atuais na tela.
+    staleTime: 60_000,
+    refetchInterval: 2 * 60 * 1000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    placeholderData: (anterior) => anterior,
     gcTime: 1000 * 60 * 10,
     retry: 1,
   });
