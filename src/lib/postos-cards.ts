@@ -179,6 +179,17 @@ export async function carregarPessoasPostos(): Promise<PessoaPosto[]> {
     pessoas.push({ nome, empresa, cargo: texto(p.career_name), posto, origem: "nexti" });
   }
 
+  // A NEXTI é a fonte oficial da lotação: quando a pessoa está na NEXTI,
+  // o posto/cargo/empresa dela substituem os das folhas e da importação antiga.
+  const daNexti = new Map<string, PessoaPosto>();
+  for (const p of pessoas) if (p.origem === "nexti") daNexti.set(normalizar(p.nome), p);
+  for (let i = 0; i < pessoas.length; i++) {
+    const p = pessoas[i]!;
+    if (p.origem === "nexti") continue;
+    const n = daNexti.get(normalizar(p.nome));
+    if (n) pessoas[i] = { ...n, origem: p.origem };
+  }
+
   // Mantém uma linha por pessoa, preferindo o registro que tem lotação informada.
   const melhor = new Map<string, PessoaPosto>();
   for (const p of pessoas) {
@@ -392,9 +403,22 @@ export function useCategoriasPostos() {
     const protocolados = new Set(protocoladosQuery.data ?? []);
     const tot: Record<string, PessoaCard[]> = {};
     const pend: Record<string, PessoaCard[]> = {};
+    // Onde a NEXTI (ao vivo) diz que cada pessoa está agora.
+    const categoriaAoVivo = new Map<string, Set<string>>();
+    for (const g of nextiQuery.data?.grupos ?? []) {
+      for (const p of g.pessoas) {
+        const k = normalizar(texto(p.nome));
+        if (!categoriaAoVivo.has(k)) categoriaAoVivo.set(k, new Set());
+        categoriaAoVivo.get(k)!.add(g.chave);
+      }
+    }
     for (const c of CATEGORIAS_POSTO) {
       tot[c.chave] = mesclarPessoasCard(
-        doBanco[c.chave],
+        // Remove quem a NEXTI já mostra em outro posto (troca de posto).
+        (doBanco[c.chave] ?? []).filter((p) => {
+          const cats = categoriaAoVivo.get(normalizar(p.nome));
+          return !cats || cats.has(c.chave);
+        }),
         aoVivo.get(c.chave)?.pessoas.map((p) => ({
           nome: p.nome || "Sem nome",
           empresa: p.empresa || "",
