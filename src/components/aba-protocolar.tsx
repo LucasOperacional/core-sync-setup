@@ -499,17 +499,59 @@ export function AbaProtocolar() {
                     </tr>
                   </thead>
                   <tbody>
-                    {folhasPdf.map((f, idx) => (
-                      <tr key={f.id} className="border-t border-border hover:bg-muted/30">
-                        <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
-                        <td className="px-3 py-2 font-medium text-foreground">{f.colaborador}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{f.empresa || "—"}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{f.cargo || "—"}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{f.matricula || "—"}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{f.posto || "—"}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{f.admissao || "—"}</td>
-                      </tr>
-                    ))}
+                    {folhasPdf.map((f, idx) => {
+                      const excluida = excluidasPdf.has(f.id);
+                      return (
+                        <tr
+                          key={f.id}
+                          className={`border-t border-border hover:bg-muted/30 ${excluida ? "opacity-50" : ""}`}
+                        >
+                          <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
+                          <td
+                            className={`px-3 py-2 font-medium text-foreground ${excluida ? "line-through" : ""}`}
+                          >
+                            {f.colaborador}
+                          </td>
+                          <td className="px-3 py-2 text-muted-foreground">{f.empresa || "—"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{f.cargo || "—"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{f.matricula || "—"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{f.posto || "—"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{f.admissao || "—"}</td>
+                          <td className="px-3 py-2">
+                            {f.folhaManual ? (
+                              <Badge
+                                variant="outline"
+                                className="border-amber-500/50 text-xs text-amber-600 dark:text-amber-400"
+                              >
+                                FOLHA MANUAL
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className={`h-7 w-7 ${
+                                excluida
+                                  ? "text-primary hover:bg-primary/10"
+                                  : "text-destructive hover:bg-destructive/10"
+                              }`}
+                              onClick={() => alternarExclusaoPdf(f.id)}
+                              aria-label={
+                                excluida
+                                  ? `Reincluir folha de ${f.colaborador}`
+                                  : `Excluir folha de ${f.colaborador} do envio`
+                              }
+                              title={excluida ? "Reincluir no envio" : "Excluir do envio"}
+                            >
+                              {excluida ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
