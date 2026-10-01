@@ -227,6 +227,7 @@ export function AbaProtocolosSalvos() {
         matricula: "",
         admissao: "",
         conferido: false,
+        folhaManual: false,
       })),
     });
   }
