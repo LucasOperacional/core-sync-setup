@@ -34,7 +34,7 @@ import {
   type SincronizacaoTempoReal,
   type StatusTempoRealProtocolo,
 } from "@/lib/protocolo-folhas-sync";
-import { useCategoriasPostos } from "@/lib/postos-cards";
+import { useCategoriasPostos, legendaPosto } from "@/lib/postos-cards";
 
 type FolhaProtocolada = FolhaParaChave & {
   id: string;
@@ -329,6 +329,7 @@ export function DashboardCardsProtocolo({ tempoReal }: { tempoReal?: Sincronizac
         corFundo,
         corValor,
         nomes: nomesMesclados,
+        legenda: legendaPosto(nomesMesclados.length, (totais[chave] ?? []).length),
       };
     };
 
@@ -547,6 +548,7 @@ export function DashboardCardsProtocolo({ tempoReal }: { tempoReal?: Sincronizac
           titulo="INSS"
           valor={(categorias["inss"] ?? []).length}
           nomes={categorias["inss"] ?? []}
+          legenda={legendaPosto((categorias["inss"] ?? []).length, (totais["inss"] ?? []).length)}
           carregando={carregandoInicial}
           icone={<ShieldAlert className="h-4 w-4" />}
           corBorda="border-red-400/30"
@@ -557,6 +559,7 @@ export function DashboardCardsProtocolo({ tempoReal }: { tempoReal?: Sincronizac
           titulo="Desaparecidos"
           valor={(categorias["desaparecidos"] ?? []).length}
           nomes={categorias["desaparecidos"] ?? []}
+          legenda={legendaPosto((categorias["desaparecidos"] ?? []).length, (totais["desaparecidos"] ?? []).length)}
           carregando={carregandoInicial}
           icone={<EyeOff className="h-4 w-4" />}
           corBorda="border-orange-400/30"
@@ -567,6 +570,7 @@ export function DashboardCardsProtocolo({ tempoReal }: { tempoReal?: Sincronizac
           titulo="Maternidade"
           valor={(categorias["maternidade"] ?? []).length}
           nomes={categorias["maternidade"] ?? []}
+          legenda={legendaPosto((categorias["maternidade"] ?? []).length, (totais["maternidade"] ?? []).length)}
           carregando={carregandoInicial}
           icone={<Baby className="h-4 w-4" />}
           corBorda="border-pink-400/30"
@@ -577,6 +581,7 @@ export function DashboardCardsProtocolo({ tempoReal }: { tempoReal?: Sincronizac
           titulo="Audiência"
           valor={(categorias["audiencia"] ?? []).length}
           nomes={categorias["audiencia"] ?? []}
+          legenda={legendaPosto((categorias["audiencia"] ?? []).length, (totais["audiencia"] ?? []).length)}
           carregando={carregandoInicial}
           icone={<Gavel className="h-4 w-4" />}
           corBorda="border-purple-400/30"
@@ -589,6 +594,7 @@ export function DashboardCardsProtocolo({ tempoReal }: { tempoReal?: Sincronizac
             titulo={r.titulo}
             valor={r.valor}
             nomes={r.nomes}
+            legenda={r.legenda}
             carregando={carregandoReservas}
             icone={r.icone}
             corBorda={r.corBorda}
