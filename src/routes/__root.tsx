@@ -57,8 +57,9 @@ function NotFoundComponent() {
 
 /* ─── Global Error Boundary ─── */
 
-function ErrorComponent({ error, reset }: ErrorComponentProps) {
+function ErrorComponent({ error: erroBruto, reset }: ErrorComponentProps) {
   const router = useRouter();
+  const error = erroBruto instanceof Error ? erroBruto : new Error(String(erroBruto));
 
   useEffect(() => {
     // Log technical details to console for debugging — never expose to user.
