@@ -406,6 +406,7 @@ export function AbaProtocolar() {
       setForm({ ...CAMPO_VAZIO });
       if (inputRef.current) inputRef.current.value = "";
       invalidarConsultasProtocoloFolhas(queryClient);
+      queryClient.invalidateQueries({ queryKey: ["protocolo-folhas-chaves-ciclo"] });
       notificarAtualizacaoProtocoloFolhas("protocolacao");
     },
     onError: (err: Error) => {
@@ -741,6 +742,16 @@ export function AbaProtocolar() {
               {duplicadasPreview > 0 && (
                 <p className="text-amber-600 dark:text-amber-400">
                   {duplicadasPreview} duplicidade(s) no arquivo/formulário serão ignorada(s).
+                </p>
+              )}
+              {duplicidadesBanco.size > 0 && (
+                <p className="flex items-center gap-1.5 font-medium text-destructive">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  {duplicidadesBanco.size} folha{duplicidadesBanco.size !== 1 ? "s" : ""} já
+                  protocolada{duplicidadesBanco.size !== 1 ? "s" : ""} neste ciclo (marcada
+                  {duplicidadesBanco.size !== 1 ? "s" : ""} como DUPLICIDADE) — será
+                  {duplicidadesBanco.size !== 1 ? "ão" : ""} ignorada
+                  {duplicidadesBanco.size !== 1 ? "s" : ""} ao salvar.
                 </p>
               )}
               {qtdExcluidas > 0 && (
