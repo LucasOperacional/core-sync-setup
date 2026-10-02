@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Criar menu lateral na página Protocolo de Folhas de Ponto, substituindo a barra de abas e adaptado ao celular.
+
 - [x] Trocar os atalhos horizontais da página Coordenação por um menu lateral, adaptado ao celular.
 
 - [x] Reiniciar a contagem de protocolação no dia 10 de cada mês, mantendo protocolos antigos no histórico e liberando nova protocolação por ciclo.
