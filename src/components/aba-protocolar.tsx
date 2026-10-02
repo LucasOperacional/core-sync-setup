@@ -74,13 +74,13 @@ async function carregarChavesExistentes(inicio: string, fim: string): Promise<Se
   const PAGINA = 1000;
   const chaves = new Set<string>();
 
-  for (let inicio = 0; ; inicio += PAGINA) {
+  for (let offset = 0; ; offset += PAGINA) {
     const { data, error } = await supabase
       .from("protocolo_folhas")
       .select("colaborador, empresa, matricula, protocolos!inner(created_at)")
       .gte("protocolos.created_at", inicio)
       .lt("protocolos.created_at", fim)
-      .range(inicio, inicio + PAGINA - 1);
+      .range(offset, offset + PAGINA - 1);
 
     if (error) throw error;
 
