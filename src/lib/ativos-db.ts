@@ -371,9 +371,9 @@ export function pendenciasPorEmpresa(
 
   return Array.from(grupos.entries())
     .map(([empresa, lista]) => {
-      const doGrupo = porEmpresa.get(normalizar(empresa));
-      const estaProtocolado = (a: FuncionarioAtivo) =>
-        doGrupo ? doGrupo.has(a.nome_normalizado) : globais.has(a.nome_normalizado);
+      // Qualquer nome já salvo em protocolos conta como protocolado,
+      // mesmo que a empresa tenha sido escrita de forma diferente.
+      const estaProtocolado = (a: FuncionarioAtivo) => globais.has(a.nome_normalizado);
       const faltantes: FuncionarioAtivoComPosto[] = lista
         .filter((a) => !estaProtocolado(a))
         .map((a) => ({ ...a, posto: postoDoAtivo(a, postoMap) }));
