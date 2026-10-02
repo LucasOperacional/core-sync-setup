@@ -300,6 +300,11 @@ export type PostoProximo = {
   distanciaKm: number;
 };
 
+/** REGRA: postos com inicial "TS" (ex.: "TS - ...") não aparecem na supervisão. */
+function nomeIniciaTs(nome: string): boolean {
+  return nome.trim().toUpperCase().startsWith("TS");
+}
+
 function distanciaKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const rad = (g: number) => (g * Math.PI) / 180;
   const R = 6371;
@@ -363,7 +368,7 @@ export const postosProximosSupervisao = createServerFn({ method: "POST" })
             Number(linha.longitude),
           ),
         }))
-        .filter((p) => Number.isFinite(p.id) && Number.isFinite(p.distanciaKm))
+        .filter((p) => Number.isFinite(p.id) && Number.isFinite(p.distanciaKm) && !nomeIniciaTs(p.nome))
         .sort((a, b) => a.distanciaKm - b.distanciaKm)
         .slice(0, 8);
 
