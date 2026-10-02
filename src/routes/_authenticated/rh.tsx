@@ -14,6 +14,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { downloadCsv } from "@/lib/dashboard-utils";
 import { aguardarSessao } from "@/lib/aguardar-sessao";
+import { RhPublicarVagasWhatsapp } from "@/components/RhPublicarVagasWhatsapp";
 import {
   listarVagasAprovacao,
   fecharVagas,
@@ -249,6 +250,8 @@ function RhPage() {
             </div>
           )}
         </section>
+
+        <RhPublicarVagasWhatsapp vagas={vagas} />
 
 
         <section className="panel p-5">
