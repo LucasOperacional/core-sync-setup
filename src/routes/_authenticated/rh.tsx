@@ -251,6 +251,8 @@ function RhPage() {
           )}
         </section>
 
+        <RhPublicarVagasWhatsapp vagas={vagas} />
+
 
         <section className="panel p-5">
           <div className="mb-4">
