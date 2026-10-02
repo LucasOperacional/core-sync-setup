@@ -239,6 +239,8 @@ export const listarRelatoriosRoteiroCoordenacao = createServerFn({ method: "GET"
 
     const relatorios: RelatorioRoteiroCoordenacao[] = [];
     for (const linha of data ?? []) {
+      // REGRA: relatórios de postos com inicial "TS" não aparecem na coordenação.
+      if (nomeIniciaTs(String((linha as { posto?: string | null }).posto ?? ""))) continue;
       const caminho = (linha as { relatorio_pdf_path: string | null }).relatorio_pdf_path;
       let url: string | null = null;
       if (caminho) {
