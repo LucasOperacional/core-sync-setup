@@ -538,16 +538,30 @@ export function AbaProtocolar() {
                           <td className="px-3 py-2 text-muted-foreground">{f.posto || "—"}</td>
                           <td className="px-3 py-2 text-muted-foreground">{f.admissao || "—"}</td>
                           <td className="px-3 py-2">
-                            {f.folhaManual ? (
-                              <Badge
-                                variant="outline"
-                                className="border-amber-500/50 text-xs text-amber-600 dark:text-amber-400"
-                              >
-                                FOLHA MANUAL
-                              </Badge>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              {f.folhaManual && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-amber-500/50 text-xs text-amber-600 dark:text-amber-400"
+                                >
+                                  FOLHA MANUAL
+                                </Badge>
+                              )}
+                              {duplicidadesBanco.has(chaveUnicaFolhaPonto(f)) && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-destructive/60 text-xs text-destructive"
+                                  title="Esta folha já consta em um protocolo salvo neste ciclo e será ignorada ao salvar."
+                                >
+                                  <AlertTriangle className="mr-1 h-3 w-3" />
+                                  DUPLICIDADE
+                                </Badge>
+                              )}
+                              {!f.folhaManual &&
+                                !duplicidadesBanco.has(chaveUnicaFolhaPonto(f)) && (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                            </div>
                           </td>
                           <td className="px-3 py-2 text-right">
                             <Button
