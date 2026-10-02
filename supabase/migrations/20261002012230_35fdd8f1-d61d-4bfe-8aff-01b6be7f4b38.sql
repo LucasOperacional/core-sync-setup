@@ -1,0 +1,1 @@
+DELETE FROM nexti_workplaces WHERE name ILIKE 'TS%' OR name ILIKE '% TS %';
