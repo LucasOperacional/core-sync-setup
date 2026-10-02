@@ -43,6 +43,7 @@ import { Route as AuthenticatedDpFeriasRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDpFolhaRouteImport } from './routes/_authenticated/dp-folha'
 import { Route as AuthenticatedDpValeAlimentacaoRouteImport } from './routes/_authenticated/dp-vale-alimentacao'
 import { Route as AuthenticatedDpValeTransporteRouteImport } from './routes/_authenticated/dp-vale-transporte'
+import { Route as AuthenticatedExtratorLeadsRouteImport } from './routes/_authenticated/extrator-leads'
 import { Route as AuthenticatedFaltasRouteImport } from './routes/_authenticated/faltas'
 import { Route as AuthenticatedGpsRouteImport } from './routes/_authenticated/gps'
 import { Route as AuthenticatedIaOperacionalRouteImport } from './routes/_authenticated/ia-operacional'
@@ -300,6 +301,12 @@ const AuthenticatedDpValeTransporteRoute =
   AuthenticatedDpValeTransporteRouteImport.update({
     id: '/dp-vale-transporte',
     path: '/dp-vale-transporte',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedExtratorLeadsRoute =
+  AuthenticatedExtratorLeadsRouteImport.update({
+    id: '/extrator-leads',
+    path: '/extrator-leads',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedFaltasRoute = AuthenticatedFaltasRouteImport.update({
@@ -751,6 +758,7 @@ export interface FileRoutesByFullPath {
   '/dp-folha': typeof AuthenticatedDpFolhaRoute
   '/dp-vale-alimentacao': typeof AuthenticatedDpValeAlimentacaoRoute
   '/dp-vale-transporte': typeof AuthenticatedDpValeTransporteRoute
+  '/extrator-leads': typeof AuthenticatedExtratorLeadsRoute
   '/faltas': typeof AuthenticatedFaltasRoute
   '/gps': typeof AuthenticatedGpsRoute
   '/ia-operacional': typeof AuthenticatedIaOperacionalRoute
@@ -857,6 +865,7 @@ export interface FileRoutesByTo {
   '/dp-folha': typeof AuthenticatedDpFolhaRoute
   '/dp-vale-alimentacao': typeof AuthenticatedDpValeAlimentacaoRoute
   '/dp-vale-transporte': typeof AuthenticatedDpValeTransporteRoute
+  '/extrator-leads': typeof AuthenticatedExtratorLeadsRoute
   '/faltas': typeof AuthenticatedFaltasRoute
   '/gps': typeof AuthenticatedGpsRoute
   '/ia-operacional': typeof AuthenticatedIaOperacionalRoute
@@ -966,6 +975,7 @@ export interface FileRoutesById {
   '/_authenticated/dp-folha': typeof AuthenticatedDpFolhaRoute
   '/_authenticated/dp-vale-alimentacao': typeof AuthenticatedDpValeAlimentacaoRoute
   '/_authenticated/dp-vale-transporte': typeof AuthenticatedDpValeTransporteRoute
+  '/_authenticated/extrator-leads': typeof AuthenticatedExtratorLeadsRoute
   '/_authenticated/faltas': typeof AuthenticatedFaltasRoute
   '/_authenticated/gps': typeof AuthenticatedGpsRoute
   '/_authenticated/ia-operacional': typeof AuthenticatedIaOperacionalRoute
@@ -1076,6 +1086,7 @@ export interface FileRouteTypes {
     | '/dp-folha'
     | '/dp-vale-alimentacao'
     | '/dp-vale-transporte'
+    | '/extrator-leads'
     | '/faltas'
     | '/gps'
     | '/ia-operacional'
@@ -1182,6 +1193,7 @@ export interface FileRouteTypes {
     | '/dp-folha'
     | '/dp-vale-alimentacao'
     | '/dp-vale-transporte'
+    | '/extrator-leads'
     | '/faltas'
     | '/gps'
     | '/ia-operacional'
@@ -1290,6 +1302,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dp-folha'
     | '/_authenticated/dp-vale-alimentacao'
     | '/_authenticated/dp-vale-transporte'
+    | '/_authenticated/extrator-leads'
     | '/_authenticated/faltas'
     | '/_authenticated/gps'
     | '/_authenticated/ia-operacional'
@@ -1635,6 +1648,13 @@ declare module '@tanstack/react-router' {
       path: '/dp-vale-transporte'
       fullPath: '/dp-vale-transporte'
       preLoaderRoute: typeof AuthenticatedDpValeTransporteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/extrator-leads': {
+      id: '/_authenticated/extrator-leads'
+      path: '/extrator-leads'
+      fullPath: '/extrator-leads'
+      preLoaderRoute: typeof AuthenticatedExtratorLeadsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/faltas': {
@@ -2172,6 +2192,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDpFolhaRoute: typeof AuthenticatedDpFolhaRoute
   AuthenticatedDpValeAlimentacaoRoute: typeof AuthenticatedDpValeAlimentacaoRoute
   AuthenticatedDpValeTransporteRoute: typeof AuthenticatedDpValeTransporteRoute
+  AuthenticatedExtratorLeadsRoute: typeof AuthenticatedExtratorLeadsRoute
   AuthenticatedFaltasRoute: typeof AuthenticatedFaltasRoute
   AuthenticatedGpsRoute: typeof AuthenticatedGpsRoute
   AuthenticatedIaOperacionalRoute: typeof AuthenticatedIaOperacionalRoute
@@ -2254,6 +2275,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDpFolhaRoute: AuthenticatedDpFolhaRoute,
   AuthenticatedDpValeAlimentacaoRoute: AuthenticatedDpValeAlimentacaoRoute,
   AuthenticatedDpValeTransporteRoute: AuthenticatedDpValeTransporteRoute,
+  AuthenticatedExtratorLeadsRoute: AuthenticatedExtratorLeadsRoute,
   AuthenticatedFaltasRoute: AuthenticatedFaltasRoute,
   AuthenticatedGpsRoute: AuthenticatedGpsRoute,
   AuthenticatedIaOperacionalRoute: AuthenticatedIaOperacionalRoute,
