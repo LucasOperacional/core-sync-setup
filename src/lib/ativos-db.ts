@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizar, type AtivoImportado } from "@/lib/ativos-planilha";
 import { filtrarFuncionariosExcluidos } from "@/lib/funcionarios-excluidos";
+import { useCicloProtocolacao } from "@/lib/ciclo-protocolacao";
 
 export type FuncionarioAtivo = {
   id: string;
@@ -205,15 +206,17 @@ export type FolhaProtocolada = {
 };
 
 export function useFolhasProtocoladas() {
+  const ciclo = useCicloProtocolacao();
   return useQuery({
-    queryKey: ["folhas-protocoladas"],
+    queryKey: ["folhas-protocoladas", ciclo.inicio],
     queryFn: async () => {
       const PAGINA = 1000;
       const todas: FolhaProtocolada[] = [];
       for (let inicio = 0; ; inicio += PAGINA) {
         const { data, error } = await supabase
           .from("protocolo_folhas")
-          .select("colaborador, empresa, cargo, posto")
+          .select("colaborador, empresa, cargo, posto, protocolos!inner(created_at)")
+          .gte("protocolos.created_at", ciclo.inicio)
           .order("id", { ascending: true })
           .range(inicio, inicio + PAGINA - 1);
         if (error) throw error;

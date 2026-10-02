@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { lerFolhasDoPdf, type FolhaPonto } from "@/lib/pdf-ponto";
 import { useSessao, nomeDoUsuario } from "@/hooks/use-sessao";
+import { useCicloProtocolacao } from "@/lib/ciclo-protocolacao";
 import {
   chaveUnicaFolhaPonto,
   deduplicarFolhasPonto,
@@ -69,14 +70,15 @@ function gerarId() {
   return `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-async function carregarChavesExistentes(): Promise<Set<string>> {
+async function carregarChavesExistentes(inicio: string): Promise<Set<string>> {
   const PAGINA = 1000;
   const chaves = new Set<string>();
 
   for (let inicio = 0; ; inicio += PAGINA) {
     const { data, error } = await supabase
       .from("protocolo_folhas")
-      .select("colaborador, empresa, matricula")
+      .select("colaborador, empresa, matricula, protocolos!inner(created_at)")
+      .gte("protocolos.created_at", inicio)
       .range(inicio, inicio + PAGINA - 1);
 
     if (error) throw error;
@@ -109,6 +111,7 @@ function validarPdf(arquivo: File | null): string {
 
 export function AbaProtocolar() {
   const { user } = useSessao();
+  const ciclo = useCicloProtocolacao();
   const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -217,7 +220,7 @@ export function AbaProtocolar() {
         );
       }
 
-      const chavesExistentes = await carregarChavesExistentes();
+      const chavesExistentes = await carregarChavesExistentes(ciclo.inicio);
       const folhasNovas = previewDeduplicado.unicas.filter(
         (folha) => !chavesExistentes.has(chaveUnicaFolhaPonto(folha)),
       );
@@ -233,6 +236,7 @@ export function AbaProtocolar() {
           .select("id")
           .eq("user_id", user.id)
           .eq("titulo", file.name)
+          .gte("created_at", ciclo.inicio)
           .order("created_at", { ascending: false })
           .limit(10);
         if (erroCandidatos) throw erroCandidatos;

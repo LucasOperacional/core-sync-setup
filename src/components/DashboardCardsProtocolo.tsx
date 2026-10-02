@@ -35,6 +35,7 @@ import {
   type StatusTempoRealProtocolo,
 } from "@/lib/protocolo-folhas-sync";
 import { useCategoriasPostos, legendaPosto } from "@/lib/postos-cards";
+import { useCicloProtocolacao } from "@/lib/ciclo-protocolacao";
 
 type FolhaProtocolada = FolhaParaChave & {
   id: string;
@@ -80,7 +81,7 @@ async function buscarTodosPaginado<T>(
   return todos;
 }
 
-async function carregarResumoDashboardProtocolo(): Promise<ResumoDashboardProtocolo> {
+async function carregarResumoDashboardProtocolo(inicio: string): Promise<ResumoDashboardProtocolo> {
   try {
     const [ativos, folhas] = await Promise.all([
       buscarTodosPaginado<FuncionarioAtivoBanco>(async (inicio, fim) => {
@@ -96,7 +97,8 @@ async function carregarResumoDashboardProtocolo(): Promise<ResumoDashboardProtoc
       buscarTodosPaginado<FolhaProtocolada>(async (inicio, fim) => {
         const { data, error } = await supabase
           .from("protocolo_folhas")
-          .select("id, protocolo_id, colaborador, empresa, cargo, matricula, posto, ordem")
+          .select("id, protocolo_id, colaborador, empresa, cargo, matricula, posto, ordem, protocolos!inner(created_at)")
+          .gte("protocolos.created_at", inicio)
           .order("id", { ascending: true })
           .range(inicio, fim);
         return { data: (data ?? []) as FolhaProtocolada[], error };
@@ -114,10 +116,10 @@ async function carregarResumoDashboardProtocolo(): Promise<ResumoDashboardProtoc
   }
 }
 
-function useResumoDashboardProtocolo() {
+function useResumoDashboardProtocolo(inicio: string) {
   return useQuery({
-    queryKey: protocoloFolhasQueryKeys.dashboardResumo,
-    queryFn: carregarResumoDashboardProtocolo,
+    queryKey: [...protocoloFolhasQueryKeys.dashboardResumo, inicio],
+    queryFn: () => carregarResumoDashboardProtocolo(inicio),
     staleTime: 60_000,
     gcTime: 1000 * 60 * 10,
     refetchOnWindowFocus: false,
@@ -279,9 +281,10 @@ const ESTADOS_TEMPO_REAL: Record<
 
 export function DashboardCardsProtocolo({ tempoReal }: { tempoReal?: SincronizacaoTempoReal }) {
   const queryClient = useQueryClient();
+  const ciclo = useCicloProtocolacao();
   const estadoTempoReal =
     ESTADOS_TEMPO_REAL[tempoReal?.status ?? "conectado"] ?? ESTADOS_TEMPO_REAL.conectado;
-  const { data, isLoading, isFetching, isError, error, refetch } = useResumoDashboardProtocolo();
+  const { data, isLoading, isFetching, isError, error, refetch } = useResumoDashboardProtocolo(ciclo.inicio);
 
   const {
     categorias,
@@ -497,7 +500,7 @@ export function DashboardCardsProtocolo({ tempoReal }: { tempoReal?: Sincronizac
 
       <div className="rounded-xl border border-border bg-card p-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <p className="text-sm font-semibold text-foreground">Progresso da protocolação</p>
+            <p className="text-sm font-semibold text-foreground">Progresso da protocolação · ciclo {ciclo.rotulo}</p>
           <p className="text-sm tabular-nums text-muted-foreground">
             <span className="font-bold text-foreground">
               {totalProtocolados.toLocaleString("pt-BR")}

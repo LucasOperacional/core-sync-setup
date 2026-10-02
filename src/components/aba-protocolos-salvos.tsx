@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { abrirProtocoloPdf } from "@/lib/protocolo-pdf";
 import { buscarTudoPaginado } from "@/lib/supabase-paginacao";
+import { useCicloProtocolacao } from "@/lib/ciclo-protocolacao";
 
 import {
   analisarHorasExtras,
@@ -79,6 +80,7 @@ function useRelogioBrasilia() {
 }
 
 export function AbaProtocolosSalvos() {
+  const ciclo = useCicloProtocolacao();
   const { user } = useSessao();
   const { data: ehAdmin } = useIsAdmin(user);
   const queryClient = useQueryClient();
@@ -158,7 +160,7 @@ export function AbaProtocolosSalvos() {
 
     const primeiroPorChave = new Map<string, { protocoloId: string; titulo: string }>();
     // data vem do mais novo para o mais antigo; percorrer invertido dá o original.
-    [...(data ?? [])].reverse().forEach((p) => {
+    [...(data ?? [])].filter((p) => p.created_at >= ciclo.inicio).reverse().forEach((p) => {
       p.protocolo_folhas_lista.forEach((f) => {
         const k = chave(f.colaborador, f.empresa);
         if (!primeiroPorChave.has(k)) {
@@ -179,7 +181,7 @@ export function AbaProtocolosSalvos() {
       porProtocolo.set(p.id, repetidas);
     });
     return porProtocolo;
-  }, [data]);
+  }, [data, ciclo.inicio]);
 
   const [confirmacao, setConfirmacao] = useState<Linha | null>(null);
 
@@ -326,6 +328,7 @@ export function AbaProtocolosSalvos() {
       <div className="rounded-xl border border-border bg-card p-5">
         <h2 className="font-semibold text-foreground">Protocolos salvos</h2>
         <p className="mt-1 text-sm tabular-nums text-muted-foreground">Brasília: {relogio}</p>
+        <p className="mt-1 text-xs text-muted-foreground">Ciclo atual: {ciclo.rotulo}. Os protocolos anteriores permanecem no histórico.</p>
       </div>
 
       {(analisandoExtras || progressoExtras) && (

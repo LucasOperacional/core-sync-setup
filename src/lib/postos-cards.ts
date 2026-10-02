@@ -15,6 +15,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizarTextoProtocolo, protocoloFolhasQueryKeys } from "@/lib/protocolo-folhas-sync";
 import { contarReservasNexti } from "@/lib/nexti-reservas.functions";
+import { useCicloProtocolacao } from "@/lib/ciclo-protocolacao";
 
 export type OrigemPessoaPosto = "folha" | "ativo" | "nexti";
 
@@ -377,17 +378,19 @@ export function useReservasNextiCards() {
  * Assim todo card mostra a quantidade exata e os nomes exatos do posto.
  */
 export function useCategoriasPostos() {
+  const ciclo = useCicloProtocolacao();
   const pessoasQuery = usePessoasPostos();
   const nextiQuery = useReservasNextiCards();
   // Nomes que já têm folha protocolada: atualiza junto com os cards (mesma
   // família de chave, invalidada em tempo real ao salvar um protocolo).
   const protocoladosQuery = useQuery({
-    queryKey: [...POSTOS_CARDS_QUERY_KEY, "protocolados"],
+    queryKey: [...POSTOS_CARDS_QUERY_KEY, "protocolados", ciclo.inicio],
     queryFn: async () => {
       const linhas = await paginado<{ colaborador: string | null }>(async (i, f) => {
         const { data, error } = await supabase
           .from("protocolo_folhas")
-          .select("colaborador")
+          .select("colaborador, protocolos!inner(created_at)")
+          .gte("protocolos.created_at", ciclo.inicio)
           .range(i, f);
         return { data: (data ?? []) as { colaborador: string | null }[], error };
       });
