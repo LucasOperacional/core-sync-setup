@@ -101,7 +101,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <inicioItem.icon className={cn("size-4 shrink-0", caminho === "/" && "text-primary")} />
             {!compacta && <span className="truncate">{inicioItem.label}</span>}
-            {caminho === "/" && <span className="ml-auto text-[9px] font-semibold text-sidebar-foreground/55">01</span>}
           </Link>
         )}
 
