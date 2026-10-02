@@ -94,14 +94,14 @@ async function carregarResumoDashboardProtocolo(inicio: string, fim: string): Pr
           .range(inicio, fim);
         return { data: (data ?? []) as FuncionarioAtivoBanco[], error };
       }),
-      buscarTodosPaginado<FolhaProtocolada>(async (inicio, fim) => {
+      buscarTodosPaginado<FolhaProtocolada>(async (paginaInicio, paginaFim) => {
         const { data, error } = await supabase
           .from("protocolo_folhas")
           .select("id, protocolo_id, colaborador, empresa, cargo, matricula, posto, ordem, protocolos!inner(created_at)")
           .gte("protocolos.created_at", inicio)
           .lt("protocolos.created_at", fim)
           .order("id", { ascending: true })
-          .range(inicio, fim);
+          .range(paginaInicio, paginaFim);
         return { data: (data ?? []) as FolhaProtocolada[], error };
       }),
     ]);
