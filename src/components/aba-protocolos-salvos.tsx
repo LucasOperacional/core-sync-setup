@@ -35,6 +35,7 @@ import {
 } from "@/lib/protocolo-folhas-sync";
 
 type FolhaResumo = {
+  id: string;
   protocolo_id: string;
   ordem: number;
   colaborador: string;
