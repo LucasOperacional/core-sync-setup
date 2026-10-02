@@ -71,7 +71,10 @@ function ExtratorLeads() {
 
   function adicionarCnpjs() {
     const lista = cnpjs.split(/[\s,;]+/).map((c) => c.replace(/\D/g, "")).filter((c) => c.length === 14);
-    if (!lista.length) return toast.error("Informe CNPJs com 14 dígitos.");
+    if (!lista.length) {
+      toast.error("Informe CNPJs com 14 dígitos.");
+      return;
+    }
     setLeads((ls) => [
       ...ls,
       ...lista.map((c) => ({
