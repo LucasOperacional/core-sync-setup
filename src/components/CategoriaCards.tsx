@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import {
   AlarmClock,
+  ArrowRight,
   BarChart3,
   Briefcase,
   BriefcaseBusiness,
@@ -102,17 +103,35 @@ export function CategoriaCards({
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {visiveis.map((item) => (
         <Link key={item.to} to={item.to} preload="intent" className="group block">
-          <Card className="h-full">
-            <CardContent className="flex h-full items-start gap-3 p-5">
-              <span className="grid size-10 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
-                <item.icon className="size-5" />
-              </span>
-              <span className="min-w-0 space-y-1">
-                <span className="block font-medium leading-tight">{item.label}</span>
-                <span className="block text-sm text-muted-foreground">{item.descricao}</span>
-              </span>
-            </CardContent>
-          </Card>
+          {item.to === "/prospeccao-maps" ? (
+            <Card className="prospeccao-card relative aspect-square h-full overflow-hidden">
+              <CardContent className="relative z-10 flex h-full flex-col items-center justify-center p-6 text-center">
+                <span className="mb-6 grid size-20 shrink-0 place-items-center rounded-lg border border-primary/25 bg-primary/10 text-primary transition-colors duration-300 group-hover:border-primary/50">
+                  <item.icon className="size-10" strokeWidth={1.5} />
+                </span>
+                <span className="font-display text-xl font-semibold leading-tight text-card-foreground">
+                  Prospecção<br />Google Maps
+                </span>
+                <span className="mt-2 text-xs font-semibold uppercase text-muted-foreground transition-colors group-hover:text-primary">
+                  Comercial
+                </span>
+                <span className="sr-only">{item.descricao}</span>
+                <ArrowRight aria-hidden="true" className="absolute bottom-5 right-5 size-5 translate-x-1 text-primary opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" />
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="h-full">
+              <CardContent className="flex h-full items-start gap-3 p-5">
+                <span className="grid size-10 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+                  <item.icon className="size-5" />
+                </span>
+                <span className="min-w-0 space-y-1">
+                  <span className="block font-medium leading-tight">{item.label}</span>
+                  <span className="block text-sm text-muted-foreground">{item.descricao}</span>
+                </span>
+              </CardContent>
+            </Card>
+          )}
         </Link>
       ))}
     </div>
