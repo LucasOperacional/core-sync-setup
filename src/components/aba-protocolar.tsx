@@ -212,6 +212,25 @@ export function AbaProtocolar() {
     [todasFolhasPreview],
   );
 
+  /** Chaves das folhas já protocoladas neste ciclo (para avisar no preview). */
+  const chavesBancoQuery = useQuery({
+    queryKey: ["protocolo-folhas-chaves-ciclo", ciclo.inicio, ciclo.fim],
+    queryFn: () => carregarChavesExistentes(ciclo.inicio, ciclo.fim),
+    staleTime: 30_000,
+  });
+
+  /** Folhas do preview que já existem em algum protocolo salvo do ciclo. */
+  const duplicidadesBanco = useMemo(() => {
+    const existentes = chavesBancoQuery.data;
+    if (!existentes || existentes.size === 0) return new Set<string>();
+    const repetidas = new Set<string>();
+    for (const folha of todasFolhasPreview) {
+      const chave = chaveUnicaFolhaPonto(folha);
+      if (existentes.has(chave)) repetidas.add(chave);
+    }
+    return repetidas;
+  }, [chavesBancoQuery.data, todasFolhasPreview]);
+
   const protocolarMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Usuário não autenticado. Faça login novamente.");
