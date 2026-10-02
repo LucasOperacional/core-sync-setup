@@ -1,4 +1,9 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { nomesComMarcacaoNoMes } from "@/lib/protocolo-marcacoes-nexti.functions";
+import { useCicloProtocolacao } from "@/lib/ciclo-protocolacao";
+import { normalizar } from "@/lib/ativos-planilha";
 import {
   CheckCircle2,
   AlertTriangle,
@@ -335,10 +340,44 @@ export function AbaProtocolacao() {
   const { data: ativos, isLoading: carregandoAtivos, error: erroAtivos } = useAtivosBanco();
   const { data: folhas, isLoading: carregandoFolhas, error: erroFolhas } = useFolhasProtocoladas();
 
-  const pendencias = useMemo(
+  // Mês das folhas do ciclo atual (ciclo de 10/09 a 09/10 -> setembro).
+  const ciclo = useCicloProtocolacao();
+  const mesFolha = ciclo.inicio.slice(0, 7);
+  const rotuloMes = `${mesFolha.slice(5, 7)}/${mesFolha.slice(0, 4)}`;
+  const buscarMarcacoes = useServerFn(nomesComMarcacaoNoMes);
+  const marcacoesQuery = useQuery({
+    queryKey: ["protocolacao-marcacoes-nexti", mesFolha],
+    queryFn: () => buscarMarcacoes({ data: { mes: mesFolha } }),
+    staleTime: 10 * 60 * 1000,
+    refetchInterval: 30 * 60 * 1000,
+  });
+  const nomesComMarcacao = useMemo(() => {
+    const r = marcacoesQuery.data;
+    // Sem resposta válida da NEXTI, não filtra nada (evita sumir com pendentes reais).
+    if (!r?.ok || r.nomes.length === 0) return null;
+    return new Set(r.nomes.map(normalizar));
+  }, [marcacoesQuery.data]);
+  const filtroNextiAtivo = nomesComMarcacao !== null;
+
+  const pendenciasBrutas = useMemo(
     () => pendenciasPorEmpresa(ativos ?? [], folhas ?? []),
     [ativos, folhas],
   );
+
+  // Regra: quem não tem nenhuma marcação na NEXTI no mês não precisa de folha -> sai dos pendentes.
+  const { pendencias, removidosSemMarcacao } = useMemo(() => {
+    if (!nomesComMarcacao) return { pendencias: pendenciasBrutas, removidosSemMarcacao: 0 };
+    let removidos = 0;
+    const lista = pendenciasBrutas
+      .map((p) => {
+        const faltantes = p.faltantes.filter((f) => nomesComMarcacao.has(f.nome_normalizado));
+        removidos += p.faltantes.length - faltantes.length;
+        return { ...p, faltantes, total: p.protocolados + faltantes.length };
+      })
+      .filter((p) => p.total > 0)
+      .sort((a, b) => b.faltantes.length - a.faltantes.length);
+    return { pendencias: lista, removidosSemMarcacao: removidos };
+  }, [pendenciasBrutas, nomesComMarcacao]);
 
   /** Postos vindos da planilha de ativos importada (coluna de setor/empresa). */
   const postos = useMemo(
@@ -440,6 +479,14 @@ export function AbaProtocolacao() {
       )}
       {erroAtivos && <ServerFunctionAwareInlineError error={erroAtivos} />}
       {erroFolhas && <ServerFunctionAwareInlineError error={erroFolhas} />}
+
+      <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+        {marcacoesQuery.isLoading
+          ? `Conferindo na NEXTI quem teve marcação de ponto em ${rotuloMes}...`
+          : filtroNextiAtivo
+            ? `Conferido na NEXTI (${rotuloMes}): ${removidosSemMarcacao} colaborador(es) sem nenhuma marcação no mês saíram dos pendentes.`
+            : `Não foi possível conferir as marcações de ${rotuloMes} na NEXTI${marcacoesQuery.data?.erro ? ` (${marcacoesQuery.data.erro})` : ""}. Pendentes mostrados sem esse filtro.`}
+      </p>
 
       {!!ativos?.length && (
         <>
