@@ -112,8 +112,8 @@ export function RhPublicarVagasWhatsapp({ vagas }: { vagas: VagaSolicitacao[] })
 
   async function enviar() {
     const jids = [...marcados];
-    if (!texto.trim()) return toast.error("Escreva a mensagem da vaga.");
-    if (jids.length === 0) return toast.error("Selecione ao menos um grupo.");
+    if (!texto.trim()) { toast.error("Escreva a mensagem da vaga."); return; }
+    if (jids.length === 0) { toast.error("Selecione ao menos um grupo."); return; }
     if (!window.confirm(`Publicar esta vaga em ${jids.length} grupo(s)?`)) return;
     setEnviando(true);
     try {
