@@ -85,7 +85,14 @@ export function PostosServicoMapaCard() {
     }
   }, [sincronizar, carregar]);
 
-  const permitidos = useMemo(() => filtrarEmpresasPermitidas(postos), [postos]);
+  // REGRA: postos com inicial "TS" não aparecem na lista nem no mapa.
+  const permitidos = useMemo(
+    () =>
+      filtrarEmpresasPermitidas(
+        postos.filter((p) => !p.nome.trim().toUpperCase().startsWith("TS")),
+      ),
+    [postos],
+  );
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toUpperCase();

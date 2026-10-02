@@ -239,6 +239,8 @@ export const listarRelatoriosRoteiroCoordenacao = createServerFn({ method: "GET"
 
     const relatorios: RelatorioRoteiroCoordenacao[] = [];
     for (const linha of data ?? []) {
+      // REGRA: relatórios de postos com inicial "TS" não aparecem na coordenação.
+      if (nomeIniciaTs(String((linha as { posto?: string | null }).posto ?? ""))) continue;
       const caminho = (linha as { relatorio_pdf_path: string | null }).relatorio_pdf_path;
       let url: string | null = null;
       if (caminho) {
@@ -299,6 +301,11 @@ export type PostoProximo = {
   cidade: string;
   distanciaKm: number;
 };
+
+/** REGRA: postos com inicial "TS" (ex.: "TS - ...") não aparecem na supervisão. */
+function nomeIniciaTs(nome: string): boolean {
+  return nome.trim().toUpperCase().startsWith("TS");
+}
 
 function distanciaKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const rad = (g: number) => (g * Math.PI) / 180;
@@ -363,7 +370,7 @@ export const postosProximosSupervisao = createServerFn({ method: "POST" })
             Number(linha.longitude),
           ),
         }))
-        .filter((p) => Number.isFinite(p.id) && Number.isFinite(p.distanciaKm))
+        .filter((p) => Number.isFinite(p.id) && Number.isFinite(p.distanciaKm) && !nomeIniciaTs(p.nome))
         .sort((a, b) => a.distanciaKm - b.distanciaKm)
         .slice(0, 8);
 

@@ -740,6 +740,8 @@ export const pesquisarPostosNexti = createServerFn({ method: "POST" })
           vistos.add(chave);
           lista.push({ id, nome, externalId });
         }
+        // REGRA: postos com inicial "TS" (ex.: "TS - ...") nunca entram na busca.
+        lista = lista.filter((p) => !p.nome.trim().toUpperCase().startsWith("TS"));
         lista.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
         cachePostos = { lista, em: Date.now() };
         em = cachePostos.em;
