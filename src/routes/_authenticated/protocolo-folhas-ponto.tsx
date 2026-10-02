@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Activity,
   Calculator,
@@ -10,6 +10,8 @@ import {
   MapPinned,
   Menu,
   Palmtree,
+  PanelLeftClose,
+  PanelLeftOpen,
   Scissors,
   UserMinus,
   UserPlus,
@@ -41,6 +43,7 @@ import { SincronizacaoAutomaticaNexti } from "@/components/SincronizacaoAutomati
 import { ServerFunctionAwareInlineError } from "@/components/server-function-refresh-notice";
 import { OperationalErrorBoundary } from "@/components/OperationalErrorBoundary";
 import { PageHeader } from "@/components/PageHeader";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useOperationalAI } from "@/hooks/use-operational-ai";
 import { useProtocoloFolhasRealtimeSync } from "@/lib/protocolo-folhas-sync";
 
@@ -95,8 +98,12 @@ const ITENS_MENU: { value: Aba; label: string; icon: typeof Activity }[] = [
   { value: "demitidos", label: "Demitidos", icon: UserMinus },
 ];
 
+/** Guarda a preferência de menu escondido entre visitas à página. */
+const CHAVE_MENU_RECOLHIDO = "corehub:menu-protocolo-recolhido";
+
 function ProtocoloFolhasPonto() {
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   // Liga o monitoramento da IA Operacional nesta página.
   useOperationalAI();
   const tempoReal = useProtocoloFolhasRealtimeSync(queryClient);
@@ -105,6 +112,32 @@ function ProtocoloFolhasPonto() {
   const [arquivoPdf, setArquivoPdf] = useState<File | null>(null);
   const [aba, setAba] = useState<Aba>("protocolar");
   const [menuAberto, setMenuAberto] = useState(false);
+  const [recolhido, setRecolhido] = useState(false);
+
+  useEffect(() => {
+    try {
+      setRecolhido(localStorage.getItem(CHAVE_MENU_RECOLHIDO) === "1");
+    } catch {
+      setRecolhido(false);
+    }
+  }, []);
+
+  /** No computador esconde/reabre a coluna; no celular apenas fecha a gaveta. */
+  const alternarMenu = () => {
+    if (isMobile) {
+      setMenuAberto(false);
+      return;
+    }
+    setRecolhido((atual) => {
+      const proximo = !atual;
+      try {
+        localStorage.setItem(CHAVE_MENU_RECOLHIDO, proximo ? "1" : "0");
+      } catch {
+        // A preferência segue funcionando sem persistência local.
+      }
+      return proximo;
+    });
+  };
 
   return (
     <main className="min-h-screen bg-background">
@@ -133,12 +166,28 @@ function ProtocoloFolhasPonto() {
 
         <aside
           id="menu-protocolo-folhas"
-          className={`${menuAberto ? "block" : "hidden"} shrink-0 border-border bg-muted/20 py-4 pb-24 md:sticky md:top-2 md:block md:max-h-[calc(100vh-1rem)] md:w-72 md:self-start md:overflow-y-auto md:rounded-lg md:border md:px-3 md:py-5 md:pb-5`}
+          className={`${menuAberto ? "block" : "hidden"} shrink-0 border-border bg-muted/20 py-4 pb-24 md:sticky md:top-2 md:block md:max-h-[calc(100vh-1rem)] md:self-start md:overflow-y-auto md:rounded-lg md:border md:px-3 md:py-5 md:pb-5 ${
+            recolhido ? "md:w-16" : "md:w-72"
+          }`}
         >
           <nav aria-label="Menu do protocolo de folhas de ponto">
-            <p className="mb-4 px-3 text-xs font-semibold uppercase text-muted-foreground">
-              Protocolo de folhas
-            </p>
+            <div className={`mb-4 flex items-center px-3 ${recolhido ? "md:justify-center md:px-0" : "justify-between"}`}>
+              <p className={`text-xs font-semibold uppercase text-muted-foreground ${recolhido ? "md:hidden" : ""}`}>
+                Protocolo de folhas
+              </p>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={alternarMenu}
+                aria-expanded={!recolhido}
+                aria-controls="menu-protocolo-folhas"
+                aria-label={isMobile ? "Fechar menu" : recolhido ? "Abrir menu" : "Esconder menu"}
+                title={isMobile ? "Fechar menu" : recolhido ? "Abrir menu" : "Esconder menu"}
+                className="size-8 shrink-0 text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                {recolhido ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+              </Button>
+            </div>
             <div className="space-y-1">
               {ITENS_MENU.map((item) => {
                 const ativa = aba === item.value;
@@ -146,20 +195,27 @@ function ProtocoloFolhasPonto() {
                   <button
                     key={item.value}
                     type="button"
+                    title={recolhido ? item.label : undefined}
                     onClick={() => {
                       setAba(item.value);
                       setMenuAberto(false);
                     }}
                     aria-current={ativa ? "page" : undefined}
                     className={`group flex min-h-12 w-full items-center gap-3 rounded-md px-3 py-3 text-sm font-medium leading-snug transition-colors focus-visible:outline-2 focus-visible:outline-primary ${
+                      recolhido ? "md:justify-center md:gap-0 md:px-2" : ""
+                    } ${
                       ativa
                         ? "bg-primary/10 text-primary ring-1 ring-primary/25"
                         : "text-foreground hover:bg-accent hover:text-accent-foreground"
                     }`}
                   >
                     <item.icon className="size-5 shrink-0 text-primary" />
-                    <span className="min-w-0 flex-1">{item.label}</span>
-                    <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                    <span className={`min-w-0 flex-1 ${recolhido ? "md:hidden" : ""}`}>{item.label}</span>
+                    <ChevronRight
+                      className={`size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 ${
+                        recolhido ? "md:hidden" : ""
+                      }`}
+                    />
                   </button>
                 );
               })}
