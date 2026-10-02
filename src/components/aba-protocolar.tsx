@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  AlertTriangle,
   CheckCircle,
   ClipboardList,
   Eye,
@@ -211,6 +212,25 @@ export function AbaProtocolar() {
     [todasFolhasPreview],
   );
 
+  /** Chaves das folhas já protocoladas neste ciclo (para avisar no preview). */
+  const chavesBancoQuery = useQuery({
+    queryKey: ["protocolo-folhas-chaves-ciclo", ciclo.inicio, ciclo.fim],
+    queryFn: () => carregarChavesExistentes(ciclo.inicio, ciclo.fim),
+    staleTime: 30_000,
+  });
+
+  /** Folhas do preview que já existem em algum protocolo salvo do ciclo. */
+  const duplicidadesBanco = useMemo(() => {
+    const existentes = chavesBancoQuery.data;
+    if (!existentes || existentes.size === 0) return new Set<string>();
+    const repetidas = new Set<string>();
+    for (const folha of todasFolhasPreview) {
+      const chave = chaveUnicaFolhaPonto(folha);
+      if (existentes.has(chave)) repetidas.add(chave);
+    }
+    return repetidas;
+  }, [chavesBancoQuery.data, todasFolhasPreview]);
+
   const protocolarMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Usuário não autenticado. Faça login novamente.");
@@ -386,6 +406,7 @@ export function AbaProtocolar() {
       setForm({ ...CAMPO_VAZIO });
       if (inputRef.current) inputRef.current.value = "";
       invalidarConsultasProtocoloFolhas(queryClient);
+      queryClient.invalidateQueries({ queryKey: ["protocolo-folhas-chaves-ciclo"] });
       notificarAtualizacaoProtocoloFolhas("protocolacao");
     },
     onError: (err: Error) => {
@@ -518,16 +539,30 @@ export function AbaProtocolar() {
                           <td className="px-3 py-2 text-muted-foreground">{f.posto || "—"}</td>
                           <td className="px-3 py-2 text-muted-foreground">{f.admissao || "—"}</td>
                           <td className="px-3 py-2">
-                            {f.folhaManual ? (
-                              <Badge
-                                variant="outline"
-                                className="border-amber-500/50 text-xs text-amber-600 dark:text-amber-400"
-                              >
-                                FOLHA MANUAL
-                              </Badge>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              {f.folhaManual && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-amber-500/50 text-xs text-amber-600 dark:text-amber-400"
+                                >
+                                  FOLHA MANUAL
+                                </Badge>
+                              )}
+                              {duplicidadesBanco.has(chaveUnicaFolhaPonto(f)) && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-destructive/60 text-xs text-destructive"
+                                  title="Esta folha já consta em um protocolo salvo neste ciclo e será ignorada ao salvar."
+                                >
+                                  <AlertTriangle className="mr-1 h-3 w-3" />
+                                  DUPLICIDADE
+                                </Badge>
+                              )}
+                              {!f.folhaManual &&
+                                !duplicidadesBanco.has(chaveUnicaFolhaPonto(f)) && (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                            </div>
                           </td>
                           <td className="px-3 py-2 text-right">
                             <Button
@@ -649,7 +684,21 @@ export function AbaProtocolar() {
                   {folhasManuais.map((f, idx) => (
                     <tr key={f.id} className="border-t border-border">
                       <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
-                      <td className="px-3 py-2 font-medium text-foreground">{f.colaborador}</td>
+                      <td className="px-3 py-2 font-medium text-foreground">
+                        <span className="inline-flex flex-wrap items-center gap-1.5">
+                          {f.colaborador}
+                          {duplicidadesBanco.has(chaveUnicaFolhaPonto(f)) && (
+                            <Badge
+                              variant="outline"
+                              className="border-destructive/60 text-xs text-destructive"
+                              title="Esta folha já consta em um protocolo salvo neste ciclo e será ignorada ao salvar."
+                            >
+                              <AlertTriangle className="mr-1 h-3 w-3" />
+                              DUPLICIDADE
+                            </Badge>
+                          )}
+                        </span>
+                      </td>
                       <td className="px-3 py-2 text-muted-foreground">{f.empresa || "—"}</td>
                       <td className="px-3 py-2 text-muted-foreground">{f.cargo || "—"}</td>
                       <td className="px-3 py-2 text-muted-foreground">{f.matricula || "—"}</td>
@@ -693,6 +742,16 @@ export function AbaProtocolar() {
               {duplicadasPreview > 0 && (
                 <p className="text-amber-600 dark:text-amber-400">
                   {duplicadasPreview} duplicidade(s) no arquivo/formulário serão ignorada(s).
+                </p>
+              )}
+              {duplicidadesBanco.size > 0 && (
+                <p className="flex items-center gap-1.5 font-medium text-destructive">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  {duplicidadesBanco.size} folha{duplicidadesBanco.size !== 1 ? "s" : ""} já
+                  protocolada{duplicidadesBanco.size !== 1 ? "s" : ""} neste ciclo (marcada
+                  {duplicidadesBanco.size !== 1 ? "s" : ""} como DUPLICIDADE) — será
+                  {duplicidadesBanco.size !== 1 ? "ão" : ""} ignorada
+                  {duplicidadesBanco.size !== 1 ? "s" : ""} ao salvar.
                 </p>
               )}
               {qtdExcluidas > 0 && (
