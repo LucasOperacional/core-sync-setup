@@ -66,7 +66,8 @@ export const nomesComMarcacaoNoMes = createServerFn({ method: "GET" })
                 const nome = m["personName"];
                 if (typeof nome === "string" && nome.trim()) nomes.add(nome.trim());
               }
-              if (itens.length < 1000) break;
+              // A NEXTI devolve o dia inteiro de uma vez (lista simples, sem páginas).
+              if (Array.isArray(r.data) || itens.length < 1000) break;
             }
             return;
           } catch {
