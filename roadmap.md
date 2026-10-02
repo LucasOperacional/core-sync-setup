@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Trocar os atalhos horizontais da página Coordenação por um menu lateral, adaptado ao celular.
+
 - [x] Reiniciar a contagem de protocolação no dia 10 de cada mês, mantendo protocolos antigos no histórico e liberando nova protocolação por ciclo.
 
 - [x] Varredura de desempenho: reduzir lentidão (bundle inicial, consultas repetidas, índices no banco)
