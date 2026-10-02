@@ -391,6 +391,7 @@ export function useCategoriasPostos() {
           .from("protocolo_folhas")
           .select("colaborador, protocolos!inner(created_at)")
           .gte("protocolos.created_at", ciclo.inicio)
+          .lt("protocolos.created_at", ciclo.fim)
           .range(i, f);
         return { data: (data ?? []) as { colaborador: string | null }[], error };
       });

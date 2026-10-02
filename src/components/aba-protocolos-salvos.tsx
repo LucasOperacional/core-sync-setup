@@ -160,7 +160,7 @@ export function AbaProtocolosSalvos() {
 
     const primeiroPorChave = new Map<string, { protocoloId: string; titulo: string }>();
     // data vem do mais novo para o mais antigo; percorrer invertido dá o original.
-    [...(data ?? [])].filter((p) => p.created_at >= ciclo.inicio).reverse().forEach((p) => {
+    [...(data ?? [])].filter((p) => p.created_at >= ciclo.inicio && p.created_at < ciclo.fim).reverse().forEach((p) => {
       p.protocolo_folhas_lista.forEach((f) => {
         const k = chave(f.colaborador, f.empresa);
         if (!primeiroPorChave.has(k)) {

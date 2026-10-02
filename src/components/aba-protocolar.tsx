@@ -70,7 +70,7 @@ function gerarId() {
   return `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-async function carregarChavesExistentes(inicio: string): Promise<Set<string>> {
+async function carregarChavesExistentes(inicio: string, fim: string): Promise<Set<string>> {
   const PAGINA = 1000;
   const chaves = new Set<string>();
 
@@ -79,6 +79,7 @@ async function carregarChavesExistentes(inicio: string): Promise<Set<string>> {
       .from("protocolo_folhas")
       .select("colaborador, empresa, matricula, protocolos!inner(created_at)")
       .gte("protocolos.created_at", inicio)
+      .lt("protocolos.created_at", fim)
       .range(inicio, inicio + PAGINA - 1);
 
     if (error) throw error;
@@ -220,7 +221,7 @@ export function AbaProtocolar() {
         );
       }
 
-      const chavesExistentes = await carregarChavesExistentes(ciclo.inicio);
+      const chavesExistentes = await carregarChavesExistentes(ciclo.inicio, ciclo.fim);
       const folhasNovas = previewDeduplicado.unicas.filter(
         (folha) => !chavesExistentes.has(chaveUnicaFolhaPonto(folha)),
       );
@@ -237,6 +238,7 @@ export function AbaProtocolar() {
           .eq("user_id", user.id)
           .eq("titulo", file.name)
           .gte("created_at", ciclo.inicio)
+          .lt("created_at", ciclo.fim)
           .order("created_at", { ascending: false })
           .limit(10);
         if (erroCandidatos) throw erroCandidatos;

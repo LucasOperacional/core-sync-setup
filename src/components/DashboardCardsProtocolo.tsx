@@ -81,7 +81,7 @@ async function buscarTodosPaginado<T>(
   return todos;
 }
 
-async function carregarResumoDashboardProtocolo(inicio: string): Promise<ResumoDashboardProtocolo> {
+async function carregarResumoDashboardProtocolo(inicio: string, fim: string): Promise<ResumoDashboardProtocolo> {
   try {
     const [ativos, folhas] = await Promise.all([
       buscarTodosPaginado<FuncionarioAtivoBanco>(async (inicio, fim) => {
@@ -99,6 +99,7 @@ async function carregarResumoDashboardProtocolo(inicio: string): Promise<ResumoD
           .from("protocolo_folhas")
           .select("id, protocolo_id, colaborador, empresa, cargo, matricula, posto, ordem, protocolos!inner(created_at)")
           .gte("protocolos.created_at", inicio)
+          .lt("protocolos.created_at", fim)
           .order("id", { ascending: true })
           .range(inicio, fim);
         return { data: (data ?? []) as FolhaProtocolada[], error };
@@ -116,10 +117,10 @@ async function carregarResumoDashboardProtocolo(inicio: string): Promise<ResumoD
   }
 }
 
-function useResumoDashboardProtocolo(inicio: string) {
+function useResumoDashboardProtocolo(inicio: string, fim: string) {
   return useQuery({
     queryKey: [...protocoloFolhasQueryKeys.dashboardResumo, inicio],
-    queryFn: () => carregarResumoDashboardProtocolo(inicio),
+    queryFn: () => carregarResumoDashboardProtocolo(inicio, fim),
     staleTime: 60_000,
     gcTime: 1000 * 60 * 10,
     refetchOnWindowFocus: false,
@@ -284,7 +285,7 @@ export function DashboardCardsProtocolo({ tempoReal }: { tempoReal?: Sincronizac
   const ciclo = useCicloProtocolacao();
   const estadoTempoReal =
     ESTADOS_TEMPO_REAL[tempoReal?.status ?? "conectado"] ?? ESTADOS_TEMPO_REAL.conectado;
-  const { data, isLoading, isFetching, isError, error, refetch } = useResumoDashboardProtocolo(ciclo.inicio);
+  const { data, isLoading, isFetching, isError, error, refetch } = useResumoDashboardProtocolo(ciclo.inicio, ciclo.fim);
 
   const {
     categorias,

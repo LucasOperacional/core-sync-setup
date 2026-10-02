@@ -217,6 +217,7 @@ export function useFolhasProtocoladas() {
           .from("protocolo_folhas")
           .select("colaborador, empresa, cargo, posto, protocolos!inner(created_at)")
           .gte("protocolos.created_at", ciclo.inicio)
+          .lt("protocolos.created_at", ciclo.fim)
           .order("id", { ascending: true })
           .range(inicio, inicio + PAGINA - 1);
         if (error) throw error;
