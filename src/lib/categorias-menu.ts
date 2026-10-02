@@ -25,6 +25,7 @@ export const CATEGORIAS_MENU: Record<string, CategoriaMenu> = {
       { to: "/comercial-contratos", label: "Contratos", descricao: "Contratos fechados e vigentes.", icon: "briefcase" },
       { to: "/comercial-relatorios", label: "Relatórios", descricao: "Desempenho comercial em PDF e Excel.", icon: "chart" },
       { to: "/prospeccao-maps", label: "Prospecção Google Maps", descricao: "Encontre empresas e contatos pelo mapa.", icon: "pin", livre: true },
+      { to: "/extrator-leads", label: "Extrator de Leads", descricao: "Nome, telefone, e-mail, CNPJ e endereço dos leads.", icon: "target", livre: true },
     ],
   },
   "departamento-pessoal": {
