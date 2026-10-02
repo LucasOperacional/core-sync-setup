@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Adicionar no menu lateral do Protocolo de Folhas o botão de esconder/reabrir, com preferência salva.
+
 - [x] Criar menu lateral na página Protocolo de Folhas de Ponto, substituindo a barra de abas e adaptado ao celular.
 
 - [x] Trocar os atalhos horizontais da página Coordenação por um menu lateral, adaptado ao celular.
