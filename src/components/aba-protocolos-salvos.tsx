@@ -112,7 +112,7 @@ export function AbaProtocolosSalvos() {
       const folhas = await buscarTudoPaginado<FolhaResumo>((inicio, fim) =>
         supabase
           .from("protocolo_folhas")
-          .select("protocolo_id, ordem, colaborador, empresa, cargo")
+          .select("id, protocolo_id, ordem, colaborador, empresa, cargo")
           .order("protocolo_id", { ascending: true })
           .order("ordem", { ascending: true })
           .range(inicio, fim),
@@ -208,6 +208,29 @@ export function AbaProtocolosSalvos() {
       return;
     }
     toast.success("Protocolo apagado.");
+    invalidarConsultasProtocoloFolhas(queryClient);
+    notificarAtualizacaoProtocoloFolhas("exclusao");
+  }
+
+  /** Remove um único nome (folha) já salvo no protocolo. */
+  async function removerNome(item: FolhaResumo & { protocolo: Linha }) {
+    const confirmado =
+      typeof window === "undefined" ||
+      window.confirm(
+        `Remover o nome "${item.colaborador}" do protocolo "${item.protocolo.titulo}"? Esta ação não pode ser desfeita.`,
+      );
+    if (!confirmado) return;
+
+    const { error: err } = await supabase
+      .from("protocolo_folhas")
+      .delete()
+      .eq("id", item.id)
+      .eq("protocolo_id", item.protocolo_id);
+    if (err) {
+      toast.error(err.message || "Não foi possível remover o nome do protocolo.");
+      return;
+    }
+    toast.success(`${item.colaborador} removido do protocolo.`);
     invalidarConsultasProtocoloFolhas(queryClient);
     notificarAtualizacaoProtocoloFolhas("exclusao");
   }
