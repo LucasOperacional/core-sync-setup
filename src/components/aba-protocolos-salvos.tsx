@@ -421,6 +421,11 @@ export function AbaProtocolosSalvos() {
                   {dataBr(item.protocolo.data_entrega)}
                 </p>
               </div>
+              {ehAdmin && (
+                <Button variant="outline" className="text-destructive" onClick={() => removerNome(item)}>
+                  Remover nome
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={() => abrirPdf(item.protocolo)}>
                 Abrir em PDF
               </Button>
