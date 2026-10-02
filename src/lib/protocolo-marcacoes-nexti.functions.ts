@@ -38,7 +38,8 @@ export const nomesComMarcacaoNoMes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ mes: z.string().regex(/^\d{4}-\d{2}$/) }).parse(d))
   .handler(async ({ data, context }): Promise<MarcacoesMesResultado> => {
-    const [ano, mes] = data.mes.split("-").map(Number);
+    const ano = Number(data.mes.slice(0, 4));
+    const mes = Number(data.mes.slice(5, 7));
     const ultimoDia = new Date(Date.UTC(ano, mes, 0)).getUTCDate();
     const mm = String(mes).padStart(2, "0");
     try {
