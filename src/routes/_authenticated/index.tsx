@@ -27,6 +27,7 @@ function HomePage() {
   const [currentDate, setCurrentDate] = useState<string>("");
   const [currentWeekday, setCurrentWeekday] = useState<string>("");
   const [currentTime, setCurrentTime] = useState<string>("");
+  const [greeting, setGreeting] = useState("Bom dia");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data, error }) => {
@@ -45,6 +46,8 @@ function HomePage() {
   useEffect(() => {
     const updateDateTime = () => {
       const now = new Date();
+      const hour = now.getHours();
+      setGreeting(hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite");
       setCurrentWeekday(now.toLocaleDateString("pt-BR", { weekday: "long" }));
       setCurrentDate(
         now.toLocaleDateString("pt-BR", {
@@ -62,7 +65,7 @@ function HomePage() {
     };
 
     updateDateTime();
-    const interval = setInterval(updateDateTime, 60000);
+    const interval = setInterval(updateDateTime, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -72,7 +75,7 @@ function HomePage() {
         <div className="mx-auto grid min-h-24 max-w-[88rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-5 sm:px-6 lg:px-8">
           <div className="min-w-0">
             <p className="mb-1 text-[10px] font-semibold uppercase text-primary">NXS / Visão geral</p>
-            <h1 className="font-display text-2xl">Bom dia, {userName.includes("@") ? userName.split("@")[0] : userName.split(" ")[0]}</h1>
+            <h1 className="font-display text-2xl">{greeting}, {userName.includes("@") ? userName.split("@")[0] : userName.split(" ")[0]}</h1>
             <p className="mt-1 text-sm text-muted-foreground">Sua central de trabalho está pronta.</p>
           </div>
           <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
