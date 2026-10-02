@@ -11,3 +11,4 @@
 - Departamento Pessoal (férias, VT, VA, folha, eSocial) vive em src/components/dp/DPWorkspace.tsx + src/lib/dp-calculos.ts, lendo horas/faltas de pnt_daily_summaries/pnt_absences — o ponto é a única fonte de horas da folha.
 
 - Render tracking and NEXTI workplace maps in RastreioMapa.tsx with Leaflet and OpenStreetMap-based tiles; keep location data from existing server functions so map provider changes do not alter business logic.
+- Keep the Prospecção Google Maps category tile as a destination-specific visual variant in CategoriaCards; this preserves the shared navigation and permission handling for every tile.
