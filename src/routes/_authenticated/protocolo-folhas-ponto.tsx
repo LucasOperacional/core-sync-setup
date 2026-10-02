@@ -133,7 +133,7 @@ function ProtocoloFolhasPonto() {
 
         <aside
           id="menu-protocolo-folhas"
-          className={`${menuAberto ? "block" : "hidden"} shrink-0 border-border bg-muted/20 py-4 md:sticky md:top-2 md:block md:max-h-[calc(100vh-1rem)] md:w-72 md:self-start md:overflow-y-auto md:rounded-lg md:border md:px-3 md:py-5`}
+          className={`${menuAberto ? "block" : "hidden"} shrink-0 border-border bg-muted/20 py-4 pb-24 md:sticky md:top-2 md:block md:max-h-[calc(100vh-1rem)] md:w-72 md:self-start md:overflow-y-auto md:rounded-lg md:border md:px-3 md:py-5 md:pb-5`}
         >
           <nav aria-label="Menu do protocolo de folhas de ponto">
             <p className="mb-4 px-3 text-xs font-semibold uppercase text-muted-foreground">
