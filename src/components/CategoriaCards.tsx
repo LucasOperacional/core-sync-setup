@@ -99,18 +99,20 @@ export function CategoriaCards({
     );
   }
 
+  const destaqueComercial = categoriaKey === "categoria-comercial";
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {visiveis.map((item) => (
         <Link key={item.to} to={item.to} preload="intent" className="group block">
-          {item.to === "/prospeccao-maps" ? (
+          {destaqueComercial ? (
             <Card className="prospeccao-card relative aspect-square h-full overflow-hidden">
               <CardContent className="relative z-10 flex h-full flex-col items-center justify-center p-6 text-center">
                 <span className="mb-6 grid size-20 shrink-0 place-items-center rounded-lg border border-primary/25 bg-primary/10 text-primary transition-colors duration-300 group-hover:border-primary/50">
                   <item.icon className="size-10" strokeWidth={1.5} />
                 </span>
                 <span className="font-display text-xl font-semibold leading-tight text-card-foreground">
-                  Prospecção<br />Google Maps
+                  {item.label}
                 </span>
                 <span className="mt-2 text-xs font-semibold uppercase text-muted-foreground transition-colors group-hover:text-primary">
                   Comercial
