@@ -683,7 +683,21 @@ export function AbaProtocolar() {
                   {folhasManuais.map((f, idx) => (
                     <tr key={f.id} className="border-t border-border">
                       <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
-                      <td className="px-3 py-2 font-medium text-foreground">{f.colaborador}</td>
+                      <td className="px-3 py-2 font-medium text-foreground">
+                        <span className="inline-flex flex-wrap items-center gap-1.5">
+                          {f.colaborador}
+                          {duplicidadesBanco.has(chaveUnicaFolhaPonto(f)) && (
+                            <Badge
+                              variant="outline"
+                              className="border-destructive/60 text-xs text-destructive"
+                              title="Esta folha já consta em um protocolo salvo neste ciclo e será ignorada ao salvar."
+                            >
+                              <AlertTriangle className="mr-1 h-3 w-3" />
+                              DUPLICIDADE
+                            </Badge>
+                          )}
+                        </span>
+                      </td>
                       <td className="px-3 py-2 text-muted-foreground">{f.empresa || "—"}</td>
                       <td className="px-3 py-2 text-muted-foreground">{f.cargo || "—"}</td>
                       <td className="px-3 py-2 text-muted-foreground">{f.matricula || "—"}</td>
