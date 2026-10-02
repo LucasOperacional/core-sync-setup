@@ -12,4 +12,4 @@
 
 - Render tracking and NEXTI workplace maps in RastreioMapa.tsx with Leaflet and OpenStreetMap-based tiles; keep location data from existing server functions so map provider changes do not alter business logic.
 - Keep the Prospecção Google Maps category tile as a destination-specific visual variant in CategoriaCards; this preserves the shared navigation and permission handling for every tile.
-- Keep coordination's local destination menu within the coordination page, separate from the global AppShell navigation; this scopes its five tools to that workspace without changing other areas.
+- Keep page-level tool menus local to the page that owns them (coordination's destinations, protocolo de folhas' sections), rendered inside that page and separate from the global AppShell navigation; this scopes each workspace's tools to it without changing other areas.
