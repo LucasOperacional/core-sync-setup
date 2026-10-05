@@ -78,16 +78,21 @@ function PainelCoordenador() {
     };
   }, []);
 
+  const [aberto, setAberto] = useState<string | null>(null);
+
   const { linhas, total, media, postos } = useMemo(() => {
     const doCoord = visitas.filter((v) => coordDaVisita(v) === alvo);
-    const mapa = new Map<string, { visitas: number; soma: number; comNota: number; postos: Set<string> }>();
+    const mapa = new Map<
+      string,
+      { visitas: number; soma: number; comNota: number; postos: Map<string, number> }
+    >();
     const todosPostos = new Set<string>();
     let somaGeral = 0;
     let comNotaGeral = 0;
     for (const v of doCoord) {
       const nome = (v.supervisor ?? "").trim() || "Não informado";
       const posto = (v.posto || v.cliente || "").trim();
-      const s = mapa.get(nome) ?? { visitas: 0, soma: 0, comNota: 0, postos: new Set<string>() };
+      const s = mapa.get(nome) ?? { visitas: 0, soma: 0, comNota: 0, postos: new Map<string, number>() };
       s.visitas++;
       if (typeof v.percentual_conformidade === "number") {
         s.soma += v.percentual_conformidade;
@@ -96,7 +101,7 @@ function PainelCoordenador() {
         comNotaGeral++;
       }
       if (posto) {
-        s.postos.add(posto);
+        s.postos.set(posto, (s.postos.get(posto) ?? 0) + 1);
         todosPostos.add(posto);
       }
       mapa.set(nome, s);
@@ -107,6 +112,9 @@ function PainelCoordenador() {
         visitas: s.visitas,
         postos: s.postos.size,
         qualidade: s.comNota ? Math.round(s.soma / s.comNota) : 0,
+        listaPostos: Array.from(s.postos.entries())
+          .map(([posto, qtd]) => ({ posto, qtd }))
+          .sort((a, b) => b.qtd - a.qtd || a.posto.localeCompare(b.posto)),
       }))
       .sort((a, b) => b.visitas - a.visitas);
     return {
