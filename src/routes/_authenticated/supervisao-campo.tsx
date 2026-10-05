@@ -50,6 +50,7 @@ function SupervisaoCampoPage() {
           <ChecklistAutomaticoCard />
           <RelatoriosVisitaCoordenacaoCard />
         </div>
+        <VisitasPorPostoCard />
         <PostosServicoMapaCard />
       </div>
 
