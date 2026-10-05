@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ChevronDown, ChevronUp, Loader2, MapPin, Pencil, RefreshCw, Trash2, Users, X } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Link2, Loader2, MapPin, Pencil, RefreshCw, Trash2, Users, X } from "lucide-react";
+import { listarVinculosGerentes, vincularUsuarioGerente } from "@/lib/gerente-vinculo.functions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -108,6 +109,25 @@ export function PostosPorGerenteCards() {
   // As quantidades só são baixadas quando algum card de gerente está aberto.
   const { buscar, carregando } = useVisitasPorNomePosto(Object.values(abertos).some(Boolean));
 
+  const listarVinc = useServerFn(listarVinculosGerentes);
+  const vincularFn = useServerFn(vincularUsuarioGerente);
+  const vq = useQuery({ queryKey: ["gerente-vinculos"], queryFn: () => listarVinc(), staleTime: 60_000 });
+  const vinculoDe = new Map((vq.data?.vinculos ?? []).map((v) => [v.gerente_nome, v.user_id]));
+  const [vinculando, setVinculando] = useState<string | null>(null);
+  async function vincular(gerente: string, userId: string | null) {
+    setVinculando(gerente);
+    try {
+      const r = await vincularFn({ data: { gerenteNome: gerente, userId } });
+      if (!r.ok) throw new Error(r.erro);
+      await qc.invalidateQueries({ queryKey: ["gerente-vinculos"] });
+      toast.success(userId ? `Usuário vinculado a ${nomeAmigavel(gerente)}: verá só esses postos.` : "Vínculo removido.");
+    } catch (e) {
+      toast.error("Falha ao vincular: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setVinculando(null);
+    }
+  }
+
   const gerentes = q.data?.ok ? q.data.gerentes : [];
 
   return (
@@ -170,6 +190,24 @@ export function PostosPorGerenteCards() {
                     </div>
                     {aberto ? <ChevronUp className="size-4 shrink-0" /> : <ChevronDown className="size-4 shrink-0" />}
                   </button>
+                  {vq.data?.admin && (
+                    <div className="flex items-center gap-2 border-t border-border px-4 py-2 text-xs">
+                      <Link2 className="size-3.5 shrink-0 text-muted-foreground" />
+                      <select
+                        className="h-7 min-w-0 flex-1 rounded border border-input bg-background px-1 text-xs"
+                        value={vinculoDe.get(g.nome) ?? ""}
+                        disabled={vinculando === g.nome}
+                        onChange={(e) => void vincular(g.nome, e.target.value || null)}
+                        title="Usuário vinculado: verá apenas os postos deste card"
+                      >
+                        <option value="">Sem usuário vinculado</option>
+                        {(vq.data?.usuarios ?? []).map((u) => (
+                          <option key={u.id} value={u.id}>{u.rotulo}</option>
+                        ))}
+                      </select>
+                      {vinculando === g.nome && <Loader2 className="size-3.5 animate-spin" />}
+                    </div>
+                  )}
                   <div className={cn("border-t border-border", !aberto && "hidden")}>
                     {carregando ? (
                       <p className="flex items-center justify-center gap-2 p-4 text-xs text-muted-foreground">
