@@ -134,13 +134,17 @@ export function ehPostoEncerrado(l: {
   return false;
 }
 
-/** REGRA: posto encerrado, noturno ativado, "TS", "FGR" ou uso restrito não é exibido no mapa. */
-export function ocultarNoMapa(p: PostoMapa): boolean {
+/**
+ * REGRA: posto encerrado, "TS", "FGR" ou uso restrito não é exibido no mapa.
+ * Posto noturno ativo só aparece para quem tem permissão (verNoturno):
+ * gerentes Israel, Adarmisson e Gabriel Medanha, superadmin e coordenadores.
+ */
+export function ocultarNoMapa(p: PostoMapa, verNoturno = false): boolean {
   if (p.encerrado) return true;
   if (p.ts) return true;
   if (p.fgr) return true;
   if (p.restrito) return true;
-  return p.noturno && p.ativo !== false;
+  return p.noturno && p.ativo !== false && !verNoturno;
 }
 
 /** REGRA: apenas postos dessas empresas aparecem no mapa. */

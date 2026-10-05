@@ -11,6 +11,7 @@ import {
   ocultarNoMapa,
   type PostoMapa,
 } from "@/lib/nexti-postos-mapa.functions";
+import { possoVerPostosNoturnos } from "@/lib/postos-noturnos.functions";
 
 const RastreioMapa = lazy(() => import("@/components/RastreioMapa"));
 
@@ -33,6 +34,14 @@ export function RastreioSupervisoresCard() {
   const [mostrarPostos, setMostrarPostos] = useState(true);
   const mapaRef = useRef<HTMLDivElement | null>(null);
   const [atualizandoId, setAtualizandoId] = useState<string | null>(null);
+  const verNoturnoFn = useServerFn(possoVerPostosNoturnos);
+  const [verNoturno, setVerNoturno] = useState(false);
+
+  useEffect(() => {
+    verNoturnoFn()
+      .then(setVerNoturno)
+      .catch(() => setVerNoturno(false));
+  }, [verNoturnoFn]);
 
   const buscar = useCallback(async () => {
     try {
@@ -59,10 +68,10 @@ export function RastreioSupervisoresCard() {
     () =>
       mostrarPostos
         ? filtrarEmpresasPermitidas(postos).filter(
-            (p) => p.latitude !== null && p.longitude !== null && !ocultarNoMapa(p),
+            (p) => p.latitude !== null && p.longitude !== null && !ocultarNoMapa(p, verNoturno),
           )
         : [],
-    [postos, mostrarPostos],
+    [postos, mostrarPostos, verNoturno],
   );
 
   /** Leva direto à localização da pessoa: centraliza o mapa e rola até ele. */

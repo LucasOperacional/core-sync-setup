@@ -15,6 +15,7 @@ import {
   sincronizarPostosNexti,
   type PostoMapa,
 } from "@/lib/nexti-postos-mapa.functions";
+import { possoVerPostosNoturnos } from "@/lib/postos-noturnos.functions";
 
 const RastreioMapa = lazy(() => import("@/components/RastreioMapa"));
 
@@ -28,6 +29,14 @@ export function PostosServicoMapaCard() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [foco, setFoco] = useState<number | null>(null);
+  const verNoturnoFn = useServerFn(possoVerPostosNoturnos);
+  const [verNoturno, setVerNoturno] = useState(false);
+
+  useEffect(() => {
+    verNoturnoFn()
+      .then(setVerNoturno)
+      .catch(() => setVerNoturno(false));
+  }, [verNoturnoFn]);
 
   const carregar = useCallback(async () => {
     try {
@@ -107,7 +116,7 @@ export function PostosServicoMapaCard() {
   const noMapa = useMemo(
     () =>
       filtrados
-        .filter((p) => p.latitude !== null && p.longitude !== null && !ocultarNoMapa(p))
+        .filter((p) => p.latitude !== null && p.longitude !== null && !ocultarNoMapa(p, verNoturno))
         .map((p) => ({
           ...p,
           nome:
@@ -117,10 +126,13 @@ export function PostosServicoMapaCard() {
                 })`
               : p.nome,
         })),
-    [filtrados],
+    [filtrados, verNoturno],
   );
 
-  const noturnosOcultos = useMemo(() => permitidos.filter(ocultarNoMapa).length, [permitidos]);
+  const noturnosOcultos = useMemo(
+    () => permitidos.filter((p) => ocultarNoMapa(p, verNoturno)).length,
+    [permitidos, verNoturno],
+  );
 
   return (
     <section className="panel p-5">
