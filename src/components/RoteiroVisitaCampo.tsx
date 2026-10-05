@@ -231,9 +231,12 @@ function lerRascunho(): RascunhoRoteiro | null {
 export function RoteiroVisitaCampo() {
   const { user } = useSessao();
   const nomeAvaliador = nomeDoUsuario(user);
-  // Para o superadmin a visita nunca começa sozinha: só inicia ao tocar em "Iniciar".
-  const inicioAutomaticoOff =
-    user?.email?.toLowerCase().trim() === "lucasdallan@gmail.com";
+  // Para o superadmin e o João Carlos a visita nunca começa sozinha: só inicia
+  // ao tocar em "Iniciar" (contador sempre zerado ao abrir a página).
+  const emailsSemInicioAutomatico = ["lucasdallan@gmail.com", "joaocarlos@gmail.com"];
+  const inicioAutomaticoOff = emailsSemInicioAutomatico.includes(
+    user?.email?.toLowerCase().trim() ?? "",
+  );
 
   const hoje = new Date().toISOString().slice(0, 10);
   // Restaura o rascunho salvo no aparelho para não perder nada se a página
