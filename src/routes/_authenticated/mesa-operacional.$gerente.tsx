@@ -35,6 +35,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { normalizarNome } from "@/lib/gerentes-area-a";
+import { normalizarNomePosto, useVisitasPorNomePosto } from "@/lib/visitas-postos-nome";
+import { SemaforoPosto } from "@/components/SemaforoPosto";
 import { Textarea } from "@/components/ui/textarea";
 import {
   buscarRelatorioGeralMesa,
@@ -174,6 +176,9 @@ function GerentePostosPage() {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao limpar o relatório"),
   });
+
+  // Bolinha e quantidade de visitas de cada posto (mesma regra da tela de visitas).
+  const { porNome } = useVisitasPorNomePosto();
 
   const postosDoGerente = useMemo(() => {
     const base = data?.postos ?? [];
@@ -369,6 +374,7 @@ function GerentePostosPage() {
                   <div className="flex items-center gap-1.5">
                     <IconeStatusRelatorio relatorio={posto.relatorio} />
                     <p className="truncate text-sm font-medium">{posto.nome}</p>
+                    <SemaforoPosto qtd={porNome.get(normalizarNomePosto(posto.nome))?.qtd} />
                   </div>
                   <p className="truncate text-xs text-muted-foreground">
                     {[posto.cliente, posto.localidade].filter(Boolean).join(" · ") ||
