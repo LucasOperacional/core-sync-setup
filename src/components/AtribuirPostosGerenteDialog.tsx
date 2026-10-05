@@ -15,8 +15,18 @@ import {
 } from "@/components/ui/dialog";
 import { AREAS_GERENTES, nomeAmigavel } from "@/lib/areas-gerentes";
 import { definirPostosDoGerente } from "@/lib/areas-gerentes.functions";
+import { BolinhaCor } from "@/components/SemaforoPosto";
+import type { Semaforo } from "@/lib/visitas-semaforo";
 
-type PostoRef = { nome: string; cliente?: string | null; cidade?: string | null; uf?: string | null };
+type PostoRef = {
+  nome: string;
+  cliente?: string | null;
+  cidade?: string | null;
+  uf?: string | null;
+  /** Quantidade de visitas e cor, quando o posto veio da tela de visitas por posto. */
+  total?: number;
+  cor?: Semaforo;
+};
 
 const norm = (s: string) =>
   s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim().toUpperCase();
@@ -53,6 +63,16 @@ export function AtribuirPostosGerenteDialog({ postos }: { postos: PostoRef[] }) 
   }, [texto, indice]);
 
   const naoEncontrados = linhas.filter((l) => !l.achado);
+
+  // Resumo por cor dos postos reconhecidos: mesma regra da tela de visitas.
+  const resumo = useMemo(() => {
+    const c = { verde: 0, amarelo: 0, vermelho: 0, sem: 0 };
+    for (const l of linhas) {
+      if (!l.achado?.cor) c.sem++;
+      else c[l.achado.cor]++;
+    }
+    return c;
+  }, [linhas]);
 
   async function salvar() {
     if (!gerente) {
@@ -126,6 +146,20 @@ export function AtribuirPostosGerenteDialog({ postos }: { postos: PostoRef[] }) 
             {linhas.length} postos na lista
             {naoEncontrados.length > 0 && ` · ${naoEncontrados.length} não encontrados no mapa (serão salvos como digitados)`}
           </p>
+          {linhas.length > 0 && (
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <BolinhaCor cor="verde" /> {resumo.verde}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <BolinhaCor cor="amarelo" /> {resumo.amarelo}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <BolinhaCor cor="vermelho" /> {resumo.vermelho}
+              </span>
+              {resumo.sem > 0 && <span className="inline-flex items-center gap-1.5">sem visita: {resumo.sem}</span>}
+            </div>
+          )}
           {naoEncontrados.length > 0 && (
             <div className="max-h-24 overflow-auto rounded border border-border bg-muted/30 p-2 text-xs text-muted-foreground">
               {naoEncontrados.map((l) => (
