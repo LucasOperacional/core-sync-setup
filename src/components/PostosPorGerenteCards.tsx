@@ -4,9 +4,19 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ChevronDown, ChevronUp, Loader2, MapPin, Pencil, RefreshCw, Users, X } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Loader2, MapPin, Pencil, RefreshCw, Trash2, Users, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { atualizarCardsGerentesComNexti, listarPostosDeTodosGerentes, renomearPostoDoGerente } from "@/lib/areas-gerentes.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { atualizarCardsGerentesComNexti, listarPostosDeTodosGerentes, renomearPostoDoGerente, removerPostoDoGerente } from "@/lib/areas-gerentes.functions";
 import { sincronizarPostosNexti } from "@/lib/nexti-postos-mapa.functions";
 import { nomeAmigavel } from "@/lib/areas-gerentes";
 import { cn } from "@/lib/utils";
@@ -55,6 +65,25 @@ export function PostosPorGerenteCards() {
   const [novoNome, setNovoNome] = useState("");
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
   const renomearFn = useServerFn(renomearPostoDoGerente);
+  const removerFn = useServerFn(removerPostoDoGerente);
+  const [removendo, setRemovendo] = useState<{ id: string; nome: string; gerente: string } | null>(null);
+  const [removendoSalvando, setRemovendoSalvando] = useState(false);
+
+  async function confirmarRemocao() {
+    if (!removendo) return;
+    setRemovendoSalvando(true);
+    try {
+      const r = await removerFn({ data: { id: removendo.id } });
+      if (!r.ok) throw new Error(r.erro);
+      await qc.invalidateQueries({ queryKey: ["postos-gerente"] });
+      toast.success(`"${removendo.nome}" saiu da lista de ${nomeAmigavel(removendo.gerente)}.`);
+      setRemovendo(null);
+    } catch (e) {
+      toast.error("Falha ao remover: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setRemovendoSalvando(false);
+    }
+  }
 
   async function salvarNome(id: string) {
     const nome = novoNome.trim();
@@ -200,18 +229,29 @@ export function PostosPorGerenteCards() {
                               )}
                             </div>
                             {editandoId !== p.id && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="size-7 shrink-0"
-                                onClick={() => {
-                                  setEditandoId(p.id);
-                                  setNovoNome(p.posto_nome);
-                                }}
-                                title="Editar nome do posto"
-                              >
-                                <Pencil className="size-3.5" />
-                              </Button>
+                              <>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="size-7 shrink-0"
+                                  onClick={() => {
+                                    setEditandoId(p.id);
+                                    setNovoNome(p.posto_nome);
+                                  }}
+                                  title="Editar nome do posto"
+                                >
+                                  <Pencil className="size-3.5" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="size-7 shrink-0 text-muted-foreground hover:text-destructive"
+                                  onClick={() => setRemovendo({ id: p.id, nome: p.posto_nome, gerente: g.nome })}
+                                  title="Remover posto da lista do gerente"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </Button>
+                              </>
                             )}
                             <SemaforoPosto qtd={buscar(p.posto_nome)?.qtd} />
                           </li>
@@ -225,6 +265,32 @@ export function PostosPorGerenteCards() {
           </div>
         )}
       </CardContent>
+      <AlertDialog open={!!removendo} onOpenChange={(v) => !v && !removendoSalvando && setRemovendo(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover posto da lista do gerente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-semibold text-foreground">{removendo?.nome}</span> sai da lista de{" "}
+              <span className="font-semibold text-foreground">{removendo ? nomeAmigavel(removendo.gerente) : ""}</span>. Os
+              outros postos e as quantidades de visita já salvas não são alterados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removendoSalvando}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={removendoSalvando}
+              onClick={(e) => {
+                e.preventDefault();
+                void confirmarRemocao();
+              }}
+            >
+              {removendoSalvando ? <Loader2 className="me-2 size-4 animate-spin" /> : null}
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
