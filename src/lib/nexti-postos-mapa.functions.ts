@@ -150,7 +150,6 @@ function normalizarNomePosto(texto: string): string {
   return texto
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
-    // eslint-disable-next-line no-misleading-character-class
     .toUpperCase()
     .replace(/\s+/g, " ")
     .trim();
