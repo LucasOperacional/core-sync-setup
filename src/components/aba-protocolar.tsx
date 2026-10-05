@@ -111,6 +111,53 @@ function validarPdf(arquivo: File | null): string {
   return "";
 }
 
+type FolhaNaoSubiu = {
+  colaborador: string;
+  empresa: string;
+  matricula: string;
+  pagina: number | null;
+  arquivo: string | null;
+  motivo: string;
+};
+
+/** Folha sem nome legível ("(não identificado)" ou vazio). */
+function folhaSemIdentificacao(f: { colaborador?: string | null }): boolean {
+  const n = (f.colaborador ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[()]/g, "")
+    .trim()
+    .toUpperCase();
+  return n.length === 0 || n === "NAO IDENTIFICADO";
+}
+
+function resumoFolha(f: FolhaPreparada): Omit<FolhaNaoSubiu, "motivo"> {
+  return {
+    colaborador: f.colaborador,
+    empresa: f.empresa,
+    matricula: f.matricula,
+    pagina: f.pagina,
+    arquivo: f.arquivo,
+  };
+}
+
+function baixarRelatorioNaoSubiram(lista: FolhaNaoSubiu[]) {
+  const esc = (v: string | number | null) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const linhas = [
+    ["Colaborador", "Empresa", "Matrícula", "Página", "Arquivo", "Motivo"].map(esc).join(";"),
+    ...lista.map((f) =>
+      [f.colaborador, f.empresa, f.matricula, f.pagina, f.arquivo ?? "Manual", f.motivo].map(esc).join(";"),
+    ),
+  ];
+  const blob = new Blob(["\ufeff" + linhas.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "folhas-que-nao-subiram.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function AbaProtocolar() {
   const { user } = useSessao();
   const ciclo = useCicloProtocolacao();
@@ -207,10 +254,17 @@ export function AbaProtocolar() {
     [folhasPdf, folhasManuais, excluidasPdf],
   );
 
-  const previewDeduplicado = useMemo(
-    () => deduplicarFolhasPonto(todasFolhasPreview),
-    [todasFolhasPreview],
-  );
+  // Folhas sem nome identificado nunca são tratadas como duplicidade entre si
+  // (todas teriam a mesma chave e só a primeira subiria). Elas sobem sempre.
+  const previewDeduplicado = useMemo(() => {
+    const semNome = todasFolhasPreview.filter(folhaSemIdentificacao);
+    const comNome = todasFolhasPreview.filter((f) => !folhaSemIdentificacao(f));
+    const r = deduplicarFolhasPonto(comNome);
+    return { unicas: [...r.unicas, ...semNome], duplicadas: r.duplicadas };
+  }, [todasFolhasPreview]);
+
+  /** Folhas que ficaram de fora do último protocolo (mostradas após salvar). */
+  const [naoSubiram, setNaoSubiram] = useState<FolhaNaoSubiu[]>([]);
 
   /** Chaves das folhas já protocoladas neste ciclo (para avisar no preview). */
   const chavesBancoQuery = useQuery({
@@ -225,6 +279,7 @@ export function AbaProtocolar() {
     if (!existentes || existentes.size === 0) return new Set<string>();
     const repetidas = new Set<string>();
     for (const folha of todasFolhasPreview) {
+      if (folhaSemIdentificacao(folha)) continue;
       const chave = chaveUnicaFolhaPonto(folha);
       if (existentes.has(chave)) repetidas.add(chave);
     }
@@ -242,11 +297,24 @@ export function AbaProtocolar() {
       }
 
       const chavesExistentes = await carregarChavesExistentes(ciclo.inicio, ciclo.fim);
-      const folhasNovas = previewDeduplicado.unicas.filter(
-        (folha) => !chavesExistentes.has(chaveUnicaFolhaPonto(folha)),
-      );
+      const jaNoBanco = (folha: FolhaPreparada) =>
+        !folhaSemIdentificacao(folha) && chavesExistentes.has(chaveUnicaFolhaPonto(folha));
+      const folhasNovas = previewDeduplicado.unicas.filter((folha) => !jaNoBanco(folha));
       const duplicadasBanco = previewDeduplicado.unicas.length - folhasNovas.length;
       const duplicadasTotal = previewDeduplicado.duplicadas.length + duplicadasBanco;
+
+      // Relatório do que NÃO vai subir, com o motivo de cada folha.
+      const relatorio: FolhaNaoSubiu[] = [
+        ...previewDeduplicado.duplicadas.map((f) => ({
+          ...resumoFolha(f),
+          motivo: "Repetida no mesmo envio (mesmo nome e empresa)",
+        })),
+        ...previewDeduplicado.unicas.filter(jaNoBanco).map((f) => ({
+          ...resumoFolha(f),
+          motivo: "Já protocolada em outro protocolo deste ciclo",
+        })),
+      ];
+      setNaoSubiram(relatorio);
 
       if (folhasNovas.length === 0 && file) {
         // Repara protocolos antigos cujas folhas foram salvas, mas cujo upload
@@ -778,6 +846,47 @@ export function AbaProtocolar() {
               </>
             )}
           </Button>
+
+          {naoSubiram.length > 0 && (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="flex items-center gap-1.5 font-semibold text-destructive">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  {naoSubiram.length} folha(s) não subiram para o protocolo
+                </p>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => baixarRelatorioNaoSubiram(naoSubiram)}>
+                    Baixar lista
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setNaoSubiram([])}>
+                    Fechar
+                  </Button>
+                </div>
+              </div>
+              <div className="max-h-72 overflow-auto rounded border border-border bg-background">
+                <table className="w-full text-left text-xs">
+                  <thead className="sticky top-0 bg-muted">
+                    <tr>
+                      <th className="px-2 py-1.5">Colaborador</th>
+                      <th className="px-2 py-1.5">Empresa</th>
+                      <th className="px-2 py-1.5">Página</th>
+                      <th className="px-2 py-1.5">Motivo</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {naoSubiram.map((f, i) => (
+                      <tr key={i}>
+                        <td className="px-2 py-1.5 font-medium">{f.colaborador}</td>
+                        <td className="px-2 py-1.5 text-muted-foreground">{f.empresa || "—"}</td>
+                        <td className="px-2 py-1.5 text-muted-foreground">{f.pagina ?? "Manual"}</td>
+                        <td className="px-2 py-1.5 text-destructive">{f.motivo}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
