@@ -2,34 +2,37 @@ import { normalizarNome } from "./gerentes-area-a";
 
 /**
  * Cada Gerente de Área responde a um Coordenador.
- * Regra da operação: os quatro gerentes abaixo são do VANDERLEI;
- * todos os demais ficam com o JEFFERSON.
+ * Os gerentes listados abaixo são do VANDERLEI; todos os demais ficam com o JEFFERSON.
  */
 export const COORDENADORES = ["VANDERLEI", "JEFFERSON"] as const;
 
 export type Coordenador = (typeof COORDENADORES)[number];
 
 const GERENTES_VANDERLEI = [
-  "VIVIAN DE CARVALHO MORENO",
-  "PAULO HENRIQUE DE ABREU RIBEIRO",
+  "JOAO CARLOS RODRIGUES",
+  "VIVIAN MORENO DE CARVALHO",
   "WILLIAMAR DE RESENDE",
-  "JOAO CARLOS RODRIGUES DA SILVA",
+  "PAULO HENRIQUE DE ABREU",
+  "GABRIEL MEDANHA",
 ];
 
 const IGNORAR_TOKENS = new Set(["DE", "DA", "DO", "DAS", "DOS", "E"]);
 
-function chave(nome: string): string {
+function tokens(nome: string): string[] {
   return normalizarNome(nome)
     .split(" ")
-    .filter((t) => t && !IGNORAR_TOKENS.has(t))
-    .join(" ");
+    .filter((t) => t && !IGNORAR_TOKENS.has(t));
 }
 
-const CHAVES_VANDERLEI = new Set(GERENTES_VANDERLEI.map(chave));
+const TOKENS_VANDERLEI = GERENTES_VANDERLEI.map(tokens);
 
 /** Devolve o coordenador responsável pelo gerente de área informado. */
 export function coordenadorDoGerente(gerente: string): Coordenador {
-  return CHAVES_VANDERLEI.has(chave(gerente)) ? "VANDERLEI" : "JEFFERSON";
+  const t = new Set(tokens(gerente));
+  if (t.size === 0) return "JEFFERSON";
+  // Casa quando todas as palavras do nome cadastrado aparecem no nome do gerente (em qualquer ordem).
+  const ehVanderlei = TOKENS_VANDERLEI.some((ref) => ref.every((p) => t.has(p)));
+  return ehVanderlei ? "VANDERLEI" : "JEFFERSON";
 }
 
 /** Nome apresentado no cabeçalho de cada bloco de coordenação. */
@@ -38,12 +41,13 @@ export function rotuloCoordenador(c: Coordenador): string {
 }
 
 /**
- * Regra de visibilidade da Mesa Operacional: cada usuário abaixo enxerga
- * apenas os gerentes de área do seu coordenador. Demais usuários veem tudo.
+ * Regra de visibilidade: cada usuário abaixo enxerga apenas os gerentes de
+ * área do seu coordenador. Demais usuários veem tudo.
  */
 const COORDENADOR_POR_USUARIO: Record<string, Coordenador> = {
-  "lucasdallan@gmail.com": "VANDERLEI",
   "mariana.silva@grupotektron.com.br": "JEFFERSON",
+  "vanderlei@nxsplus.xyz": "VANDERLEI",
+  "jefferson@nxsplus.xyz": "JEFFERSON",
 };
 
 /** Coordenador que o usuário pode visualizar, ou null quando vê todos. */
@@ -52,7 +56,7 @@ export function coordenadorVisivelPara(email?: string | null): Coordenador | nul
   const chaveEmail = email.trim().toLowerCase();
   if (COORDENADOR_POR_USUARIO[chaveEmail]) return COORDENADOR_POR_USUARIO[chaveEmail];
   const usuario = chaveEmail.split("@")[0] ?? "";
-  if (usuario === "lucasdallan") return "VANDERLEI";
-  if (usuario.startsWith("mariana")) return "JEFFERSON";
+  if (usuario === "vanderlei") return "VANDERLEI";
+  if (usuario === "jefferson" || usuario.startsWith("mariana")) return "JEFFERSON";
   return null;
 }
