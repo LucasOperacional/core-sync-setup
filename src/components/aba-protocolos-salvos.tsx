@@ -260,6 +260,98 @@ export function AbaProtocolosSalvos() {
     });
   }
 
+  /** Nome de arquivo seguro: sem acentos, espaços ou caracteres inválidos. */
+  function nomeArquivoSeguro(partes: (string | number)[]): string {
+    const nome = partes
+      .map((p) => String(p))
+      .join("-")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    return nome || "folha";
+  }
+
+  function folhaUnica(f: FolhaResumo) {
+    return {
+      id: f.id,
+      ordem: f.ordem,
+      pagina: 0,
+      arquivo: "",
+      colaborador: f.colaborador,
+      empresa: f.empresa,
+      posto: "",
+      cargo: f.cargo,
+      matricula: "",
+      admissao: "",
+      conferido: false,
+      folhaManual: false,
+    };
+  }
+
+  function contextoPdf(p: Linha) {
+    return {
+      titulo: p.titulo,
+      empresa: p.empresa,
+      responsavel: p.profiles?.nome ?? p.profiles?.email ?? undefined,
+      data: dataBr(p.data_entrega),
+    };
+  }
+
+  /** Baixa um PDF individual de uma única folha protocolada. */
+  function baixarFolhaIndividual(f: FolhaResumo, p: Linha) {
+    const ctx = contextoPdf(p);
+    gerarProtocoloPdf({
+      titulo: ctx.titulo,
+      empresa: f.empresa,
+      responsavel: ctx.responsavel,
+      data: ctx.data,
+      folhas: [folhaUnica(f)],
+    }).save(`${nomeArquivoSeguro([f.colaborador, f.empresa])}.pdf`);
+    toast.success(`Folha de ${f.colaborador} baixada.`);
+  }
+
+  /** Baixa todas as folhas do protocolo em PDFs separados por nome (ZIP). */
+  async function baixarSeparadoPorNome(p: Linha) {
+    if (!p.protocolo_folhas_lista.length) {
+      toast.info("Este protocolo não tem folhas.");
+      return;
+    }
+    setGerandoZip(p.id);
+    try {
+      const zip = new JSZip();
+      const ctx = contextoPdf(p);
+      p.protocolo_folhas_lista.forEach((f, i) => {
+        const doc = gerarProtocoloPdf({
+          titulo: `${ctx.titulo} — ${f.colaborador}`,
+          empresa: f.empresa,
+          responsavel: ctx.responsavel,
+          data: ctx.data,
+          folhas: [folhaUnica(f)],
+        });
+        zip.file(
+          `${String(i + 1).padStart(3, "0")}-${nomeArquivoSeguro([f.colaborador, f.empresa])}.pdf`,
+          doc.output("arraybuffer"),
+        );
+      });
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${nomeArquivoSeguro([p.titulo, "por-nome"])}.zip`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      toast.success(
+        `${p.protocolo_folhas_lista.length} folha(s) baixada(s) — um PDF por nome, dentro do ZIP.`,
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível gerar o ZIP.");
+    } finally {
+      setGerandoZip(null);
+    }
+  }
+
   async function garantirAnaliseExtras(): Promise<ResultadoAnalise | null> {
     if (extras) return extras;
     setAnalisandoExtras(true);
