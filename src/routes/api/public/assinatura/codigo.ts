@@ -55,8 +55,8 @@ export const Route = createFileRoute("/api/public/assinatura/codigo")({
           const html = `<p>Olá, ${signatario.nome}.</p><p>Seu código de confirmação é <strong style="font-size:20px">${codigo}</strong>.</p><p>Ele vale por 10 minutos. Se você não solicitou, ignore este e-mail.</p>`;
           await sendLovableEmail(
             {
-              from: "Assinatura de Documentos <assinatura@notify.email.operacional.cloud>",
-              sender_domain: "notify.email.operacional.cloud",
+              from: "Assinatura de Documentos <assinatura@cyber.nxsplus.xyz>",
+              sender_domain: "notify.cyber.nxsplus.xyz",
               to: signatario.email,
               subject: "Código de confirmação da assinatura",
               html,

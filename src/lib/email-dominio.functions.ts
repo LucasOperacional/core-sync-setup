@@ -2,8 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** Domínio padrão de envio, usado enquanto ninguém alterar manualmente. */
-export const DOMINIO_EMAIL = "notify.email.operacional.cloud";
-export const DOMINIO_RAIZ = "email.operacional.cloud";
+export const DOMINIO_EMAIL = "notify.cyber.nxsplus.xyz";
+export const DOMINIO_RAIZ = "cyber.nxsplus.xyz";
 export const REMETENTE = `noreply@${DOMINIO_EMAIL}`;
 export const TOKEN_PADRAO =
   "lovable_email_verify=ab42bff5ab61eedef0b01cd0192e9ce9b6d6862278e5c8c67198b8b2fda3dfbd";
