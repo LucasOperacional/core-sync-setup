@@ -274,6 +274,14 @@
     box-shadow: var(--shadow-panel);
   }
 
+  /* Quadros longos (listas editáveis): sem movimento ao clicar, senão o
+     quadro "pula" e o clique cai fora do botão. */
+  .app-workspace [data-slot="card"][data-sem-movimento],
+  .app-workspace [data-slot="card"][data-sem-movimento]:hover,
+  .app-workspace [data-slot="card"][data-sem-movimento]:active {
+    transform: none;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .app-workspace [data-slot="card"] {
       transition: box-shadow 180ms var(--ease-standard), border-color 180ms var(--ease-standard);
