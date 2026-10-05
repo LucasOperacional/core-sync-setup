@@ -214,6 +214,7 @@ export function RelatoriosVisitaCoordenacaoCard() {
           </Table>
         )}
       </CardContent>
+      )}
     </Card>
   );
 }
