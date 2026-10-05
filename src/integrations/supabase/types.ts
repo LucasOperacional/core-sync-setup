@@ -5850,6 +5850,27 @@ export type Database = {
           },
         ]
       }
+      postos_visitas_ajuste: {
+        Row: {
+          atualizado_por: string | null
+          posto_id: string
+          quantidade: number
+          updated_at: string
+        }
+        Insert: {
+          atualizado_por?: string | null
+          posto_id: string
+          quantidade: number
+          updated_at?: string
+        }
+        Update: {
+          atualizado_por?: string | null
+          posto_id?: string
+          quantidade?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
