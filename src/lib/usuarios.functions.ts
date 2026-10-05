@@ -208,6 +208,33 @@ export const criarUsuario = createServerFn({ method: "POST" })
     return { ok: true as const, id: created.user.id };
   });
 
+export const alterarDepartamento = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { userId: string; department: string }) => {
+    if (!input.userId) throw new Error("Usuário inválido.");
+    const department = (input.department ?? "").trim();
+    if (!department) throw new Error("Departamento é obrigatório.");
+    return { userId: input.userId, department };
+  })
+  .handler(async ({ data, context }) => {
+    await enforceRateLimit(
+      context as unknown as ServerGuardContext,
+      "usuarios.alterarDepartamento",
+      10,
+      60,
+    );
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (await alvoEhSuperadminProtegido(supabaseAdmin, context.userId, data.userId)) {
+      throw new Error("Somente o superadmin pode gerenciar esta conta.");
+    }
+    const { error } = await (supabaseAdmin as any)
+      .from("user_profiles")
+      .upsert({ id: data.userId, department: data.department }, { onConflict: "id" });
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
 export const alterarPapel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { userId: string; role: AppRole }) => {
