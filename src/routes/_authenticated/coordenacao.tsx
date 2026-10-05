@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowRightLeft,
@@ -8,11 +8,14 @@ import {
   ClipboardList,
   ListChecks,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   ShieldCheck,
   X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Route = createFileRoute("/_authenticated/coordenacao")({
   head: () => ({
@@ -47,8 +50,38 @@ const ATALHOS = [
   },
 ] as const;
 
+/** Guarda a preferência de menu recolhido entre visitas à página. */
+const CHAVE_MENU_RECOLHIDO = "corehub:menu-coordenacao-recolhido";
+
 function CoordenacaoPage() {
+  const isMobile = useIsMobile();
   const [menuAberto, setMenuAberto] = useState(false);
+  const [recolhido, setRecolhido] = useState(false);
+
+  useEffect(() => {
+    try {
+      setRecolhido(localStorage.getItem(CHAVE_MENU_RECOLHIDO) === "1");
+    } catch {
+      setRecolhido(false);
+    }
+  }, []);
+
+  /** No computador esconde/reabre a coluna; no celular apenas fecha a gaveta. */
+  const alternarMenu = () => {
+    if (isMobile) {
+      setMenuAberto(false);
+      return;
+    }
+    setRecolhido((atual) => {
+      const proximo = !atual;
+      try {
+        localStorage.setItem(CHAVE_MENU_RECOLHIDO, proximo ? "1" : "0");
+      } catch {
+        // A preferência segue funcionando sem persistência local.
+      }
+      return proximo;
+    });
+  };
 
   return (
     <main className="min-h-screen">
