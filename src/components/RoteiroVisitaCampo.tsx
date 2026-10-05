@@ -806,7 +806,7 @@ export function RoteiroVisitaCampo() {
       geoTracking.current.dentroDesde = null;
       encerrarPorSaida();
     }
-  }, [postoNexti, postosProximos, geo.status]);
+  }, [postoNexti, postosProximos, geo.status, inicioAutomaticoOff]);
 
   useEffect(
     () => () => {
