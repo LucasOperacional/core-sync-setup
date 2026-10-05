@@ -19,3 +19,4 @@
 - [x] Trocar os mapas visuais de postos e rastreio e seus links por OpenStreetMap, preservando dados NEXTI.
 
 - [x] Painel do coordenador: clicar no nome do supervisor abre a lista de postos que ele visitou.
+- [x] Colocar bolinha e quantidade de visitas em todos os cards de postos (gerentes, áreas, supervisor, mesa operacional), aceitando nomes abreviados.
