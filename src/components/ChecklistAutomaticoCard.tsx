@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import {
   ArrowDown,
   ArrowUp,
+  ChevronDown,
+  ChevronUp,
   ClipboardCheck,
   ListChecks,
   Loader2,
@@ -52,11 +54,12 @@ function agruparPorBloco(perguntas: PerguntaRoteiro[]) {
 }
 
 export function ChecklistAutomaticoCard() {
+  const [aberto, setAberto] = useState(false);
   const [filtro, setFiltro] = useState<FiltroFuncao | null>(null);
   const [perguntasBase, setPerguntasBase] = useState<PerguntaRoteiro[]>(PERGUNTAS);
   const [rascunho, setRascunho] = useState<PerguntaRoteiro[]>(PERGUNTAS);
   const [editando, setEditando] = useState(false);
-  const [carregando, setCarregando] = useState(true);
+  const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   const carregar = useServerFn(obterPerguntasChecklist);
@@ -66,6 +69,7 @@ export function ChecklistAutomaticoCard() {
   const [podeEditar, setPodeEditar] = useState(false);
 
   useEffect(() => {
+    if (!aberto) return;
     let ativo = true;
     verificarEdicao({})
       .then((r) => ativo && setPodeEditar(r?.pode === true))
@@ -73,10 +77,12 @@ export function ChecklistAutomaticoCard() {
     return () => {
       ativo = false;
     };
-  }, [verificarEdicao]);
+  }, [aberto, verificarEdicao]);
 
   useEffect(() => {
+    if (!aberto) return;
     let ativo = true;
+    setCarregando(true);
     carregar({})
       .then((r) => {
         if (!ativo || !r?.perguntas) return;
@@ -88,7 +94,7 @@ export function ChecklistAutomaticoCard() {
     return () => {
       ativo = false;
     };
-  }, [carregar]);
+  }, [aberto, carregar]);
 
   const perguntas = useMemo(() => {
     if (!filtro) return [];
@@ -169,16 +175,29 @@ export function ChecklistAutomaticoCard() {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ListChecks className="size-5 text-primary" />
-          Checklist automático
-        </CardTitle>
-        <CardDescription>
-          Monte o checklist de supervisão de campo, veja as perguntas separadas por função e tópico
-          e edite-as por completo.
-        </CardDescription>
-      </CardHeader>
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        aria-expanded={aberto}
+        className="block w-full text-left"
+      >
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ListChecks className="size-5 text-primary" />
+            Checklist automático
+            {aberto ? (
+              <ChevronUp className="ms-auto size-5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="ms-auto size-5 text-muted-foreground" />
+            )}
+          </CardTitle>
+          <CardDescription>
+            Monte o checklist de supervisão de campo, veja as perguntas separadas por função e
+            tópico e edite-as por completo. Clique para {aberto ? "fechar" : "abrir"}.
+          </CardDescription>
+        </CardHeader>
+      </button>
+      {aberto && (
       <CardContent className="space-y-5">
         <div className="flex flex-wrap items-center gap-2">
           <Button
@@ -383,6 +402,7 @@ export function ChecklistAutomaticoCard() {
           </div>
         )}
       </CardContent>
+      )}
     </Card>
   );
 }
