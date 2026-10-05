@@ -165,8 +165,22 @@ function PainelCoordenador() {
               </thead>
               <tbody>
                 {linhas.map((l) => (
-                  <tr key={l.nome} className="border-b border-border/50 last:border-0">
-                    <td className="py-2 pr-3 font-medium">{l.nome}</td>
+                  <Fragment key={l.nome}>
+                  <tr className="border-b border-border/50 last:border-0">
+                    <td className="py-2 pr-3 font-medium">
+                      <button
+                        type="button"
+                        onClick={() => setAberto(aberto === l.nome ? null : l.nome)}
+                        className="inline-flex items-center gap-1.5 text-left font-medium text-primary hover:underline"
+                      >
+                        {aberto === l.nome ? (
+                          <ChevronDown className="size-3.5 shrink-0" />
+                        ) : (
+                          <ChevronRight className="size-3.5 shrink-0" />
+                        )}
+                        {l.nome}
+                      </button>
+                    </td>
                     <td className="py-2 pr-3">
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-32 rounded bg-muted">
