@@ -52,11 +52,12 @@ function agruparPorBloco(perguntas: PerguntaRoteiro[]) {
 }
 
 export function ChecklistAutomaticoCard() {
+  const [aberto, setAberto] = useState(false);
   const [filtro, setFiltro] = useState<FiltroFuncao | null>(null);
   const [perguntasBase, setPerguntasBase] = useState<PerguntaRoteiro[]>(PERGUNTAS);
   const [rascunho, setRascunho] = useState<PerguntaRoteiro[]>(PERGUNTAS);
   const [editando, setEditando] = useState(false);
-  const [carregando, setCarregando] = useState(true);
+  const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   const carregar = useServerFn(obterPerguntasChecklist);
