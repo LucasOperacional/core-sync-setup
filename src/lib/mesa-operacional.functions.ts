@@ -76,12 +76,19 @@ export const listarPostosMesa = createServerFn({ method: "GET" })
 
     if (error) return { ok: false, data: dia, postos: [], erro: error.message };
 
+    // Marcações persistentes: vale a marcação mais recente até o dia consultado,
+    // para que os postos marcados nunca voltem ao zero ao virar o dia.
     const { data: checks } = await context.supabase
       .from("mesa_checkins")
-      .select("posto_id, feito, observacao, registrado_em")
-      .eq("data", dia);
+      .select("posto_id, feito, observacao, registrado_em, data")
+      .lte("data", dia)
+      .order("data", { ascending: false })
+      .limit(5000);
 
-    const mapa = new Map((checks ?? []).map((c) => [c.posto_id, c]));
+    const mapa = new Map<string, NonNullable<typeof checks>[number]>();
+    for (const c of checks ?? []) {
+      if (!mapa.has(c.posto_id)) mapa.set(c.posto_id, c);
+    }
 
     const { data: relatorios } = await context.supabase
       .from("mesa_relatorios")
