@@ -66,7 +66,8 @@ function VisitasPostosPage() {
     // Mesmo filtro do mapa: quando a NEXTI não informa a empresa na maioria
     // dos postos, mostra todos em vez de deixar a lista quase vazia.
     return filtrarEmpresasPermitidas((postosQ.data ?? []) as PostoMapa[])
-      .filter((p) => !ocultarNoMapa(p))
+      // Igual ao mapa: só entram postos com coordenadas e que não são ocultados.
+      .filter((p) => p.latitude !== null && p.longitude !== null && !ocultarNoMapa(p))
       .map((p) => {
         const auto = p.visitasRealizadas || 0;
         const editado = aj[String(p.id)];
