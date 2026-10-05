@@ -226,7 +226,7 @@ export function usePessoasPostos() {
     queryKey: POSTOS_CARDS_QUERY_KEY,
     queryFn: carregarPessoasPostos,
     staleTime: 60_000,
-    refetchInterval: 2 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
     placeholderData: (anterior) => anterior,
     gcTime: 1000 * 60 * 10,
     refetchOnWindowFocus: false,
