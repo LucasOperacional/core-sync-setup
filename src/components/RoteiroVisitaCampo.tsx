@@ -261,6 +261,15 @@ export function RoteiroVisitaCampo() {
   );
   const [agora, setAgora] = useState(() => Date.now());
 
+  // Superadmin: ao abrir a página, o contador nunca continua sozinho de um
+  // rascunho antigo — só conta depois de tocar em "Iniciar" nesta abertura.
+  const iniciadoPeloToque = useRef(false);
+  useEffect(() => {
+    if (!inicioAutomaticoOff || iniciadoPeloToque.current) return;
+    inicioPreenchimento.current = null;
+    setIniciadoEm(null);
+  }, [inicioAutomaticoOff]);
+
   // Cronômetro visível enquanto o roteiro está sendo preenchido.
   useEffect(() => {
     if (iniciadoEm === null) return;
@@ -334,6 +343,7 @@ export function RoteiroVisitaCampo() {
   }
 
   function iniciarPreenchimento() {
+    iniciadoPeloToque.current = true;
     const inicio = Date.now();
     inicioPreenchimento.current = inicio;
     setIniciadoEm(inicio);
