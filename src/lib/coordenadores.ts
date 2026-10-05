@@ -45,6 +45,7 @@ export function rotuloCoordenador(c: Coordenador): string {
  * área do seu coordenador. Demais usuários veem tudo.
  */
 const COORDENADOR_POR_USUARIO: Record<string, Coordenador> = {
+  "lucasdallan@gmail.com": "VANDERLEI",
   "mariana.silva@grupotektron.com.br": "JEFFERSON",
   "vanderlei@nxsplus.xyz": "VANDERLEI",
   "jefferson@nxsplus.xyz": "JEFFERSON",
@@ -56,7 +57,7 @@ export function coordenadorVisivelPara(email?: string | null): Coordenador | nul
   const chaveEmail = email.trim().toLowerCase();
   if (COORDENADOR_POR_USUARIO[chaveEmail]) return COORDENADOR_POR_USUARIO[chaveEmail];
   const usuario = chaveEmail.split("@")[0] ?? "";
-  if (usuario === "vanderlei") return "VANDERLEI";
+  if (usuario === "vanderlei" || usuario === "lucasdallan") return "VANDERLEI";
   if (usuario === "jefferson" || usuario.startsWith("mariana")) return "JEFFERSON";
   return null;
 }
