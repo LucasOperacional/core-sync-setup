@@ -252,3 +252,8 @@ export function PostosServicoMapaCard() {
     </section>
   );
 }
+
+function formatarDataVisita(valor: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(valor);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : valor;
+}
