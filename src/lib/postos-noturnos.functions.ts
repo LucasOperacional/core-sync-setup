@@ -8,9 +8,25 @@ import { normalizarNome } from "@/lib/gerentes-area-a";
  * - o superadmin (lucasdallan@gmail.com) e administradores;
  * - os coordenadores Jefferson e Vanderlei (papel de coordenador).
  */
-const GERENTES_NOTURNO = ["ISRAEL", "ADARMISSON", "GABRIEL MEDANHA"];
+const GERENTES_NOTURNO = ["ISRAEL", "ADARMISSON", "GABRIEL MENDANHA", "GABRIEL MEDANHA"];
 const COORDENADORES_NOTURNO = ["JEFFERSON", "VANDERLEI"];
 const SUPERADMIN_EMAIL = "lucasdallan@gmail.com";
+
+/** Nome de gerente autorizado a ver postos "noturno" (uso em listagens por gerente). */
+export function gerentePodeVerNoturno(nome: string): boolean {
+  const n = normalizarNome(nome);
+  if (!n) return false;
+  return GERENTES_NOTURNO.some((alvo) => {
+    const a = normalizarNome(alvo);
+    return n === a || n.startsWith(`${a} `) || n.includes(` ${a} `) || n.endsWith(` ${a}`);
+  });
+}
+
+/** Nome de posto é "noturno"? */
+export function ehPostoNoturno(nomePosto: string): boolean {
+  const n = normalizarNome(nomePosto);
+  return n.includes("NOTURNO") || n.includes("NOTURNA");
+}
 
 function nomeAutorizado(nome: string): boolean {
   const n = normalizarNome(nome);
