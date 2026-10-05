@@ -112,7 +112,9 @@ export function PostosServicoMapaCard() {
           ...p,
           nome:
             p.visitasRealizadas && p.visitasRealizadas > 0
-              ? `${p.nome} (${p.visitasRealizadas} ${p.visitasRealizadas === 1 ? "visita" : "visitas"})`
+              ? `${p.nome} (${p.visitasRealizadas} ${p.visitasRealizadas === 1 ? "visita" : "visitas"}${
+                  p.ultimaVisita ? ` · última ${formatarDataVisita(p.ultimaVisita)}` : ""
+                })`
               : p.nome,
         })),
     [filtrados],
@@ -202,7 +204,15 @@ export function PostosServicoMapaCard() {
                   <td className="px-2 py-2 font-medium">{p.nome}</td>
                   <td className="px-2 py-2 text-muted-foreground">{p.cliente || "—"}</td>
                   <td className="px-2 py-2 text-muted-foreground">{p.enderecoCompleto || "—"}</td>
-                  <td className="px-2 py-2 text-center font-bold text-primary">{p.visitasRealizadas || 0}</td>
+                  <td className="px-2 py-2 text-center">
+                    <span className="font-bold text-primary">{p.visitasRealizadas || 0}</span>
+                    {p.ultimaVisita ? (
+                      <span className="block text-[11px] text-muted-foreground">
+                        última {formatarDataVisita(p.ultimaVisita)}
+                        {p.ultimoSupervisor ? ` · ${p.ultimoSupervisor}` : ""}
+                      </span>
+                    ) : null}
+                  </td>
                   <td className="px-2 py-2 text-right">
                     {p.latitude !== null && p.longitude !== null ? (
                       <div className="flex items-center justify-end gap-1">
@@ -241,4 +251,9 @@ export function PostosServicoMapaCard() {
       )}
     </section>
   );
+}
+
+function formatarDataVisita(valor: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(valor);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : valor;
 }

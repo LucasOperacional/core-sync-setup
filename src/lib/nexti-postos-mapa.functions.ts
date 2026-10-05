@@ -36,6 +36,9 @@ export interface PostoMapa {
   latitude: number | null;
   longitude: number | null;
   visitasRealizadas?: number;
+  /** Data da visita mais recente feita pela Supervisão de Campo. */
+  ultimaVisita?: string | null;
+  ultimoSupervisor?: string | null;
 }
 
 type LinhaPosto = {
@@ -239,7 +242,38 @@ export const listarPostosMapa = createServerFn({ method: "GET" })
       }
     }
 
-    return postos.map(p => ({ ...p, visitasRealizadas: contagem.get(p.id) || 0 }));
+    // Visitas feitas pela Supervisão de Campo (roteiros salvos) alimentam cada posto.
+    const norm = (s: string) =>
+      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/\s+/g, " ").trim();
+    const idPorNome = new Map<string, number>();
+    for (const p of postos) idPorNome.set(norm(p.nome), p.id);
+    const ultima = new Map<number, { data: string; supervisor: string }>();
+    for (let inicio = 0; inicio < 50000; inicio += passo) {
+      const { data: roteiros, error } = await supabase
+        .from("roteiros_visita_campo")
+        .select("posto_nexti_id,posto,data_visita,supervisor,created_at")
+        .order("created_at", { ascending: false })
+        .range(inicio, inicio + passo - 1);
+      if (error || !roteiros) break;
+      for (const r of roteiros as Array<Record<string, unknown>>) {
+        let id = Number(r["posto_nexti_id"]);
+        if (!Number.isFinite(id) || id <= 0) id = idPorNome.get(norm(String(r["posto"] ?? ""))) ?? NaN;
+        if (!Number.isFinite(id)) continue;
+        contagem.set(id, (contagem.get(id) ?? 0) + 1);
+        const data = String(r["data_visita"] ?? r["created_at"] ?? "");
+        const atual = ultima.get(id);
+        if (!atual || data > atual.data)
+          ultima.set(id, { data, supervisor: String(r["supervisor"] ?? "") });
+      }
+      if (roteiros.length < passo) break;
+    }
+
+    return postos.map((p) => ({
+      ...p,
+      visitasRealizadas: contagem.get(p.id) || 0,
+      ultimaVisita: ultima.get(p.id)?.data ?? null,
+      ultimoSupervisor: ultima.get(p.id)?.supervisor || null,
+    }));
   });
 
 /** Rebusca na API da NEXTI todos os postos e endereços completos. */
