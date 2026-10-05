@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import {
   ArrowDown,
   ArrowUp,
+  ChevronDown,
+  ChevronUp,
   ClipboardCheck,
   ListChecks,
   Loader2,
@@ -400,6 +402,7 @@ export function ChecklistAutomaticoCard() {
           </div>
         )}
       </CardContent>
+      )}
     </Card>
   );
 }
