@@ -71,7 +71,6 @@ async function enviarEmailAprovacao(
       ? configurados
       : [String(vaga.email_destino ?? "").trim()].filter(Boolean);
   if (destinos.length === 0) return { enviado: false, motivo: "sem_destinatario" };
-  const destino = destinos[0]!;
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
