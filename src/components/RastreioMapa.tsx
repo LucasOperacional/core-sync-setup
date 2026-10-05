@@ -95,12 +95,13 @@ export default function RastreioMapa({
       const lng = p.longitude as number;
       vistos.add(p.id);
       const rotulo = `<strong>${escapar(p.nome)}</strong>${p.cliente ? `<br/>${escapar(p.cliente)}` : ""}${p.enderecoCompleto ? `<br/>${escapar(p.enderecoCompleto)}` : ""}${p.telefone ? `<br/>Tel.: ${escapar(p.telefone)}` : ""}<br/><a href="${linkLocal(lat, lng)}" target="_blank" rel="noopener noreferrer">Abrir no OpenStreetMap</a>`;
+      const corPosto = (p as PostoMapa & { corMapa?: string }).corMapa ?? "#f59e0b";
       let marcador = postosRef.current.get(p.id);
       if (marcador) {
-        marcador.setLatLng([lat, lng]).setPopupContent(rotulo);
+        marcador.setLatLng([lat, lng]).setStyle({ fillColor: corPosto }).setPopupContent(rotulo);
       } else {
         marcador = L.circleMarker([lat, lng], {
-          radius: 7, color: "#ffffff", weight: 2, fillColor: "#f59e0b", fillOpacity: 0.9,
+          radius: 7, color: "#ffffff", weight: 2, fillColor: corPosto, fillOpacity: 0.9,
         }).addTo(mapa).bindPopup(rotulo);
         postosRef.current.set(p.id, marcador);
       }
