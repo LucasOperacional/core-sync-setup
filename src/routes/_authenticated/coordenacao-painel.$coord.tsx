@@ -1,6 +1,6 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Fragment, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, BarChart3, ChevronDown, ChevronRight, ClipboardCheck, Star, Users } from "lucide-react";
+import { createFileRoute, Link, notFound, Outlet, useParams } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, BarChart3, ClipboardCheck, Star, Users } from "lucide-react";
 
 import { KpiCard } from "@/components/KpiCard";
 import { PostosServicoMapaCard } from "@/components/PostosServicoMapaCard";
@@ -44,6 +44,12 @@ function tom(p: number) {
 }
 
 function PainelCoordenador() {
+  const { nome } = useParams({ strict: false }) as { nome?: string };
+  if (nome) return <Outlet />;
+  return <PainelConteudo />;
+}
+
+function PainelConteudo() {
   const { coord } = Route.useParams();
   const alvo: Coordenador = coord === "vanderlei" ? "VANDERLEI" : "JEFFERSON";
   const [visitas, setVisitas] = useState<VisitaCampo[]>([]);
@@ -77,8 +83,6 @@ function PainelCoordenador() {
       vivo = false;
     };
   }, []);
-
-  const [aberto, setAberto] = useState<string | null>(null);
 
   const { linhas, total, media, postos } = useMemo(() => {
     const doCoord = visitas.filter((v) => coordDaVisita(v) === alvo);
@@ -165,21 +169,15 @@ function PainelCoordenador() {
               </thead>
               <tbody>
                 {linhas.map((l) => (
-                  <Fragment key={l.nome}>
-                  <tr className="border-b border-border/50 last:border-0">
+                  <tr key={l.nome} className="border-b border-border/50 last:border-0">
                     <td className="py-2 pr-3 font-medium">
-                      <button
-                        type="button"
-                        onClick={() => setAberto(aberto === l.nome ? null : l.nome)}
-                        className="inline-flex items-center gap-1.5 text-left font-medium text-primary hover:underline"
+                      <Link
+                        to="/coordenacao-painel/$coord/supervisor/$nome"
+                        params={{ coord, nome: l.nome }}
+                        className="font-medium text-primary hover:underline"
                       >
-                        {aberto === l.nome ? (
-                          <ChevronDown className="size-3.5 shrink-0" />
-                        ) : (
-                          <ChevronRight className="size-3.5 shrink-0" />
-                        )}
                         {l.nome}
-                      </button>
+                      </Link>
                     </td>
                     <td className="py-2 pr-3">
                       <div className="flex items-center gap-2">
@@ -199,33 +197,6 @@ function PainelCoordenador() {
                       </div>
                     </td>
                   </tr>
-                  {aberto === l.nome && (
-                    <tr className="border-b border-border/50 bg-muted/30">
-                      <td colSpan={4} className="px-4 py-3">
-                        <p className="mb-2 text-xs font-semibold text-muted-foreground">
-                          Postos visitados por {l.nome} ({l.listaPostos.length})
-                        </p>
-                        {l.listaPostos.length === 0 ? (
-                          <p className="text-xs text-muted-foreground">Nenhum posto identificado nas visitas.</p>
-                        ) : (
-                          <ul className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
-                            {l.listaPostos.map((p) => (
-                              <li
-                                key={p.posto}
-                                className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-xs"
-                              >
-                                <span className="truncate font-medium">{p.posto}</span>
-                                <span className="shrink-0 tabular-nums text-muted-foreground">
-                                  {p.qtd} {p.qtd === 1 ? "visita" : "visitas"}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </td>
-                    </tr>
-                  )}
-                  </Fragment>
                 ))}
               </tbody>
             </table>
