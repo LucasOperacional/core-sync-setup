@@ -6,10 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { listarPostosDeTodosGerentes } from "@/lib/areas-gerentes.functions";
 import { nomeAmigavel } from "@/lib/areas-gerentes";
 import { cn } from "@/lib/utils";
+import { resumirPorCor, useVisitasPorNomePosto } from "@/lib/visitas-postos-nome";
+import { BolinhaCor, SemaforoPosto } from "@/components/SemaforoPosto";
 
 /**
  * Um card por gerente de área com os postos atribuídos em massa a ele
  * (a mesma lista definida em "Postos em massa para gerente").
+ *
+ * Cada posto mostra a bolinha de cor e a quantidade de visitas que ele tem
+ * que fazer — a mesma regra e o mesmo número da página de visitas por posto.
  */
 export function PostosPorGerenteCards() {
   const listar = useServerFn(listarPostosDeTodosGerentes);
@@ -20,6 +25,9 @@ export function PostosPorGerenteCards() {
   });
   const [abertos, setAbertos] = useState<Record<string, boolean>>({});
 
+  // As quantidades só são baixadas quando algum card de gerente está aberto.
+  const { buscar, carregando } = useVisitasPorNomePosto(Object.values(abertos).some(Boolean));
+
   const gerentes = q.data?.ok ? q.data.gerentes : [];
 
   return (
@@ -29,7 +37,8 @@ export function PostosPorGerenteCards() {
           <Users className="size-5 text-primary" /> Postos em massa por gerente
         </CardTitle>
         <CardDescription>
-          Cada card mostra a lista de postos definida para aquele gerente de área. Clique no card para abrir ou fechar.
+          Cada card mostra a lista de postos definida para aquele gerente de área, com a bolinha de cor
+          e a quantidade de visitas de cada posto. Clique no card para abrir ou fechar.
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-4">
@@ -45,6 +54,10 @@ export function PostosPorGerenteCards() {
           <div className="grid gap-3 sm:grid-cols-2">
             {gerentes.map((g) => {
               const aberto = !!abertos[g.nome];
+              const resumo = resumirPorCor(
+                g.postos.map((p) => p.posto_nome),
+                buscar,
+              );
               return (
                 <div key={g.nome} className="rounded-lg border border-border">
                   <button
@@ -57,23 +70,41 @@ export function PostosPorGerenteCards() {
                       <p className="text-xs text-muted-foreground">
                         {g.postos.length} {g.postos.length === 1 ? "posto" : "postos"}
                       </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <BolinhaCor cor="verde" /> {resumo.verde}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <BolinhaCor cor="amarelo" /> {resumo.amarelo}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <BolinhaCor cor="vermelho" /> {resumo.vermelho}
+                        </span>
+                      </div>
                     </div>
                     {aberto ? <ChevronUp className="size-4 shrink-0" /> : <ChevronDown className="size-4 shrink-0" />}
                   </button>
                   <div className={cn("border-t border-border", !aberto && "hidden")}>
-                    <ul className="max-h-64 divide-y divide-border overflow-auto">
-                      {g.postos.map((p) => (
-                        <li key={p.id} className="flex items-start gap-2 px-4 py-2 text-sm">
-                          <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                          <div className="min-w-0">
-                            <p className="truncate">{p.posto_nome}</p>
-                            {p.posto_localidade && (
-                              <p className="truncate text-xs text-muted-foreground">{p.posto_localidade}</p>
-                            )}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                    {carregando ? (
+                      <p className="flex items-center justify-center gap-2 p-4 text-xs text-muted-foreground">
+                        <Loader2 className="size-3.5 animate-spin" /> Carregando quantidades de visita...
+                      </p>
+                    ) : (
+                      <ul className="max-h-64 divide-y divide-border overflow-auto">
+                        {g.postos.map((p) => (
+                          <li key={p.id} className="flex items-start gap-2 px-4 py-2 text-sm">
+                            <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate">{p.posto_nome}</p>
+                              {p.posto_localidade && (
+                                <p className="truncate text-xs text-muted-foreground">{p.posto_localidade}</p>
+                              )}
+                            </div>
+                            <SemaforoPosto qtd={buscar(p.posto_nome)?.qtd} />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 </div>
               );

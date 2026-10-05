@@ -5,6 +5,8 @@ import { ArrowLeft, BarChart3, Building2, ClipboardCheck, Star } from "lucide-re
 import { KpiCard } from "@/components/KpiCard";
 import { supabase } from "@/integrations/supabase/client";
 import { rotuloCoordenador, type Coordenador } from "@/lib/coordenadores";
+import { useVisitasPorNomePosto } from "@/lib/visitas-postos-nome";
+import { SemaforoPosto } from "@/components/SemaforoPosto";
 
 export const Route = createFileRoute("/_authenticated/coordenacao-painel/$coord/supervisor/$nome")({
   beforeLoad: ({ params }) => {
@@ -55,6 +57,8 @@ function PaginaSupervisor() {
   const supervisor = decodeURIComponent(nome);
   const [visitas, setVisitas] = useState<VisitaCampo[]>([]);
   const [carregando, setCarregando] = useState(true);
+  // Bolinha e quantidade de visitas de cada posto (mesma regra da tela de visitas).
+  const { buscar } = useVisitasPorNomePosto();
 
   useEffect(() => {
     let vivo = true;
@@ -162,6 +166,7 @@ function PaginaSupervisor() {
                   <th className="py-2 pr-3 font-medium">Posto</th>
                   <th className="py-2 pr-3 font-medium">Visitas</th>
                   <th className="py-2 pr-3 font-medium">Última visita</th>
+                  <th className="py-2 pr-3 font-medium">Situação</th>
                   <th className="py-2 font-medium">Qualidade</th>
                 </tr>
               </thead>
@@ -171,6 +176,9 @@ function PaginaSupervisor() {
                     <td className="py-2 pr-3 font-medium">{p.posto}</td>
                     <td className="py-2 pr-3 tabular-nums">{p.qtd}</td>
                     <td className="py-2 pr-3 tabular-nums text-muted-foreground">{p.ultima || "—"}</td>
+                    <td className="py-2 pr-3">
+                      <SemaforoPosto qtd={buscar(p.posto)?.qtd} />
+                    </td>
                     <td className="py-2">
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-32 rounded bg-muted">
