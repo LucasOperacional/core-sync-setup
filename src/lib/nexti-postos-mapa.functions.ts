@@ -293,6 +293,35 @@ export const listarPostosMapa = createServerFn({ method: "GET" })
       if (roteiros.length < passo) break;
     }
 
+    // Usuário vinculado a um card de gerente vê apenas os postos daquele card.
+    let permitidos: string[] | null = null;
+    const uid = (context as { userId?: string }).userId;
+    if (uid) {
+      const { data: vinc } = await (supabase.from("gerente_usuario_vinculo" as never) as any)
+        .select("gerente_nome")
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (vinc?.gerente_nome) {
+        const { data: lista } = await supabase
+          .from("areas_gerentes_postos")
+          .select("posto_nome")
+          .eq("gerente_nome", vinc.gerente_nome);
+        const so = (s: string) => norm(s).replace(/[^A-Z0-9]/g, "");
+        permitidos = ((lista ?? []) as { posto_nome: string }[]).map((l) => so(l.posto_nome)).filter(Boolean);
+        const set = permitidos;
+        const ok = (nome: string) => {
+          const n = so(nome);
+          return set.some((x) => x === n || (x.length >= 3 && n.length >= 3 && (n.includes(x) || x.includes(n))));
+        };
+        return postos.filter((p) => ok(p.nome)).map((p) => ({
+          ...p,
+          visitasRealizadas: contagem.get(p.id) || 0,
+          ultimaVisita: ultima.get(p.id)?.data ?? null,
+          ultimoSupervisor: ultima.get(p.id)?.supervisor || null,
+        }));
+      }
+    }
+
     return postos.map((p) => ({
       ...p,
       visitasRealizadas: contagem.get(p.id) || 0,
