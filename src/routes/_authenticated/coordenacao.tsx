@@ -109,7 +109,7 @@ function CoordenacaoPage() {
         </div>
         <aside
           id="menu-coordenacao"
-          className={`${menuAberto ? "block" : "hidden"} shrink-0 border-border bg-muted/20 py-4 md:block md:border-b-0 md:border-r md:py-8 ${
+          className={`${menuAberto ? "block" : "hidden"} shrink-0 border-border bg-muted/20 px-3 py-4 md:block md:border-b-0 md:border-r md:py-8 ${
             recolhido ? "md:w-16" : "md:w-72"
           }`}
         >
