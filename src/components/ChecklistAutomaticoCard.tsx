@@ -173,16 +173,29 @@ export function ChecklistAutomaticoCard() {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ListChecks className="size-5 text-primary" />
-          Checklist automático
-        </CardTitle>
-        <CardDescription>
-          Monte o checklist de supervisão de campo, veja as perguntas separadas por função e tópico
-          e edite-as por completo.
-        </CardDescription>
-      </CardHeader>
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        aria-expanded={aberto}
+        className="block w-full text-left"
+      >
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ListChecks className="size-5 text-primary" />
+            Checklist automático
+            {aberto ? (
+              <ChevronUp className="ms-auto size-5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="ms-auto size-5 text-muted-foreground" />
+            )}
+          </CardTitle>
+          <CardDescription>
+            Monte o checklist de supervisão de campo, veja as perguntas separadas por função e
+            tópico e edite-as por completo. Clique para {aberto ? "fechar" : "abrir"}.
+          </CardDescription>
+        </CardHeader>
+      </button>
+      {aberto && (
       <CardContent className="space-y-5">
         <div className="flex flex-wrap items-center gap-2">
           <Button
