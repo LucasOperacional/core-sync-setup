@@ -41,3 +41,8 @@ export function BolinhaSemaforo({ qtd, className }: { qtd: number | null | undef
   if (!cor) return <span className={cn("size-2.5 rounded-full bg-muted", className)} />;
   return <span className={cn("size-2.5 rounded-full", DOT[cor], className)} />;
 }
+
+/** Bolinha a partir da cor já conhecida (usada nos resumos por cor). */
+export function BolinhaCor({ cor, className }: { cor: Semaforo; className?: string }) {
+  return <span className={cn("size-2.5 shrink-0 rounded-full", DOT[cor], className)} />;
+}

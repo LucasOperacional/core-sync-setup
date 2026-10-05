@@ -11,7 +11,7 @@ import {
   resumirPorCor,
   useVisitasPorNomePosto,
 } from "@/lib/visitas-postos-nome";
-import { BolinhaSemaforo, SemaforoPosto } from "@/components/SemaforoPosto";
+import { BolinhaCor, SemaforoPosto } from "@/components/SemaforoPosto";
 
 /**
  * Um card por gerente de área com os postos atribuídos em massa a ele
@@ -76,13 +76,13 @@ export function PostosPorGerenteCards() {
                       </p>
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
-                          <BolinhaSemaforo qtd={0} /> {resumo.verde}
+                          <BolinhaCor cor="verde" /> {resumo.verde}
                         </span>
                         <span className="inline-flex items-center gap-1">
-                          <BolinhaSemaforo qtd={3} /> {resumo.amarelo}
+                          <BolinhaCor cor="amarelo" /> {resumo.amarelo}
                         </span>
                         <span className="inline-flex items-center gap-1">
-                          <BolinhaSemaforo qtd={5} /> {resumo.vermelho}
+                          <BolinhaCor cor="vermelho" /> {resumo.vermelho}
                         </span>
                       </div>
                     </div>
