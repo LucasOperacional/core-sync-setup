@@ -761,6 +761,7 @@ export function RoteiroVisitaCampo() {
     }
 
     function agendarInicio() {
+      if (inicioAutomaticoOff) return;
       if (timerPermanencia.current || refEstado.current.iniciadoEm !== null) return;
       const desde = geoTracking.current.dentroDesde ?? Date.now();
       const restante = Math.max(0, PERMANENCIA_MS - (Date.now() - desde));
