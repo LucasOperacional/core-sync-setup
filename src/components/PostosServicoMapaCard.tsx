@@ -16,6 +16,7 @@ import {
   type PostoMapa,
 } from "@/lib/nexti-postos-mapa.functions";
 import { possoVerPostosNoturnos } from "@/lib/postos-noturnos.functions";
+import { COR_MAPA, semaforoDe } from "@/lib/visitas-semaforo";
 
 const RastreioMapa = lazy(() => import("@/components/RastreioMapa"));
 
@@ -53,7 +54,21 @@ export function PostosServicoMapaCard() {
     void carregar();
   }, [carregar]);
 
-  // Atualiza o mapa automaticamente assim que um supervisor registra uma visita.
+  // Quantidades editadas na página "Quantidade de visitas por posto".
+  const [ajustes, setAjustes] = useState<Record<string, number>>({});
+  const carregarAjustes = useCallback(async () => {
+    const { data } = await (supabase as any).from("postos_visitas_ajuste").select("posto_id, quantidade");
+    const m: Record<string, number> = {};
+    for (const r of (data ?? []) as { posto_id: string; quantidade: number }[]) m[r.posto_id] = r.quantidade;
+    setAjustes(m);
+  }, []);
+
+  useEffect(() => {
+    void carregarAjustes();
+  }, [carregarAjustes]);
+
+  // Atualiza o mapa automaticamente assim que um supervisor registra uma visita
+  // ou alguém muda a quantidade de visitas de um posto.
   useEffect(() => {
     const canal = supabase
       .channel("mapa-postos-visitas")
@@ -64,14 +79,24 @@ export function PostosServicoMapaCard() {
           void carregar();
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "postos_visitas_ajuste" },
+        () => {
+          void carregarAjustes();
+        },
+      )
       .subscribe();
 
-    const intervalo = setInterval(() => void carregar(), 60_000);
+    const intervalo = setInterval(() => {
+      void carregar();
+      void carregarAjustes();
+    }, 60_000);
     return () => {
       clearInterval(intervalo);
       void supabase.removeChannel(canal);
     };
-  }, [carregar]);
+  }, [carregar, carregarAjustes]);
 
   const buscarNaNexti = useCallback(async () => {
     setBuscando(true);
@@ -117,16 +142,21 @@ export function PostosServicoMapaCard() {
     () =>
       filtrados
         .filter((p) => p.latitude !== null && p.longitude !== null && !ocultarNoMapa(p, verNoturno))
-        .map((p) => ({
-          ...p,
-          nome:
-            p.visitasRealizadas && p.visitasRealizadas > 0
-              ? `${p.nome} (${p.visitasRealizadas} ${p.visitasRealizadas === 1 ? "visita" : "visitas"}${
-                  p.ultimaVisita ? ` · última ${formatarDataVisita(p.ultimaVisita)}` : ""
-                })`
-              : p.nome,
-        })),
-    [filtrados, verNoturno],
+        .map((p) => {
+          // Cor da bolinha = quantidade editada em "Visitas por posto" (ou a automática).
+          const total = ajustes[String(p.id)] ?? (p.visitasRealizadas || 0);
+          return {
+            ...p,
+            corMapa: COR_MAPA[semaforoDe(total)],
+            nome:
+              total > 0
+                ? `${p.nome} (${total} ${total === 1 ? "visita" : "visitas"}${
+                    p.ultimaVisita ? ` · última ${formatarDataVisita(p.ultimaVisita)}` : ""
+                  })`
+                : p.nome,
+          };
+        }),
+    [filtrados, verNoturno, ajustes],
   );
 
   const noturnosOcultos = useMemo(
