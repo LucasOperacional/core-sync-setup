@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   listarPostosMapa,
   ocultarNoMapa,
-  empresaPermitidaNoMapa,
+  filtrarEmpresasPermitidas,
   type PostoMapa,
 } from "@/lib/nexti-postos-mapa.functions";
 import { cn } from "@/lib/utils";
@@ -63,8 +63,10 @@ function VisitasPostosPage() {
 
   const postos = useMemo(() => {
     const aj = ajustesQ.data ?? {};
-    return ((postosQ.data ?? []) as PostoMapa[])
-      .filter((p) => empresaPermitidaNoMapa(p) && !ocultarNoMapa(p))
+    // Mesmo filtro do mapa: quando a NEXTI não informa a empresa na maioria
+    // dos postos, mostra todos em vez de deixar a lista quase vazia.
+    return filtrarEmpresasPermitidas((postosQ.data ?? []) as PostoMapa[])
+      .filter((p) => !ocultarNoMapa(p))
       .map((p) => {
         const auto = p.visitasRealizadas || 0;
         const editado = aj[String(p.id)];
