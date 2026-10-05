@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { ehPostoNoturno, gerentePodeVerNoturno } from "@/lib/postos-noturnos.functions";
 
 export type PostoDoGerente = {
   id: string;
