@@ -139,12 +139,30 @@ export function ehPostoEncerrado(l: {
  * Postos noturnos ficam ocultos para todos os usuários — tanto pela marcação
  * da NEXTI quanto pelo nome do posto (ex.: "... NOTURNO", "... NOITE").
  */
+/** Postos administrativos/internos que nunca aparecem no mapa nem nas listas. */
+const POSTOS_OCULTOS_NOME = [
+  "TEKTRON ADMINISTRACAO E CONSERVACAO",
+  "CIOP SUPERVISAO",
+  "DEPARTAMENTO PESSOAL",
+];
+
+function normalizarNomePosto(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function ocultarNoMapa(p: PostoMapa, _verNoturno = false): boolean {
   if (p.encerrado) return true;
   if (p.ts) return true;
   if (p.fgr) return true;
   if (p.restrito) return true;
   if (ehPostoNoturno([p.nome])) return true;
+  const nome = normalizarNomePosto(p.nome ?? "");
+  if (POSTOS_OCULTOS_NOME.some((o) => nome.includes(o))) return true;
   return p.noturno && p.ativo !== false;
 }
 
