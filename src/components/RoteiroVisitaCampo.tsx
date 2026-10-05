@@ -366,13 +366,9 @@ export function RoteiroVisitaCampo() {
     if (!busca?.nome) return;
     chegadaAplicada.current = true;
     setPostoNexti({ id: busca.posto ?? 0, nome: busca.nome, externalId: "" });
+    // O início fica a cargo da localização: só começa quando estiver dentro do posto.
     if (busca.iniciar) {
-      const inicio = Date.now();
-      inicioPreenchimento.current = inicio;
-      setIniciadoEm(inicio);
-      setAgora(inicio);
-      avisarControlIniciado(busca.nome, busca.posto ?? 0);
-      toast.success(`Chegada em ${busca.nome} — preenchimento iniciado automaticamente.`);
+      toast.info(`Posto ${busca.nome} selecionado — a visita começa sozinha ao entrar no posto.`);
     }
   }, [busca]);
 
@@ -779,17 +775,9 @@ export function RoteiroVisitaCampo() {
 
     function encerrarPorSaida() {
       limparTimer();
-      if (refEstado.current.iniciadoEm === null || refEstado.current.mutation.isPending) return;
-      const temDados =
-        Object.keys(refEstado.current.respostas).length > 0 || refEstado.current.fotos.length > 0;
-      if (temDados) {
-        toast.info("Você saiu do local do posto. O relatório foi fechado e está sendo salvo.");
-        refEstado.current.mutation.mutate();
-      } else {
-        toast.warning("Você saiu do local do posto. A supervisão foi encerrada sem registros.");
-        inicioPreenchimento.current = null;
-        setIniciadoEm(null);
-      }
+      // Regra: a visita não é fechada fora do posto — só avisa para voltar ao local.
+      if (refEstado.current.iniciadoEm === null) return;
+      toast.warning("Você saiu do local do posto. Volte ao posto para concluir e salvar a visita.");
     }
 
     if (geoTracking.current.postoId !== pId) {
@@ -852,13 +840,31 @@ export function RoteiroVisitaCampo() {
     setRespostas((atual) => ({ ...atual, [id]: valor }));
   }
 
+  function dentroDoPosto(raioKm: number) {
+    if (!postoNexti || geo.status !== "ok" || !postosProximos) return false;
+    const info = postosProximos.find((p) => p.id === postoNexti.id);
+    return !!info && info.distanciaKm <= raioKm;
+  }
+
+  function iniciarManual() {
+    if (!dentroDoPosto(RAIO_ENTRADA_KM)) {
+      toast.error("Você precisa estar dentro do posto para iniciar a visita.");
+      return;
+    }
+    iniciarPreenchimento();
+  }
+
   function enviar() {
     if (iniciadoEm === null) {
-      toast.error("Clique em “Iniciar preenchimento” antes de salvar o roteiro.");
+      toast.error("A visita ainda não foi iniciada — ela começa sozinha quando você estiver no posto.");
       return;
     }
     if (!postoNexti) {
       toast.error("Selecione o posto da NEXTI visitado.");
+      return;
+    }
+    if (!dentroDoPosto(RAIO_SAIDA_KM)) {
+      toast.error("Você está longe do posto. Volte ao local para fechar a visita.");
       return;
     }
     if (resumo.avaliadas + resumo.naoAplicaveis === 0) {
@@ -902,7 +908,7 @@ export function RoteiroVisitaCampo() {
           </span>
           <Button
             type="button"
-            onClick={iniciarPreenchimento}
+            onClick={iniciarManual}
             variant={iniciadoEm === null ? "default" : "outline"}
           >
             <Play className="size-4" />
