@@ -1,18 +1,21 @@
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
-import { 
-  Download, 
-  FileText, 
-  Loader2, 
-  MapPin, 
-  CalendarDays, 
-  Clock, 
-  CheckCircle2, 
-  AlertTriangle, 
+import {
+  Download,
+  FileText,
+  Loader2,
+  MapPin,
+  CalendarDays,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
   XCircle,
-  Trash2
+  Trash2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,11 +46,13 @@ function horaBr(iso: string | null, subSegundos: number = 0) {
 
 /** Relatórios em PDF enviados automaticamente pela supervisão de campo. */
 export function RelatoriosVisitaCoordenacaoCard() {
+  const [aberto, setAberto] = useState(false);
   const carregar = useServerFn(listarRelatoriosRoteiroCoordenacao);
   const { data, isLoading } = useQuery({
     queryKey: ["relatorios-roteiro-coordenacao"],
     queryFn: () => carregar(),
     refetchInterval: 60_000,
+    enabled: aberto,
   });
 
   const relatorios = data?.relatorios ?? [];
@@ -57,6 +62,7 @@ export function RelatoriosVisitaCoordenacaoCard() {
     queryKey: ["sou-admin-roteiro"],
     queryFn: () => verificarAdmin(),
     staleTime: 5 * 60_000,
+    enabled: aberto,
   });
   const ehAdmin = adminInfo?.admin === true;
 
