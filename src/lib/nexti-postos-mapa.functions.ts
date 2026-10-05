@@ -136,13 +136,15 @@ export function ehPostoEncerrado(l: {
 
 /**
  * REGRA: posto encerrado, "TS", "FGR", uso restrito ou noturno não é exibido no mapa.
- * Postos noturnos ficam ocultos para todos os usuários.
+ * Postos noturnos ficam ocultos para todos os usuários — tanto pela marcação
+ * da NEXTI quanto pelo nome do posto (ex.: "... NOTURNO", "... NOITE").
  */
 export function ocultarNoMapa(p: PostoMapa, _verNoturno = false): boolean {
   if (p.encerrado) return true;
   if (p.ts) return true;
   if (p.fgr) return true;
   if (p.restrito) return true;
+  if (ehPostoNoturno([p.nome])) return true;
   return p.noturno && p.ativo !== false;
 }
 
