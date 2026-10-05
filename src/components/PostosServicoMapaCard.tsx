@@ -116,7 +116,7 @@ export function PostosServicoMapaCard() {
   const noMapa = useMemo(
     () =>
       filtrados
-        .filter((p) => p.latitude !== null && p.longitude !== null && !ocultarNoMapa(p))
+        .filter((p) => p.latitude !== null && p.longitude !== null && !ocultarNoMapa(p, verNoturno))
         .map((p) => ({
           ...p,
           nome:
@@ -126,10 +126,13 @@ export function PostosServicoMapaCard() {
                 })`
               : p.nome,
         })),
-    [filtrados],
+    [filtrados, verNoturno],
   );
 
-  const noturnosOcultos = useMemo(() => permitidos.filter(ocultarNoMapa).length, [permitidos]);
+  const noturnosOcultos = useMemo(
+    () => permitidos.filter((p) => ocultarNoMapa(p, verNoturno)).length,
+    [permitidos, verNoturno],
+  );
 
   return (
     <section className="panel p-5">
