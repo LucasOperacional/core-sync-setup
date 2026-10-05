@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronDown, ChevronUp, Loader2, MapPin, Users } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, MapPin, RefreshCw, Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { listarPostosDeTodosGerentes } from "@/lib/areas-gerentes.functions";
+import { atualizarCardsGerentesComNexti, listarPostosDeTodosGerentes } from "@/lib/areas-gerentes.functions";
+import { sincronizarPostosNexti } from "@/lib/nexti-postos-mapa.functions";
 import { nomeAmigavel } from "@/lib/areas-gerentes";
 import { cn } from "@/lib/utils";
 import { resumirPorCor, useVisitasPorNomePosto } from "@/lib/visitas-postos-nome";
@@ -23,6 +26,29 @@ export function PostosPorGerenteCards() {
     queryFn: () => listar(),
     staleTime: 5 * 60_000,
   });
+  const qc = useQueryClient();
+  const sincronizarFn = useServerFn(sincronizarPostosNexti);
+  const atualizarFn = useServerFn(atualizarCardsGerentesComNexti);
+  const [atualizando, setAtualizando] = useState(false);
+
+  async function atualizarComNexti() {
+    setAtualizando(true);
+    try {
+      const s = await sincronizarFn();
+      if (!s.ok) toast.warning("NEXTI não respondeu agora; usando os últimos dados baixados.");
+      const r = await atualizarFn();
+      if (!r.ok) throw new Error(r.erro);
+      await qc.invalidateQueries({ queryKey: ["postos-gerente"] });
+      toast.success(
+        `Cards atualizados com a NEXTI: ${r.atualizados} postos atualizados` +
+          (r.naoEncontrados ? ` · ${r.naoEncontrados} não encontrados` : ""),
+      );
+    } catch (e) {
+      toast.error("Falha ao atualizar: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setAtualizando(false);
+    }
+  }
   const [abertos, setAbertos] = useState<Record<string, boolean>>({});
 
   // As quantidades só são baixadas quando algum card de gerente está aberto.
@@ -40,6 +66,12 @@ export function PostosPorGerenteCards() {
           Cada card mostra a lista de postos definida para aquele gerente de área, com a bolinha de cor
           e a quantidade de visitas de cada posto. Clique no card para abrir ou fechar.
         </CardDescription>
+        <div>
+          <Button size="sm" variant="outline" className="mt-2 gap-2" onClick={atualizarComNexti} disabled={atualizando}>
+            {atualizando ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+            Verificar e atualizar com a NEXTI
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="pt-4">
         {q.isLoading ? (

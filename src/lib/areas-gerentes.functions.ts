@@ -250,3 +250,118 @@ export const definirPostosDoGerente = createServerFn({ method: "POST" })
     }
     return { ok: true, total: linhas.length };
   });
+
+// ---------------------------------------------------------------------------
+// Verificação dos nomes de postos contra a NEXTI
+// ---------------------------------------------------------------------------
+
+const normNexti = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9 ]/gi, " ").replace(/\s+/g, " ").trim().toUpperCase();
+
+export type PostoNextiAchado = {
+  digitado: string;
+  nexti_id: number;
+  nome: string;
+  cliente: string | null;
+  cidade: string | null;
+  estado: string | null;
+  ativo: boolean | null;
+  localidade: string | null;
+};
+
+type LinhaWp = { nexti_id: number; name: string | null; client_name: string | null; city: string | null; state: string | null; active: boolean | null };
+
+function casarNomes(nomes: string[], wps: LinhaWp[]): Map<string, PostoNextiAchado> {
+  const lista = wps
+    .filter((w) => w.name)
+    .map((w) => ({ w, k: normNexti(w.name!) }))
+    // ativos primeiro
+    .sort((a, b) => Number(b.w.active !== false) - Number(a.w.active !== false));
+  const exato = new Map<string, LinhaWp>();
+  for (const { w, k } of lista) if (!exato.has(k)) exato.set(k, w);
+  const out = new Map<string, PostoNextiAchado>();
+  for (const digitado of nomes) {
+    const k = normNexti(digitado);
+    if (!k) continue;
+    let w = exato.get(k);
+    if (!w && k.length >= 4) {
+      const cands = lista.filter((x) => x.k.includes(k) || (k.includes(x.k) && x.k.length >= 6));
+      if (cands.length === 1 || (cands.length > 1 && cands[0]!.w.active !== false && cands.filter((c) => c.w.active !== false).length === 1)) {
+        w = cands[0]!.w;
+      }
+    }
+    if (!w) continue;
+    const partes = [w.city, w.state].filter(Boolean).join(" / ");
+    out.set(digitado, {
+      digitado,
+      nexti_id: w.nexti_id,
+      nome: w.name!,
+      cliente: w.client_name,
+      cidade: w.city,
+      estado: w.state,
+      ativo: w.active,
+      localidade: [partes || null, w.client_name].filter(Boolean).join(" · ") || null,
+    });
+  }
+  return out;
+}
+
+async function carregarWorkplaces(supabase: { from: (t: string) => any }): Promise<LinhaWp[]> {
+  const todos: LinhaWp[] = [];
+  for (let de = 0; ; de += 1000) {
+    const { data, error } = await supabase
+      .from("nexti_workplaces")
+      .select("nexti_id, name, client_name, city, state, active")
+      .range(de, de + 999);
+    if (error) throw new Error(error.message);
+    todos.push(...((data ?? []) as LinhaWp[]));
+    if (!data || data.length < 1000) break;
+  }
+  return todos;
+}
+
+/** Verifica uma lista de nomes digitados e devolve o posto correspondente da NEXTI. */
+export const verificarNomesPostosNexti = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ nomes: z.array(z.string().max(300)).max(2000) }).parse(data))
+  .handler(async ({ context, data }) => {
+    try {
+      const wps = await carregarWorkplaces(context.supabase as never);
+      const m = casarNomes(data.nomes, wps);
+      return { ok: true as const, achados: [...m.values()] };
+    } catch (e) {
+      return { ok: false as const, achados: [] as PostoNextiAchado[], erro: e instanceof Error ? e.message : String(e) };
+    }
+  });
+
+/**
+ * Atualiza os postos de todos os cards dos gerentes com as informações da NEXTI
+ * (nome oficial, cliente, cidade/UF). Não remove nenhum posto.
+ */
+export const atualizarCardsGerentesComNexti = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    try {
+      const { data: linhas, error } = await context.supabase
+        .from("areas_gerentes_postos")
+        .select("id, posto_nome, posto_localidade");
+      if (error) throw new Error(error.message);
+      const wps = await carregarWorkplaces(context.supabase as never);
+      const m = casarNomes((linhas ?? []).map((l) => l.posto_nome), wps);
+      let atualizados = 0;
+      let naoEncontrados = 0;
+      for (const l of linhas ?? []) {
+        const a = m.get(l.posto_nome);
+        if (!a) { naoEncontrados++; continue; }
+        if (a.nome === l.posto_nome && a.localidade === l.posto_localidade) continue;
+        const { error: e } = await context.supabase
+          .from("areas_gerentes_postos")
+          .update({ posto_nome: a.nome, posto_localidade: a.localidade })
+          .eq("id", l.id);
+        if (!e) atualizados++;
+      }
+      return { ok: true as const, total: linhas?.length ?? 0, atualizados, naoEncontrados };
+    } catch (e) {
+      return { ok: false as const, total: 0, atualizados: 0, naoEncontrados: 0, erro: e instanceof Error ? e.message : String(e) };
+    }
+  });

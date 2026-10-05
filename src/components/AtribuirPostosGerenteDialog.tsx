@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { ListPlus, Loader2 } from "lucide-react";
@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AREAS_GERENTES, nomeAmigavel } from "@/lib/areas-gerentes";
-import { definirPostosDoGerente } from "@/lib/areas-gerentes.functions";
+import { definirPostosDoGerente, verificarNomesPostosNexti, type PostoNextiAchado } from "@/lib/areas-gerentes.functions";
 import { BolinhaCor } from "@/components/SemaforoPosto";
 import type { Semaforo } from "@/lib/visitas-semaforo";
 
@@ -38,6 +38,9 @@ export function AtribuirPostosGerenteDialog({ postos }: { postos: PostoRef[] }) 
   const [gerente, setGerente] = useState("");
   const [texto, setTexto] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const verificarFn = useServerFn(verificarNomesPostosNexti);
+  const [nexti, setNexti] = useState<Map<string, PostoNextiAchado>>(new Map());
+  const [verificando, setVerificando] = useState(false);
 
   const indice = useMemo(() => {
     const m = new Map<string, PostoRef>();
@@ -58,9 +61,28 @@ export function AtribuirPostosGerenteDialog({ postos }: { postos: PostoRef[] }) 
       })
       .map((l) => {
         const achado = indice.get(norm(l));
-        return { digitado: l, achado };
+        return { digitado: l, achado, nx: nexti.get(l) };
       });
-  }, [texto, indice]);
+  }, [texto, indice, nexti]);
+
+  // Verifica na NEXTI cada nome digitado (com pequena espera enquanto digita).
+  useEffect(() => {
+    const nomes = linhas.map((l) => l.digitado);
+    if (!nomes.length) { setNexti(new Map()); return; }
+    const t = setTimeout(async () => {
+      setVerificando(true);
+      try {
+        const r = await verificarFn({ data: { nomes } });
+        if (r.ok) setNexti(new Map(r.achados.map((a) => [a.digitado, a])));
+      } finally {
+        setVerificando(false);
+      }
+    }, 600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [texto]);
+
+  const foraNexti = linhas.filter((l) => !l.nx);
 
   const naoEncontrados = linhas.filter((l) => !l.achado);
 
@@ -89,8 +111,8 @@ export function AtribuirPostosGerenteDialog({ postos }: { postos: PostoRef[] }) 
         data: {
           gerenteNome: gerente,
           postos: linhas.map((l) => ({
-            nome: l.achado?.nome ?? l.digitado,
-            localidade: l.achado
+            nome: l.nx?.nome ?? l.achado?.nome ?? l.digitado,
+            localidade: l.nx ? l.nx.localidade : l.achado
               ? [[l.achado.cidade, l.achado.uf].filter(Boolean).join(" / ") || null, l.achado.cliente]
                   .filter(Boolean)
                   .join(" · ") || null
@@ -146,6 +168,26 @@ export function AtribuirPostosGerenteDialog({ postos }: { postos: PostoRef[] }) 
             {linhas.length} postos na lista
             {naoEncontrados.length > 0 && ` · ${naoEncontrados.length} não encontrados no mapa (serão salvos como digitados)`}
           </p>
+          {linhas.length > 0 && (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              {verificando ? (
+                <><Loader2 className="size-3 animate-spin" /> Verificando nomes na NEXTI...</>
+              ) : (
+                <>NEXTI: {linhas.length - foraNexti.length} reconhecidos · {foraNexti.length} não encontrados</>
+              )}
+            </p>
+          )}
+          {!verificando && linhas.some((l) => l.nx) && (
+            <div className="max-h-32 overflow-auto rounded border border-border p-2 text-xs">
+              {linhas.filter((l) => l.nx).map((l) => (
+                <div key={l.digitado} className="py-0.5">
+                  <span className="font-medium">{l.nx!.nome}</span>
+                  {l.nx!.localidade && <span className="text-muted-foreground"> · {l.nx!.localidade}</span>}
+                  {l.nx!.ativo === false && <span className="text-destructive"> · encerrado</span>}
+                </div>
+              ))}
+            </div>
+          )}
           {linhas.length > 0 && (
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
