@@ -21,4 +21,4 @@
 - [x] Painel do coordenador: clicar no nome do supervisor abre a lista de postos que ele visitou.
 - [x] Colocar bolinha e quantidade de visitas em todos os cards de postos (gerentes, áreas, supervisor, mesa operacional), aceitando nomes abreviados.
 - [x] Permitir remover um posto da lista de cada gerente direto no card, com confirmação antes de apagar.
-- [ ] "Postos próximos a você": mostrar apenas postos do card vinculado ao usuário (ignorar os demais)
+- [x] "Postos próximos a você": mostrar apenas postos do card vinculado ao usuário (ignorar os demais)
