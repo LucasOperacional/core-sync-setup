@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { rotuloCoordenador, type Coordenador } from "@/lib/coordenadores";
 import { useVisitasPorNomePosto } from "@/lib/visitas-postos-nome";
 import { SemaforoPosto } from "@/components/SemaforoPosto";
+import { RelatorioRotaVisitas } from "@/components/RelatorioRotaVisitas";
 
 export const Route = createFileRoute("/_authenticated/coordenacao-painel/$coord/supervisor/$nome")({
   beforeLoad: ({ params }) => {
@@ -151,6 +152,8 @@ function PaginaSupervisor() {
         />
         <KpiCard label="Não conformidades" value={naoConformes} icon={BarChart3} tone={naoConformes > 0 ? "destructive" : "success"} />
       </div>
+
+      <RelatorioRotaVisitas supervisor={supervisor} />
 
       <section className="panel p-5">
         <h2 className="text-sm font-semibold">Postos visitados ({postos.length})</h2>
