@@ -9,10 +9,10 @@ import { TEMPLATES } from "./registry";
 const SITE_NAME = "Project Data Hub";
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
-const SENDER_DOMAIN = "notify.email.operacional.cloud";
+const SENDER_DOMAIN = "notify.cyber.nxsplus.xyz";
 // FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
 // Can be the root domain when display_from_root is enabled — this is cosmetic only.
-const FROM_DOMAIN = "notify.email.operacional.cloud";
+const FROM_DOMAIN = "cyber.nxsplus.xyz";
 
 export type SendTemplateEmailResult =
   { sent: true } | { sent: false; reason: "recipient_suppressed" };
