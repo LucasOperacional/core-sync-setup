@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Fragment, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, BarChart3, ChevronDown, ChevronRight, ClipboardCheck, Star, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, BarChart3, ClipboardCheck, Star, Users } from "lucide-react";
 
 import { KpiCard } from "@/components/KpiCard";
 import { PostosServicoMapaCard } from "@/components/PostosServicoMapaCard";
@@ -77,8 +77,6 @@ function PainelCoordenador() {
       vivo = false;
     };
   }, []);
-
-  const [aberto, setAberto] = useState<string | null>(null);
 
   const { linhas, total, media, postos } = useMemo(() => {
     const doCoord = visitas.filter((v) => coordDaVisita(v) === alvo);

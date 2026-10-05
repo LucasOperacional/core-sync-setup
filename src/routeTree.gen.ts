@@ -118,6 +118,7 @@ import { Route as ApiPublicNxsPosicaoRouteImport } from './routes/api/public/nxs
 import { Route as ApiPublicPushEnviarRouteImport } from './routes/api/public/push/enviar'
 import { Route as ApiPublicPushProcessarAgendaRouteImport } from './routes/api/public/push/processar-agenda'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as AuthenticatedCoordenacaoPainelCoordSupervisorNomeRouteImport } from './routes/_authenticated/coordenacao-painel.$coord.supervisor.$nome'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -737,6 +738,12 @@ const LovableEmailTransactionalPreviewRoute =
     path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedCoordenacaoPainelCoordSupervisorNomeRoute =
+  AuthenticatedCoordenacaoPainelCoordSupervisorNomeRouteImport.update({
+    id: '/supervisor/$nome',
+    path: '/supervisor/$nome',
+    getParentRoute: () => AuthenticatedCoordenacaoPainelCoordRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -819,7 +826,7 @@ export interface FileRoutesByFullPath {
   '/assinar-movimentacao/$token': typeof AssinarMovimentacaoTokenRoute
   '/assinar/$token': typeof AssinarTokenRoute
   '/categoria/$cat': typeof AuthenticatedCategoriaCatRoute
-  '/coordenacao-painel/$coord': typeof AuthenticatedCoordenacaoPainelCoordRoute
+  '/coordenacao-painel/$coord': typeof AuthenticatedCoordenacaoPainelCoordRouteWithChildren
   '/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
   '/mesa-operacional/$gerente': typeof AuthenticatedMesaOperacionalGerenteRoute
   '/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
@@ -847,6 +854,7 @@ export interface FileRoutesByFullPath {
   '/api/public/push/enviar': typeof ApiPublicPushEnviarRoute
   '/api/public/push/processar-agenda': typeof ApiPublicPushProcessarAgendaRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/coordenacao-painel/$coord/supervisor/$nome': typeof AuthenticatedCoordenacaoPainelCoordSupervisorNomeRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -929,7 +937,7 @@ export interface FileRoutesByTo {
   '/assinar/$token': typeof AssinarTokenRoute
   '/': typeof AuthenticatedIndexRoute
   '/categoria/$cat': typeof AuthenticatedCategoriaCatRoute
-  '/coordenacao-painel/$coord': typeof AuthenticatedCoordenacaoPainelCoordRoute
+  '/coordenacao-painel/$coord': typeof AuthenticatedCoordenacaoPainelCoordRouteWithChildren
   '/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
   '/mesa-operacional/$gerente': typeof AuthenticatedMesaOperacionalGerenteRoute
   '/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
@@ -957,6 +965,7 @@ export interface FileRoutesByTo {
   '/api/public/push/enviar': typeof ApiPublicPushEnviarRoute
   '/api/public/push/processar-agenda': typeof ApiPublicPushProcessarAgendaRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/coordenacao-painel/$coord/supervisor/$nome': typeof AuthenticatedCoordenacaoPainelCoordSupervisorNomeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1041,7 +1050,7 @@ export interface FileRoutesById {
   '/assinar/$token': typeof AssinarTokenRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/categoria/$cat': typeof AuthenticatedCategoriaCatRoute
-  '/_authenticated/coordenacao-painel/$coord': typeof AuthenticatedCoordenacaoPainelCoordRoute
+  '/_authenticated/coordenacao-painel/$coord': typeof AuthenticatedCoordenacaoPainelCoordRouteWithChildren
   '/_authenticated/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
   '/_authenticated/mesa-operacional/$gerente': typeof AuthenticatedMesaOperacionalGerenteRoute
   '/_authenticated/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
@@ -1069,6 +1078,7 @@ export interface FileRoutesById {
   '/api/public/push/enviar': typeof ApiPublicPushEnviarRoute
   '/api/public/push/processar-agenda': typeof ApiPublicPushProcessarAgendaRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/_authenticated/coordenacao-painel/$coord/supervisor/$nome': typeof AuthenticatedCoordenacaoPainelCoordSupervisorNomeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1181,6 +1191,7 @@ export interface FileRouteTypes {
     | '/api/public/push/enviar'
     | '/api/public/push/processar-agenda'
     | '/lovable/email/transactional/preview'
+    | '/coordenacao-painel/$coord/supervisor/$nome'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -1291,6 +1302,7 @@ export interface FileRouteTypes {
     | '/api/public/push/enviar'
     | '/api/public/push/processar-agenda'
     | '/lovable/email/transactional/preview'
+    | '/coordenacao-painel/$coord/supervisor/$nome'
   id:
     | '__root__'
     | '/_authenticated'
@@ -1402,6 +1414,7 @@ export interface FileRouteTypes {
     | '/api/public/push/enviar'
     | '/api/public/push/processar-agenda'
     | '/lovable/email/transactional/preview'
+    | '/_authenticated/coordenacao-painel/$coord/supervisor/$nome'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2202,8 +2215,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/coordenacao-painel/$coord/supervisor/$nome': {
+      id: '/_authenticated/coordenacao-painel/$coord/supervisor/$nome'
+      path: '/supervisor/$nome'
+      fullPath: '/coordenacao-painel/$coord/supervisor/$nome'
+      preLoaderRoute: typeof AuthenticatedCoordenacaoPainelCoordSupervisorNomeRouteImport
+      parentRoute: typeof AuthenticatedCoordenacaoPainelCoordRoute
+    }
   }
 }
+
+interface AuthenticatedCoordenacaoPainelCoordRouteChildren {
+  AuthenticatedCoordenacaoPainelCoordSupervisorNomeRoute: typeof AuthenticatedCoordenacaoPainelCoordSupervisorNomeRoute
+}
+
+const AuthenticatedCoordenacaoPainelCoordRouteChildren: AuthenticatedCoordenacaoPainelCoordRouteChildren =
+  {
+    AuthenticatedCoordenacaoPainelCoordSupervisorNomeRoute:
+      AuthenticatedCoordenacaoPainelCoordSupervisorNomeRoute,
+  }
+
+const AuthenticatedCoordenacaoPainelCoordRouteWithChildren =
+  AuthenticatedCoordenacaoPainelCoordRoute._addFileChildren(
+    AuthenticatedCoordenacaoPainelCoordRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAberturaDeVagasRoute: typeof AuthenticatedAberturaDeVagasRoute
@@ -2278,7 +2313,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVerificadorAtestadosRoute: typeof AuthenticatedVerificadorAtestadosRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedCategoriaCatRoute: typeof AuthenticatedCategoriaCatRoute
-  AuthenticatedCoordenacaoPainelCoordRoute: typeof AuthenticatedCoordenacaoPainelCoordRoute
+  AuthenticatedCoordenacaoPainelCoordRoute: typeof AuthenticatedCoordenacaoPainelCoordRouteWithChildren
   AuthenticatedGerentesSlugRoute: typeof AuthenticatedGerentesSlugRoute
   AuthenticatedMesaOperacionalGerenteRoute: typeof AuthenticatedMesaOperacionalGerenteRoute
   AuthenticatedRelatoriosGerenteSlugRoute: typeof AuthenticatedRelatoriosGerenteSlugRoute
@@ -2367,7 +2402,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedCategoriaCatRoute: AuthenticatedCategoriaCatRoute,
   AuthenticatedCoordenacaoPainelCoordRoute:
-    AuthenticatedCoordenacaoPainelCoordRoute,
+    AuthenticatedCoordenacaoPainelCoordRouteWithChildren,
   AuthenticatedGerentesSlugRoute: AuthenticatedGerentesSlugRoute,
   AuthenticatedMesaOperacionalGerenteRoute:
     AuthenticatedMesaOperacionalGerenteRoute,
