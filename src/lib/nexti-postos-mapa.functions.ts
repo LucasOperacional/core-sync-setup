@@ -144,6 +144,8 @@ const POSTOS_OCULTOS_NOME = [
   "TEKTRON ADMINISTRACAO E CONSERVACAO",
   "CIOP SUPERVISAO",
   "DEPARTAMENTO PESSOAL",
+  "AFASTADO INSS",
+  "AFASTADOS CONSERVACAO",
 ];
 
 function normalizarNomePosto(texto: string): string {
