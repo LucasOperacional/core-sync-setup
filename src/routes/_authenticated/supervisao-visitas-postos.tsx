@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Loader2, MapPin, Minus, Plus, RotateCcw, Search, TrafficCone } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Loader2, MapPin, Minus, Plus, RotateCcw, Search, TrafficCone } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,15 +47,17 @@ const tabela = () => (supabase as any).from("postos_visitas_ajuste");
 
 function VisitasPostosPage() {
   const qc = useQueryClient();
+  const [aberto, setAberto] = useState(false);
   const [busca, setBusca] = useState("");
   const [filtroCor, setFiltroCor] = useState<Semaforo | null>(null);
   const [rascunho, setRascunho] = useState<Record<string, string>>({});
   const [salvando, setSalvando] = useState<string | null>(null);
 
   const listar = useServerFn(listarPostosMapa);
-  const postosQ = useQuery({ queryKey: ["visitas-por-posto"], queryFn: () => listar(), staleTime: 10 * 60_000 });
+  const postosQ = useQuery({ queryKey: ["visitas-por-posto"], queryFn: () => listar(), staleTime: 10 * 60_000, enabled: aberto });
   const ajustesQ = useQuery({
     queryKey: ["postos-visitas-ajuste"],
+    enabled: aberto,
     queryFn: async () => {
       const { data, error } = await tabela().select("posto_id, quantidade");
       if (error) throw error;
@@ -117,7 +119,7 @@ function VisitasPostosPage() {
     toast.success(valor === null ? "Voltou para a contagem automática" : "Quantidade salva");
   }
 
-  const carregando = postosQ.isLoading || ajustesQ.isLoading;
+  const carregando = aberto && (postosQ.isLoading || ajustesQ.isLoading);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-8">
@@ -125,14 +127,27 @@ function VisitasPostosPage() {
         <ArrowLeft className="size-4" /> Voltar para Supervisão em Campo
       </Link>
       <Card data-sem-movimento className="shadow-lg border-border/50">
-        <CardHeader className="bg-muted/30 border-b border-border/50">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <TrafficCone className="size-5 text-primary" /> Quantidade de visitas por posto
-          </CardTitle>
-          <CardDescription>
-            Edite a quantidade de visitas de cada posto. A cor muda sozinha: verde até 2, amarelo de 3 a 4, vermelho 5 ou mais.
-          </CardDescription>
-        </CardHeader>
+        <button
+          type="button"
+          onClick={() => setAberto((v) => !v)}
+          aria-expanded={aberto}
+          className="block w-full text-left"
+        >
+          <CardHeader className="bg-muted/30 border-b border-border/50">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <TrafficCone className="size-5 text-primary" /> Quantidade de visitas por posto
+              {aberto ? (
+                <ChevronUp className="ms-auto size-5 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="ms-auto size-5 text-muted-foreground" />
+              )}
+            </CardTitle>
+            <CardDescription>
+              Edite a quantidade de visitas de cada posto. A cor muda sozinha: verde até 2, amarelo de 3 a 4, vermelho 5 ou mais. Clique para {aberto ? "fechar" : "abrir"}.
+            </CardDescription>
+          </CardHeader>
+        </button>
+        {aberto && (
         <CardContent className="space-y-4 pt-4">
           {carregando ? (
             <div className="flex flex-col items-center p-10 text-muted-foreground">
@@ -214,6 +229,7 @@ function VisitasPostosPage() {
             </>
           )}
         </CardContent>
+        )}
       </Card>
       <PostosPorGerenteCards />
     </div>
