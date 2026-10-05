@@ -67,6 +67,7 @@ export function ChecklistAutomaticoCard() {
   const [podeEditar, setPodeEditar] = useState(false);
 
   useEffect(() => {
+    if (!aberto) return;
     let ativo = true;
     verificarEdicao({})
       .then((r) => ativo && setPodeEditar(r?.pode === true))
@@ -74,10 +75,12 @@ export function ChecklistAutomaticoCard() {
     return () => {
       ativo = false;
     };
-  }, [verificarEdicao]);
+  }, [aberto, verificarEdicao]);
 
   useEffect(() => {
+    if (!aberto) return;
     let ativo = true;
+    setCarregando(true);
     carregar({})
       .then((r) => {
         if (!ativo || !r?.perguntas) return;
@@ -89,7 +92,7 @@ export function ChecklistAutomaticoCard() {
     return () => {
       ativo = false;
     };
-  }, [carregar]);
+  }, [aberto, carregar]);
 
   const perguntas = useMemo(() => {
     if (!filtro) return [];
