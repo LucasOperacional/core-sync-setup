@@ -44,6 +44,12 @@ function tom(p: number) {
 }
 
 function PainelCoordenador() {
+  const { nome } = useParams({ strict: false }) as { nome?: string };
+  if (nome) return <Outlet />;
+  return <PainelConteudo />;
+}
+
+function PainelConteudo() {
   const { coord } = Route.useParams();
   const alvo: Coordenador = coord === "vanderlei" ? "VANDERLEI" : "JEFFERSON";
   const [visitas, setVisitas] = useState<VisitaCampo[]>([]);
