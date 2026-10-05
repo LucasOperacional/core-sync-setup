@@ -520,6 +520,13 @@ export function AbaProtocolosSalvos() {
                   Remover nome
                 </Button>
               )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => baixarFolhaIndividual(item, item.protocolo)}
+              >
+                Baixar folha
+              </Button>
               <Button variant="outline" size="sm" onClick={() => abrirPdf(item.protocolo)}>
                 Abrir em PDF
               </Button>
@@ -557,6 +564,19 @@ export function AbaProtocolosSalvos() {
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => pedirConfirmacaoOuAbrir(p)}>
                 Abrir em PDF
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2 text-primary"
+                disabled={gerandoZip !== null}
+                onClick={() => baixarSeparadoPorNome(p)}
+              >
+                {gerandoZip === p.id ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                Baixar por nome (ZIP)
               </Button>
 
               <Button
