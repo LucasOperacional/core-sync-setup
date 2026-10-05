@@ -103,6 +103,27 @@ export const buscarPostosNexti = createServerFn({ method: "GET" })
     return { ok: true, postos, total: count ?? postos.length };
   });
 
+/** Lista os postos atribuídos em massa de TODOS os gerentes de uma vez (para os cards de resumo). */
+export const listarPostosDeTodosGerentes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("areas_gerentes_postos")
+      .select("id, gerente_nome, posto_nome, posto_localidade, created_at")
+      .order("posto_nome", { ascending: true });
+    if (error) return { ok: false as const, gerentes: [] as { nome: string; postos: { id: string; posto_nome: string; posto_localidade: string | null }[] }[], erro: error.message };
+    const porGerente = new Map<string, { id: string; posto_nome: string; posto_localidade: string | null }[]>();
+    for (const p of data ?? []) {
+      const lista = porGerente.get(p.gerente_nome) ?? [];
+      lista.push({ id: p.id, posto_nome: p.posto_nome, posto_localidade: p.posto_localidade });
+      porGerente.set(p.gerente_nome, lista);
+    }
+    const gerentes = [...porGerente.entries()]
+      .map(([nome, postos]) => ({ nome, postos }))
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+    return { ok: true as const, gerentes };
+  });
+
 export const listarPostosDoGerente = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => listarSchema.parse(data))
