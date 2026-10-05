@@ -25,7 +25,7 @@ export const listarVinculosGerentes = createServerFn({ method: "GET" })
     for (const p of (perfis ?? []) as { id: string; nome: string | null }[]) nomes.set(p.id, p.nome);
     const usuarios = ((authErr ? [] : (authData?.users ?? [])) as { id: string; email?: string | null; user_metadata?: Record<string, unknown> }[])
       .map((u) => {
-        const metaNome = typeof u.user_metadata?.nome === "string" ? (u.user_metadata.nome as string) : null;
+        const metaNome = typeof u.user_metadata?.["nome"] === "string" ? (u.user_metadata["nome"] as string) : null;
         const nome = nomes.get(u.id) ?? metaNome ?? null;
         return {
           id: u.id,
