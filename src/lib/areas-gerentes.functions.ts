@@ -206,6 +206,30 @@ export const removerPostoDoGerente = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const renomearSchema = z.object({
+  id: z.string().uuid(),
+  postoNome: z.string().min(1),
+});
+
+/**
+ * Renomeia um posto já salvo na lista de um gerente, sem mexer nos demais.
+ */
+export const renomearPostoDoGerente = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => renomearSchema.parse(data))
+  .handler(async ({ context, data }): Promise<GerenciarPostoResultado> => {
+    const nome = data.postoNome.trim();
+    if (!nome) return { ok: false, erro: "Informe o novo nome do posto." };
+
+    const { error } = await context.supabase
+      .from("areas_gerentes_postos")
+      .update({ posto_nome: nome })
+      .eq("id", data.id);
+
+    if (error) return { ok: false, erro: error.message };
+    return { ok: true };
+  });
+
 const definirSchema = z.object({
   gerenteNome: z.string().min(1),
   postos: z
