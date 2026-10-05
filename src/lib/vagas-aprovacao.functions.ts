@@ -85,25 +85,28 @@ async function enviarEmailAprovacao(
   }
 
   try {
-    const resultado = await sendTemplateEmail("solicitacao-vaga", destino, {
-      idempotencyKey: chaveEnvio ?? `vaga-aprovada-${vaga.id}`,
-      templateData: {
-        cargo: vaga.cargo,
-        posto: vaga.posto,
-        localidade: vaga.localidade,
-        salario: vaga.salario,
-        horario: vaga.horario,
-        dataInicio: vaga.data_inicio,
-        solicitante: vaga.solicitante,
-        tipo: vaga.tipo,
-        justificativa: vaga.justificativa,
-        atividade: vaga.atividade,
-        perfil: vaga.perfil,
-        linkPdf,
-        arquivo: vaga.arquivo,
-      },
-    });
-    if (!resultado.sent) return { enviado: false, motivo: "destinatario_bloqueado" };
+    const chaveBase = chaveEnvio ?? `vaga-aprovada-${vaga.id}`;
+    for (const destino of destinos) {
+      const resultado = await sendTemplateEmail("solicitacao-vaga", destino, {
+        idempotencyKey: `${chaveBase}-${destino}`,
+        templateData: {
+          cargo: vaga.cargo,
+          posto: vaga.posto,
+          localidade: vaga.localidade,
+          salario: vaga.salario,
+          horario: vaga.horario,
+          dataInicio: vaga.data_inicio,
+          solicitante: vaga.solicitante,
+          tipo: vaga.tipo,
+          justificativa: vaga.justificativa,
+          atividade: vaga.atividade,
+          perfil: vaga.perfil,
+          linkPdf,
+          arquivo: vaga.arquivo,
+        },
+      });
+      if (!resultado.sent) return { enviado: false, motivo: "destinatario_bloqueado" };
+    }
     return { enviado: true };
   } catch (erro) {
     const codigo = (erro as { code?: string } | null)?.code;
