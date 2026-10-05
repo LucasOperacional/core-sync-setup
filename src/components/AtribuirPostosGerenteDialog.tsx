@@ -56,8 +56,14 @@ export function AtribuirPostosGerenteDialog({ postos }: { postos: PostoRef[] }) 
   const naoEncontrados = linhas.filter((l) => !l.achado);
 
   async function salvar() {
-    if (!gerente) return toast.error("Escolha o gerente de área.");
-    if (!linhas.length) return toast.error("Cole pelo menos um nome de posto.");
+    if (!gerente) {
+      toast.error("Escolha o gerente de área.");
+      return;
+    }
+    if (!linhas.length) {
+      toast.error("Cole pelo menos um nome de posto.");
+      return;
+    }
     setSalvando(true);
     try {
       const r = await salvarFn({
