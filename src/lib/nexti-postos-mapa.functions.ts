@@ -149,7 +149,7 @@ const POSTOS_OCULTOS_NOME = [
 function normalizarNomePosto(texto: string): string {
   return texto
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toUpperCase()
     .replace(/\s+/g, " ")
     .trim();
