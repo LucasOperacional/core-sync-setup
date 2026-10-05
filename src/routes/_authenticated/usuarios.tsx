@@ -16,6 +16,7 @@ import {
   Search,
   UserCheck,
   CalendarPlus,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,7 @@ import {
   listarUsuarios,
   criarUsuario,
   alterarPapel,
+  alterarDepartamento,
   redefinirSenha,
   excluirUsuario,
   type UsuarioAdmin,
@@ -177,6 +179,11 @@ function UsuariosPage() {
   const [roleEditUser, setRoleEditUser] = useState<UsuarioAdmin | null>(null);
   const [roleEditValue, setRoleEditValue] = useState<AppRole>("user");
   const [savingRole, setSavingRole] = useState(false);
+
+  // Department edit
+  const [deptUser, setDeptUser] = useState<UsuarioAdmin | null>(null);
+  const [deptValue, setDeptValue] = useState("");
+  const [savingDept, setSavingDept] = useState(false);
 
   // Password reset
   const [resetUser, setResetUser] = useState<UsuarioAdmin | null>(null);
@@ -297,6 +304,23 @@ function UsuariosPage() {
       toast.error(e.message || "Erro ao alterar papel.");
     } finally {
       setSavingRole(false);
+    }
+  }
+
+  async function handleDeptSave() {
+    if (!deptUser?.id) return;
+    try {
+      setSavingDept(true);
+      await alterarDepartamento({
+        data: { userId: deptUser.id, department: deptValue },
+      });
+      toast.success("Departamento atualizado.");
+      setDeptUser(null);
+      await fetchData();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao alterar departamento.");
+    } finally {
+      setSavingDept(false);
     }
   }
 
@@ -543,6 +567,17 @@ function UsuariosPage() {
                                 onClick={() => openPermissions(u)}
                               >
                                 <Settings2 className="size-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Editar departamento"
+                                onClick={() => {
+                                  setDeptUser(u);
+                                  setDeptValue(u.department || "");
+                                }}
+                              >
+                                <Pencil className="size-4" />
                               </Button>
                               <Button
                                 variant="ghost"
@@ -909,6 +944,39 @@ function UsuariosPage() {
             </Button>
             <Button onClick={handlePermSave} disabled={savingPerms}>
               {savingPerms && <Loader2 className="mr-1.5 size-4 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Editar departamento */}
+      <Dialog open={!!deptUser} onOpenChange={(open) => !open && setDeptUser(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Editar Departamento</DialogTitle>
+            <DialogDescription>{deptUser?.email}</DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <Select value={deptValue} onValueChange={setDeptValue}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                {DEPARTAMENTOS.map((dept) => (
+                  <SelectItem key={dept} value={dept}>
+                    {dept}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeptUser(null)} disabled={savingDept}>
+              Cancelar
+            </Button>
+            <Button onClick={handleDeptSave} disabled={savingDept || !deptValue}>
+              {savingDept && <Loader2 className="mr-1.5 size-4 animate-spin" />}
               Salvar
             </Button>
           </DialogFooter>
