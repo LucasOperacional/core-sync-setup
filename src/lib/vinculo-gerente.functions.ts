@@ -28,7 +28,19 @@ export const meuVinculoGerente = createServerFn({ method: "GET" })
       .maybeSingle();
 
     const nomePerfil = (perfil?.display_name ?? "").trim();
-    const gerenteNome = nomePerfil ? areaGerenteCanonica(nomePerfil) : null;
+    let gerenteNome = nomePerfil ? areaGerenteCanonica(nomePerfil) : null;
+
+    // Usuário vinculado a um card de gerente (pela página de visitas por
+    // posto): ele vê apenas os postos daquele card, mesmo que o nome do
+    // perfil não bata com o nome do gerente.
+    if (!gerenteNome) {
+      const { data: vinc } = await (context.supabase.from("gerente_usuario_vinculo" as never) as any)
+        .select("gerente_nome")
+        .eq("user_id", context.userId)
+        .maybeSingle();
+      const nomeVinculado = (vinc?.gerente_nome ?? "").trim();
+      if (nomeVinculado) gerenteNome = nomeVinculado;
+    }
 
     if (!gerenteNome) {
       return { ehGerente: false, gerenteNome: null, postos: [] };
