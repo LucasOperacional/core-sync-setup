@@ -77,7 +77,8 @@ function VisitasPostosPage() {
         const total = editado ?? auto;
         return { ...p, auto, editado: editado !== undefined, total, cor: semaforoDe(total) };
       })
-      .sort((a, b) => a.total - b.total || a.nome.localeCompare(b.nome));
+      // Ordem fixa por nome: o posto não "pula" de lugar ao editar a quantidade.
+      .sort((a, b) => a.nome.localeCompare(b.nome));
   }, [postosQ.data, ajustesQ.data]);
 
   const contagem = useMemo(() => {
