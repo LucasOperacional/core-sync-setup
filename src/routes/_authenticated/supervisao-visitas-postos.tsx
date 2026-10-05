@@ -15,6 +15,7 @@ import {
   type PostoMapa,
 } from "@/lib/nexti-postos-mapa.functions";
 import { cn } from "@/lib/utils";
+import { AtribuirPostosGerenteDialog } from "@/components/AtribuirPostosGerenteDialog";
 
 export const Route = createFileRoute("/_authenticated/supervisao-visitas-postos")({
   head: () => ({
@@ -157,7 +158,10 @@ function VisitasPostosPage() {
                   <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar posto, cliente ou cidade..." className="pl-9" />
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">{visiveis.length} de {postos.length} postos exibidos.</p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">{visiveis.length} de {postos.length} postos exibidos.</p>
+                <AtribuirPostosGerenteDialog postos={postos} />
+              </div>
               <div className="divide-y divide-border rounded-lg border border-border">
                 {visiveis.map((p) => {
                   const id = String(p.id);

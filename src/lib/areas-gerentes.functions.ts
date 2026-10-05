@@ -184,3 +184,48 @@ export const removerPostoDoGerente = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+const definirSchema = z.object({
+  gerenteNome: z.string().min(1),
+  postos: z
+    .array(z.object({ nome: z.string().min(1), localidade: z.string().nullable().optional() }))
+    .max(2000),
+});
+
+/**
+ * Substitui a lista inteira de postos de um gerente de área pela lista enviada.
+ * Depois disso, o gerente passa a ver somente esses postos.
+ */
+export const definirPostosDoGerente = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => definirSchema.parse(data))
+  .handler(async ({ context, data }): Promise<GerenciarPostoResultado & { total?: number }> => {
+    const gerenteNome = data.gerenteNome.trim();
+    const vistos = new Set<string>();
+    const linhas = data.postos
+      .map((p) => ({ nome: p.nome.trim(), localidade: p.localidade?.trim() || null }))
+      .filter((p) => {
+        const k = p.nome.toUpperCase();
+        if (!p.nome || vistos.has(k)) return false;
+        vistos.add(k);
+        return true;
+      });
+
+    const { error: delErr } = await context.supabase
+      .from("areas_gerentes_postos")
+      .delete()
+      .eq("gerente_nome", gerenteNome);
+    if (delErr) return { ok: false, erro: delErr.message };
+
+    if (linhas.length) {
+      const { error } = await context.supabase.from("areas_gerentes_postos").insert(
+        linhas.map((p) => ({
+          gerente_nome: gerenteNome,
+          posto_nome: p.nome,
+          posto_localidade: p.localidade,
+        })),
+      );
+      if (error) return { ok: false, erro: error.message };
+    }
+    return { ok: true, total: linhas.length };
+  });
