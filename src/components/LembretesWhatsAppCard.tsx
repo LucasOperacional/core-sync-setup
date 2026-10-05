@@ -115,7 +115,11 @@ export function LembretesWhatsAppCard() {
   const atualizar = () => void queryClient.invalidateQueries({ queryKey: ["wa-lembretes"] });
 
   const criarMut = useMutation({
-    mutationFn: () => criar({ data: { titulo, numeros, texto, quando, repeticao } }),
+    mutationFn: () =>
+      criar({
+        // O campo é no horário local (Brasília); converte para ISO com fuso antes de enviar ao servidor.
+        data: { titulo, numeros, texto, quando: new Date(quando).toISOString(), repeticao },
+      }),
     onSuccess: (r) => {
       if (!r.ok) {
         toast.error(r.erro ?? "Não foi possível agendar.");
