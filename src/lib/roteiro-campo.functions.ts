@@ -358,6 +358,27 @@ export const postosProximosSupervisao = createServerFn({ method: "POST" })
       if (query.error)
         return { ok: false, erro: query.error.message, postos: [] as PostoProximo[] };
 
+      // Usuário vinculado a um card de gerente: os postos próximos são
+      // filtrados aqui no servidor, ANTES de cortar os 8 mais próximos —
+      // assim a lista mostra os postos do card dele mesmo que estejam
+      // além dos 8 primeiros gerais.
+      const normalizar = (s: string) =>
+        s.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Z0-9]/g, "");
+      let permitidos: Set<string> | null = null;
+      const { data: vinc } = await (context.supabase.from("gerente_usuario_vinculo" as never) as any)
+        .select("gerente_nome")
+        .eq("user_id", context.userId)
+        .maybeSingle();
+      const gerenteVinculado = (vinc?.gerente_nome ?? "").trim();
+      if (gerenteVinculado) {
+        const { data: postosCard } = await context.supabase
+          .from("areas_gerentes_postos")
+          .select("posto_nome")
+          .eq("gerente_nome", gerenteVinculado);
+        const nomes = (postosCard ?? []).map((p) => normalizar(p.posto_nome ?? "")).filter(Boolean);
+        if (nomes.length > 0) permitidos = new Set(nomes);
+      }
+
       const postos: PostoProximo[] = (query.data ?? [])
         .map((linha) => ({
           id: Number(linha.nexti_id),
