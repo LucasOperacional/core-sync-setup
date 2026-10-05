@@ -5,7 +5,7 @@ import { ArrowLeft, BarChart3, Building2, ClipboardCheck, Star } from "lucide-re
 import { KpiCard } from "@/components/KpiCard";
 import { supabase } from "@/integrations/supabase/client";
 import { rotuloCoordenador, type Coordenador } from "@/lib/coordenadores";
-import { normalizarNomePosto, useVisitasPorNomePosto } from "@/lib/visitas-postos-nome";
+import { useVisitasPorNomePosto } from "@/lib/visitas-postos-nome";
 import { SemaforoPosto } from "@/components/SemaforoPosto";
 
 export const Route = createFileRoute("/_authenticated/coordenacao-painel/$coord/supervisor/$nome")({
@@ -58,7 +58,7 @@ function PaginaSupervisor() {
   const [visitas, setVisitas] = useState<VisitaCampo[]>([]);
   const [carregando, setCarregando] = useState(true);
   // Bolinha e quantidade de visitas de cada posto (mesma regra da tela de visitas).
-  const { porNome } = useVisitasPorNomePosto();
+  const { buscar } = useVisitasPorNomePosto();
 
   useEffect(() => {
     let vivo = true;
@@ -177,7 +177,7 @@ function PaginaSupervisor() {
                     <td className="py-2 pr-3 tabular-nums">{p.qtd}</td>
                     <td className="py-2 pr-3 tabular-nums text-muted-foreground">{p.ultima || "—"}</td>
                     <td className="py-2 pr-3">
-                      <SemaforoPosto qtd={porNome.get(normalizarNomePosto(p.posto))?.qtd} />
+                      <SemaforoPosto qtd={buscar(p.posto)?.qtd} />
                     </td>
                     <td className="py-2">
                       <div className="flex items-center gap-2">

@@ -6,11 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { listarPostosDeTodosGerentes } from "@/lib/areas-gerentes.functions";
 import { nomeAmigavel } from "@/lib/areas-gerentes";
 import { cn } from "@/lib/utils";
-import {
-  normalizarNomePosto,
-  resumirPorCor,
-  useVisitasPorNomePosto,
-} from "@/lib/visitas-postos-nome";
+import { resumirPorCor, useVisitasPorNomePosto } from "@/lib/visitas-postos-nome";
 import { BolinhaCor, SemaforoPosto } from "@/components/SemaforoPosto";
 
 /**
@@ -30,7 +26,7 @@ export function PostosPorGerenteCards() {
   const [abertos, setAbertos] = useState<Record<string, boolean>>({});
 
   // As quantidades só são baixadas quando algum card de gerente está aberto.
-  const { porNome, carregando } = useVisitasPorNomePosto(Object.values(abertos).some(Boolean));
+  const { buscar, carregando } = useVisitasPorNomePosto(Object.values(abertos).some(Boolean));
 
   const gerentes = q.data?.ok ? q.data.gerentes : [];
 
@@ -60,7 +56,7 @@ export function PostosPorGerenteCards() {
               const aberto = !!abertos[g.nome];
               const resumo = resumirPorCor(
                 g.postos.map((p) => p.posto_nome),
-                porNome,
+                buscar,
               );
               return (
                 <div key={g.nome} className="rounded-lg border border-border">
@@ -104,7 +100,7 @@ export function PostosPorGerenteCards() {
                                 <p className="truncate text-xs text-muted-foreground">{p.posto_localidade}</p>
                               )}
                             </div>
-                            <SemaforoPosto qtd={porNome.get(normalizarNomePosto(p.posto_nome))?.qtd} />
+                            <SemaforoPosto qtd={buscar(p.posto_nome)?.qtd} />
                           </li>
                         ))}
                       </ul>

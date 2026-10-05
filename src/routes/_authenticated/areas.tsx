@@ -39,7 +39,7 @@ import {
 } from "@/lib/areas-gerentes.functions";
 import { importarPostosNexti } from "@/lib/areas-nexti.functions";
 import { meuVinculoGerente } from "@/lib/vinculo-gerente.functions";
-import { normalizarNomePosto, useVisitasPorNomePosto } from "@/lib/visitas-postos-nome";
+import { useVisitasPorNomePosto } from "@/lib/visitas-postos-nome";
 import { SemaforoPosto } from "@/components/SemaforoPosto";
 import { useSessao, useIsAdmin } from "@/hooks/use-sessao";
 import { toast } from "sonner";
@@ -241,7 +241,7 @@ function PainelPostos({
 
   const buscarNexti = useServerFn(buscarPostosNexti);
   // Bolinha e quantidade de visitas de cada posto (mesma regra da tela de visitas).
-  const { porNome } = useVisitasPorNomePosto();
+  const { buscar } = useVisitasPorNomePosto();
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["postos-gerente", gerente],
@@ -377,7 +377,7 @@ function PainelPostos({
                             <p className="truncate text-xs text-muted-foreground">{p.localidade}</p>
                           )}
                         </div>
-                        <SemaforoPosto qtd={porNome.get(normalizarNomePosto(p.nome))?.qtd} />
+                        <SemaforoPosto qtd={buscar(p.nome)?.qtd} />
                         <Button
                           size="sm"
                           variant={vinculado ? "ghost" : "secondary"}
@@ -480,7 +480,7 @@ function PainelPostos({
                         </p>
                       )}
                     </div>
-                    <SemaforoPosto qtd={porNome.get(normalizarNomePosto(posto.posto_nome))?.qtd} className="mt-0.5" />
+                    <SemaforoPosto qtd={buscar(posto.posto_nome)?.qtd} className="mt-0.5" />
                     {isAdmin && (
                       <Button
                         variant="ghost"
