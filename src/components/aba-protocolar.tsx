@@ -207,10 +207,17 @@ export function AbaProtocolar() {
     [folhasPdf, folhasManuais, excluidasPdf],
   );
 
-  const previewDeduplicado = useMemo(
-    () => deduplicarFolhasPonto(todasFolhasPreview),
-    [todasFolhasPreview],
-  );
+  // Folhas sem nome identificado nunca são tratadas como duplicidade entre si
+  // (todas teriam a mesma chave e só a primeira subiria). Elas sobem sempre.
+  const previewDeduplicado = useMemo(() => {
+    const semNome = todasFolhasPreview.filter(folhaSemIdentificacao);
+    const comNome = todasFolhasPreview.filter((f) => !folhaSemIdentificacao(f));
+    const r = deduplicarFolhasPonto(comNome);
+    return { unicas: [...r.unicas, ...semNome], duplicadas: r.duplicadas };
+  }, [todasFolhasPreview]);
+
+  /** Folhas que ficaram de fora do último protocolo (mostradas após salvar). */
+  const [naoSubiram, setNaoSubiram] = useState<FolhaNaoSubiu[]>([]);
 
   /** Chaves das folhas já protocoladas neste ciclo (para avisar no preview). */
   const chavesBancoQuery = useQuery({
@@ -225,6 +232,7 @@ export function AbaProtocolar() {
     if (!existentes || existentes.size === 0) return new Set<string>();
     const repetidas = new Set<string>();
     for (const folha of todasFolhasPreview) {
+      if (folhaSemIdentificacao(folha)) continue;
       const chave = chaveUnicaFolhaPonto(folha);
       if (existentes.has(chave)) repetidas.add(chave);
     }
@@ -242,11 +250,24 @@ export function AbaProtocolar() {
       }
 
       const chavesExistentes = await carregarChavesExistentes(ciclo.inicio, ciclo.fim);
-      const folhasNovas = previewDeduplicado.unicas.filter(
-        (folha) => !chavesExistentes.has(chaveUnicaFolhaPonto(folha)),
-      );
+      const jaNoBanco = (folha: FolhaPreparada) =>
+        !folhaSemIdentificacao(folha) && chavesExistentes.has(chaveUnicaFolhaPonto(folha));
+      const folhasNovas = previewDeduplicado.unicas.filter((folha) => !jaNoBanco(folha));
       const duplicadasBanco = previewDeduplicado.unicas.length - folhasNovas.length;
       const duplicadasTotal = previewDeduplicado.duplicadas.length + duplicadasBanco;
+
+      // Relatório do que NÃO vai subir, com o motivo de cada folha.
+      const relatorio: FolhaNaoSubiu[] = [
+        ...previewDeduplicado.duplicadas.map((f) => ({
+          ...resumoFolha(f),
+          motivo: "Repetida no mesmo envio (mesmo nome e empresa)",
+        })),
+        ...previewDeduplicado.unicas.filter(jaNoBanco).map((f) => ({
+          ...resumoFolha(f),
+          motivo: "Já protocolada em outro protocolo deste ciclo",
+        })),
+      ];
+      setNaoSubiram(relatorio);
 
       if (folhasNovas.length === 0 && file) {
         // Repara protocolos antigos cujas folhas foram salvas, mas cujo upload
