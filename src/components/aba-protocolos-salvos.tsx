@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Clock, Loader2 } from "lucide-react";
+import { AlertTriangle, Clock, Download, Loader2 } from "lucide-react";
+import JSZip from "jszip";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessao, useIsAdmin } from "@/hooks/use-sessao";
@@ -17,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { abrirProtocoloPdf } from "@/lib/protocolo-pdf";
+import { abrirProtocoloPdf, gerarProtocoloPdf } from "@/lib/protocolo-pdf";
 import { buscarTudoPaginado } from "@/lib/supabase-paginacao";
 import { useCicloProtocolacao } from "@/lib/ciclo-protocolacao";
 
@@ -92,6 +93,7 @@ export function AbaProtocolosSalvos() {
   const [progressoExtras, setProgressoExtras] = useState("");
   const [gerandoExtras, setGerandoExtras] = useState<string | null>(null);
   const relogio = useRelogioBrasilia();
+  const [gerandoZip, setGerandoZip] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: protocoloFolhasQueryKeys.protocolos,
