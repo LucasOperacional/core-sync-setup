@@ -36,7 +36,6 @@ import { useNextiDiferido } from "@/lib/use-nexti-diferido";
 import {
   buscarPostosNexti,
   chavePosto,
-  importarPostosMesaLote,
   cadastrarPostoMesa,
   hojeBrasilia,
   listarFolhasPendentesMesa,
