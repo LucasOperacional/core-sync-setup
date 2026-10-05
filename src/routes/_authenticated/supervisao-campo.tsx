@@ -4,6 +4,7 @@ import { FloatingNav } from "@/components/FloatingNav";
 import { ChecklistAutomaticoCard } from "@/components/ChecklistAutomaticoCard";
 import { RelatoriosVisitaCoordenacaoCard } from "@/components/RelatoriosVisitaCoordenacaoCard";
 import { PostosServicoMapaCard } from "@/components/PostosServicoMapaCard";
+import { VisitasPorPostoCard } from "@/components/VisitasPorPostoCard";
 
 export const Route = createFileRoute("/_authenticated/supervisao-campo")({
   head: () => ({
@@ -49,6 +50,7 @@ function SupervisaoCampoPage() {
           <ChecklistAutomaticoCard />
           <RelatoriosVisitaCoordenacaoCard />
         </div>
+        <VisitasPorPostoCard />
         <PostosServicoMapaCard />
       </div>
 
