@@ -1,11 +1,10 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, BarChart3, ClipboardCheck, Star, Users } from "lucide-react";
 
 import { KpiCard } from "@/components/KpiCard";
 import { PostosServicoMapaCard } from "@/components/PostosServicoMapaCard";
-import { useVisits } from "@/lib/use-visits";
-import { classificarResposta, type Visit } from "@/lib/report-parser";
+import { supabase } from "@/integrations/supabase/client";
 import { gerenteAreaACanonico } from "@/lib/gerentes-area-a";
 import { coordenadorDoGerente, rotuloCoordenador, type Coordenador } from "@/lib/coordenadores";
 
@@ -16,9 +15,9 @@ export const Route = createFileRoute("/_authenticated/coordenacao-painel/$coord"
   head: ({ params }) => ({
     meta: [
       { title: `Painel da coordenação ${params.coord}` },
-      { name: "description", content: "Qualidade e quantidade de visitas por supervisor da coordenação, com mapa de postos." },
+      { name: "description", content: "Qualidade e quantidade de visitas da Supervisão em Campo por supervisor, com mapa de postos." },
       { property: "og:title", content: `Painel da coordenação ${params.coord}` },
-      { property: "og:description", content: "Dashboard de visitas por supervisor e mapa de postos." },
+      { property: "og:description", content: "Dashboard de visitas da Supervisão em Campo por supervisor e mapa de postos." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -26,21 +25,16 @@ export const Route = createFileRoute("/_authenticated/coordenacao-painel/$coord"
   component: PainelCoordenador,
 });
 
-function coordDaVisita(v: Visit): Coordenador {
-  const g =
-    gerenteAreaACanonico(v.responsavel) ?? gerenteAreaACanonico(v.posto) ?? gerenteAreaACanonico(v.local) ?? "";
-  return coordenadorDoGerente(g);
-}
+type VisitaCampo = {
+  supervisor: string | null;
+  posto: string | null;
+  cliente: string | null;
+  percentual_conformidade: number | null;
+};
 
-function qualidade(v: Visit) {
-  let c = 0;
-  let n = 0;
-  for (const r of v.respostas) {
-    const k = classificarResposta(r.answer, r.question);
-    if (k === "conforme") c++;
-    else if (k === "nao_conforme") n++;
-  }
-  return { c, t: c + n };
+function coordDaVisita(v: VisitaCampo): Coordenador {
+  const g = gerenteAreaACanonico(v.supervisor ?? "") ?? gerenteAreaACanonico(v.posto ?? "") ?? "";
+  return coordenadorDoGerente(g);
 }
 
 function tom(p: number) {
@@ -52,28 +46,59 @@ function tom(p: number) {
 function PainelCoordenador() {
   const { coord } = Route.useParams();
   const alvo: Coordenador = coord === "vanderlei" ? "VANDERLEI" : "JEFFERSON";
-  const { visits } = useVisits();
+  const [visitas, setVisitas] = useState<VisitaCampo[]>([]);
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    let vivo = true;
+    async function carregar() {
+      setCarregando(true);
+      const acumulado: VisitaCampo[] = [];
+      let desde = 0;
+      const passo = 1000;
+      for (;;) {
+        const { data, error } = await supabase
+          .from("roteiros_visita_campo")
+          .select("supervisor, posto, cliente, percentual_conformidade")
+          .order("data_visita", { ascending: false })
+          .range(desde, desde + passo - 1);
+        if (error || !data || data.length === 0) break;
+        acumulado.push(...(data as VisitaCampo[]));
+        if (data.length < passo) break;
+        desde += passo;
+      }
+      if (vivo) {
+        setVisitas(acumulado);
+        setCarregando(false);
+      }
+    }
+    void carregar();
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   const { linhas, total, media, postos } = useMemo(() => {
-    const doCoord = visits.filter((v) => coordDaVisita(v) === alvo);
-    const mapa = new Map<string, { visitas: number; c: number; t: number; postos: Set<string> }>();
+    const doCoord = visitas.filter((v) => coordDaVisita(v) === alvo);
+    const mapa = new Map<string, { visitas: number; soma: number; comNota: number; postos: Set<string> }>();
     const todosPostos = new Set<string>();
-    let gc = 0;
-    let gt = 0;
+    let somaGeral = 0;
+    let comNotaGeral = 0;
     for (const v of doCoord) {
-      const nome = v.responsavel.trim() || "Não informado";
-      const posto = (v.local || v.posto || v.cliente).trim();
-      const s = mapa.get(nome) ?? { visitas: 0, c: 0, t: 0, postos: new Set<string>() };
-      const q = qualidade(v);
+      const nome = (v.supervisor ?? "").trim() || "Não informado";
+      const posto = (v.posto || v.cliente || "").trim();
+      const s = mapa.get(nome) ?? { visitas: 0, soma: 0, comNota: 0, postos: new Set<string>() };
       s.visitas++;
-      s.c += q.c;
-      s.t += q.t;
+      if (typeof v.percentual_conformidade === "number") {
+        s.soma += v.percentual_conformidade;
+        s.comNota++;
+        somaGeral += v.percentual_conformidade;
+        comNotaGeral++;
+      }
       if (posto) {
         s.postos.add(posto);
         todosPostos.add(posto);
       }
-      gc += q.c;
-      gt += q.t;
       mapa.set(nome, s);
     }
     const linhas = Array.from(mapa.entries())
@@ -81,11 +106,16 @@ function PainelCoordenador() {
         nome,
         visitas: s.visitas,
         postos: s.postos.size,
-        qualidade: s.t ? Math.round((s.c / s.t) * 100) : 0,
+        qualidade: s.comNota ? Math.round(s.soma / s.comNota) : 0,
       }))
       .sort((a, b) => b.visitas - a.visitas);
-    return { linhas, total: doCoord.length, media: gt ? Math.round((gc / gt) * 100) : 0, postos: todosPostos.size };
-  }, [visits, alvo]);
+    return {
+      linhas,
+      total: doCoord.length,
+      media: comNotaGeral ? Math.round(somaGeral / comNotaGeral) : 0,
+      postos: todosPostos.size,
+    };
+  }, [visitas, alvo]);
 
   const maxVisitas = Math.max(1, ...linhas.map((l) => l.visitas));
 
@@ -97,6 +127,9 @@ function PainelCoordenador() {
       <h1 className="flex items-center gap-3 font-display text-3xl font-bold">
         <BarChart3 className="size-8 text-primary" /> {rotuloCoordenador(alvo)}
       </h1>
+      <p className="text-xs text-muted-foreground">
+        Somente visitas registradas na Supervisão em Campo entram neste painel.
+      </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Visitas" value={total} icon={ClipboardCheck} />
@@ -107,8 +140,10 @@ function PainelCoordenador() {
 
       <section className="panel p-5">
         <h2 className="text-sm font-semibold">Qualidade e quantidade de visitas por supervisor</h2>
-        {linhas.length === 0 ? (
-          <p className="mt-4 text-xs text-muted-foreground">Nenhuma visita encontrada para esta coordenação.</p>
+        {carregando ? (
+          <p className="mt-4 text-xs text-muted-foreground">Carregando visitas da Supervisão em Campo…</p>
+        ) : linhas.length === 0 ? (
+          <p className="mt-4 text-xs text-muted-foreground">Nenhuma visita da Supervisão em Campo encontrada para esta coordenação.</p>
         ) : (
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[40rem] text-left text-sm">
