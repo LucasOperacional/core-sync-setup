@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronDown, ChevronUp, Loader2, MapPin, RefreshCw, Users } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Loader2, MapPin, Pencil, RefreshCw, Users, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { atualizarCardsGerentesComNexti, listarPostosDeTodosGerentes } from "@/lib/areas-gerentes.functions";
+import { atualizarCardsGerentesComNexti, listarPostosDeTodosGerentes, renomearPostoDoGerente } from "@/lib/areas-gerentes.functions";
 import { sincronizarPostosNexti } from "@/lib/nexti-postos-mapa.functions";
 import { nomeAmigavel } from "@/lib/areas-gerentes";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,30 @@ export function PostosPorGerenteCards() {
     }
   }
   const [abertos, setAbertos] = useState<Record<string, boolean>>({});
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [novoNome, setNovoNome] = useState("");
+  const [salvandoId, setSalvandoId] = useState<string | null>(null);
+  const renomearFn = useServerFn(renomearPostoDoGerente);
+
+  async function salvarNome(id: string) {
+    const nome = novoNome.trim();
+    if (!nome) {
+      toast.warning("Digite o novo nome do posto.");
+      return;
+    }
+    setSalvandoId(id);
+    try {
+      const r = await renomearFn({ data: { id, postoNome: nome } });
+      if (!r.ok) throw new Error(r.erro);
+      await qc.invalidateQueries({ queryKey: ["postos-gerente"] });
+      toast.success("Nome do posto atualizado.");
+      setEditandoId(null);
+    } catch (e) {
+      toast.error("Falha ao renomear: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setSalvandoId(null);
+    }
+  }
 
   // As quantidades só são baixadas quando algum card de gerente está aberto.
   const { buscar, carregando } = useVisitasPorNomePosto(Object.values(abertos).some(Boolean));
@@ -127,11 +152,67 @@ export function PostosPorGerenteCards() {
                           <li key={p.id} className="flex items-start gap-2 px-4 py-2 text-sm">
                             <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
                             <div className="min-w-0 flex-1">
-                              <p className="truncate">{p.posto_nome}</p>
-                              {p.posto_localidade && (
-                                <p className="truncate text-xs text-muted-foreground">{p.posto_localidade}</p>
+                              {editandoId === p.id ? (
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    value={novoNome}
+                                    onChange={(e) => setNovoNome(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") void salvarNome(p.id);
+                                      if (e.key === "Escape") setEditandoId(null);
+                                    }}
+                                    className="h-7 text-sm"
+                                    autoFocus
+                                    disabled={salvandoId === p.id}
+                                  />
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="size-7 shrink-0"
+                                    onClick={() => void salvarNome(p.id)}
+                                    disabled={salvandoId === p.id}
+                                    title="Salvar novo nome"
+                                  >
+                                    {salvandoId === p.id ? (
+                                      <Loader2 className="size-3.5 animate-spin" />
+                                    ) : (
+                                      <Check className="size-3.5 text-green-600" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="size-7 shrink-0"
+                                    onClick={() => setEditandoId(null)}
+                                    disabled={salvandoId === p.id}
+                                    title="Cancelar"
+                                  >
+                                    <X className="size-3.5" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <>
+                                  <p className="truncate">{p.posto_nome}</p>
+                                  {p.posto_localidade && (
+                                    <p className="truncate text-xs text-muted-foreground">{p.posto_localidade}</p>
+                                  )}
+                                </>
                               )}
                             </div>
+                            {editandoId !== p.id && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="size-7 shrink-0"
+                                onClick={() => {
+                                  setEditandoId(p.id);
+                                  setNovoNome(p.posto_nome);
+                                }}
+                                title="Editar nome do posto"
+                              >
+                                <Pencil className="size-3.5" />
+                              </Button>
+                            )}
                             <SemaforoPosto qtd={buscar(p.posto_nome)?.qtd} />
                           </li>
                         ))}
