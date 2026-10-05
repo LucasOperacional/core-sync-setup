@@ -16,6 +16,7 @@ import {
 } from "@/lib/nexti-postos-mapa.functions";
 import { cn } from "@/lib/utils";
 import { AtribuirPostosGerenteDialog } from "@/components/AtribuirPostosGerenteDialog";
+import { PostosPorGerenteCards } from "@/components/PostosPorGerenteCards";
 
 export const Route = createFileRoute("/_authenticated/supervisao-visitas-postos")({
   head: () => ({
@@ -214,6 +215,7 @@ function VisitasPostosPage() {
           )}
         </CardContent>
       </Card>
+      <PostosPorGerenteCards />
     </div>
   );
 }
