@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 
 import { FloatingNav } from "@/components/FloatingNav";
+import { BatidasMesGerente } from "@/components/BatidasMesGerente";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -441,6 +442,9 @@ function GerentePostosPage() {
             ))}
           </div>
         )}
+        {postosDoGerente.length > 0 ? (
+          <BatidasMesGerente postos={postosDoGerente.map((p) => p.nome)} dia={dia} />
+        ) : null}
       </div>
       <FloatingNav />
     </main>
