@@ -152,11 +152,67 @@ export function PostosPorGerenteCards() {
                           <li key={p.id} className="flex items-start gap-2 px-4 py-2 text-sm">
                             <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
                             <div className="min-w-0 flex-1">
-                              <p className="truncate">{p.posto_nome}</p>
-                              {p.posto_localidade && (
-                                <p className="truncate text-xs text-muted-foreground">{p.posto_localidade}</p>
+                              {editandoId === p.id ? (
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    value={novoNome}
+                                    onChange={(e) => setNovoNome(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") void salvarNome(p.id);
+                                      if (e.key === "Escape") setEditandoId(null);
+                                    }}
+                                    className="h-7 text-sm"
+                                    autoFocus
+                                    disabled={salvandoId === p.id}
+                                  />
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="size-7 shrink-0"
+                                    onClick={() => void salvarNome(p.id)}
+                                    disabled={salvandoId === p.id}
+                                    title="Salvar novo nome"
+                                  >
+                                    {salvandoId === p.id ? (
+                                      <Loader2 className="size-3.5 animate-spin" />
+                                    ) : (
+                                      <Check className="size-3.5 text-green-600" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="size-7 shrink-0"
+                                    onClick={() => setEditandoId(null)}
+                                    disabled={salvandoId === p.id}
+                                    title="Cancelar"
+                                  >
+                                    <X className="size-3.5" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <>
+                                  <p className="truncate">{p.posto_nome}</p>
+                                  {p.posto_localidade && (
+                                    <p className="truncate text-xs text-muted-foreground">{p.posto_localidade}</p>
+                                  )}
+                                </>
                               )}
                             </div>
+                            {editandoId !== p.id && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="size-7 shrink-0"
+                                onClick={() => {
+                                  setEditandoId(p.id);
+                                  setNovoNome(p.posto_nome);
+                                }}
+                                title="Editar nome do posto"
+                              >
+                                <Pencil className="size-3.5" />
+                              </Button>
+                            )}
                             <SemaforoPosto qtd={buscar(p.posto_nome)?.qtd} />
                           </li>
                         ))}
