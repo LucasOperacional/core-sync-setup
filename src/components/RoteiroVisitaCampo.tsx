@@ -38,6 +38,7 @@ import {
   type GeoCaptura,
 } from "@/lib/foto-carimbo";
 import {
+  dadosEmpresaClientePosto,
   enviarRelatorioRoteiro,
   listarRoteirosVisita,
   postosProximosSupervisao,
@@ -201,10 +202,13 @@ function formatarDuracao(total: number) {
 
 const RASCUNHO_KEY = "roteiro-visita-campo:rascunho";
 
+type DadosPosto = { cliente: string; empresa: string };
+
 type RascunhoRoteiro = {
   funcao: FuncaoRoteiro;
   dataVisita: string;
   postoNexti: PostoNexti | null;
+  postoDados?: DadosPosto | null;
   observacaoGeral: string;
   planoAcao: string;
   respostas: Record<string, RespostaValor>;
@@ -241,6 +245,10 @@ export function RoteiroVisitaCampo() {
   const [dataVisita, setDataVisita] = useState(rascunhoInicial.current?.dataVisita ?? hoje);
   const [postoNexti, setPostoNexti] = useState<PostoNexti | null>(
     rascunhoInicial.current?.postoNexti ?? null,
+  );
+  // Empresa e cliente do posto escolhido (vêm do cadastro da NEXTI).
+  const [postoDados, setPostoDados] = useState<DadosPosto | null>(
+    rascunhoInicial.current?.postoDados ?? null,
   );
   const [observacaoGeral, setObservacaoGeral] = useState(
     rascunhoInicial.current?.observacaoGeral ?? "",
