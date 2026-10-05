@@ -140,7 +140,8 @@ export const reenviarEmailVaga = createServerFn({ method: "POST" })
     if (!vagaData) throw new Error("Vaga não encontrada.");
 
     const vaga = vagaData as unknown as VagaSolicitacao;
-    const destino = (await destinoConfigurado()) || String(vaga.email_destino ?? "").trim();
+    const configurados = await destinosConfigurados();
+    const destino = configurados[0] ?? String(vaga.email_destino ?? "").trim();
     const envio = await enviarEmailAprovacao(vaga, `vaga-reenvio-${vaga.id}-${Date.now()}`);
     if (!envio.enviado) {
       const motivos: Record<string, string> = {
