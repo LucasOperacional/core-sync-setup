@@ -121,9 +121,15 @@ export const listarPostosDoGerente = createServerFn({ method: "GET" })
       return { ok: false, postos: [], erro: error.message };
     }
 
+    // REGRA: postos "noturno" só aparecem para Israel, Adarmisson e Gabriel Mendanha.
+    const podeVerNoturno = gerentePodeVerNoturno(nome);
+    const visiveis = (postos ?? []).filter(
+      (p) => podeVerNoturno || !ehPostoNoturno(p.posto_nome),
+    );
+
     return {
       ok: true,
-      postos: (postos ?? []).map((p) => ({
+      postos: visiveis.map((p) => ({
         id: p.id,
         gerente_nome: p.gerente_nome,
         posto_nome: p.posto_nome,
