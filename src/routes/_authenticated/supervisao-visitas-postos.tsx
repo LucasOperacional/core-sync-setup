@@ -77,7 +77,8 @@ function VisitasPostosPage() {
         const total = editado ?? auto;
         return { ...p, auto, editado: editado !== undefined, total, cor: semaforoDe(total) };
       })
-      .sort((a, b) => a.total - b.total || a.nome.localeCompare(b.nome));
+      // Ordem fixa por nome: o posto não "pula" de lugar ao editar a quantidade.
+      .sort((a, b) => a.nome.localeCompare(b.nome));
   }, [postosQ.data, ajustesQ.data]);
 
   const contagem = useMemo(() => {
@@ -122,7 +123,7 @@ function VisitasPostosPage() {
       <Link to="/supervisao-campo" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" /> Voltar para Supervisão em Campo
       </Link>
-      <Card className="shadow-lg border-border/50">
+      <Card data-sem-movimento className="shadow-lg border-border/50">
         <CardHeader className="bg-muted/30 border-b border-border/50">
           <CardTitle className="flex items-center gap-2 text-xl">
             <TrafficCone className="size-5 text-primary" /> Quantidade de visitas por posto

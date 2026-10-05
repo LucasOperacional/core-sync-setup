@@ -12,7 +12,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { AREAS_GERENTES, nomeAmigavel } from "@/lib/areas-gerentes";
 import { definirPostosDoGerente } from "@/lib/areas-gerentes.functions";
@@ -92,12 +91,11 @@ export function AtribuirPostosGerenteDialog({ postos }: { postos: PostoRef[] }) 
   }
 
   return (
+    <>
+    <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => setAberto(true)}>
+      <ListPlus className="size-4" /> Postos em massa para gerente
+    </Button>
     <Dialog open={aberto} onOpenChange={setAberto}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <ListPlus className="size-4" /> Postos em massa para gerente
-        </Button>
-      </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Definir postos do gerente de área</DialogTitle>
@@ -143,5 +141,6 @@ export function AtribuirPostosGerenteDialog({ postos }: { postos: PostoRef[] }) 
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
