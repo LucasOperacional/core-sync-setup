@@ -15,6 +15,7 @@ import {
   sincronizarPostosNexti,
   type PostoMapa,
 } from "@/lib/nexti-postos-mapa.functions";
+import { possoVerPostosNoturnos } from "@/lib/postos-noturnos.functions";
 
 const RastreioMapa = lazy(() => import("@/components/RastreioMapa"));
 
@@ -28,6 +29,14 @@ export function PostosServicoMapaCard() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [foco, setFoco] = useState<number | null>(null);
+  const verNoturnoFn = useServerFn(possoVerPostosNoturnos);
+  const [verNoturno, setVerNoturno] = useState(false);
+
+  useEffect(() => {
+    verNoturnoFn()
+      .then(setVerNoturno)
+      .catch(() => setVerNoturno(false));
+  }, [verNoturnoFn]);
 
   const carregar = useCallback(async () => {
     try {
