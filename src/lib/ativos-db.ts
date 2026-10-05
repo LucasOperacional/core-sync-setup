@@ -342,6 +342,23 @@ function postoDoAtivo(ativo: FuncionarioAtivo, postoMap: Map<string, string>): s
   return postoMap.get(ativo.nome_normalizado) ?? null;
 }
 
+const PARTICULAS = new Set(["DE", "DA", "DO", "DAS", "DOS", "E"]);
+
+/**
+ * Nomes compatíveis quando um é o começo do outro, palavra por palavra
+ * (o PDF costuma cortar nomes longos). Exige ao menos 3 palavras
+ * significativas no nome mais curto para evitar confusões.
+ */
+export function nomesCompativeis(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const pa = a.toUpperCase().split(/\s+/).filter(Boolean);
+  const pb = b.toUpperCase().split(/\s+/).filter(Boolean);
+  const [curto, longo] = pa.length <= pb.length ? [pa, pb] : [pb, pa];
+  if (curto.filter((p) => !PARTICULAS.has(p)).length < 3) return false;
+  return curto.every((p, i) => longo[i] === p);
+}
+
 /** Cruza os ativos do banco com as folhas já protocoladas, agrupando por empresa. */
 export function pendenciasPorEmpresa(
   ativos: FuncionarioAtivo[],
@@ -369,11 +386,16 @@ export function pendenciasPorEmpresa(
     grupos.set(chave, lista);
   }
 
+  const nomesFolhas = Array.from(globais);
+
   return Array.from(grupos.entries())
     .map(([empresa, lista]) => {
       // Qualquer nome já salvo em protocolos conta como protocolado,
       // mesmo que a empresa tenha sido escrita de forma diferente.
-      const estaProtocolado = (a: FuncionarioAtivo) => globais.has(a.nome_normalizado);
+      // Também aceita nome cortado no PDF (início igual, ex.: sobrenome final omitido).
+      const estaProtocolado = (a: FuncionarioAtivo) =>
+        globais.has(a.nome_normalizado) ||
+        nomesFolhas.some((n) => nomesCompativeis(n, a.nome_normalizado));
       const faltantes: FuncionarioAtivoComPosto[] = lista
         .filter((a) => !estaProtocolado(a))
         .map((a) => ({ ...a, posto: postoDoAtivo(a, postoMap) }));
