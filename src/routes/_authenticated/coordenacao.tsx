@@ -107,20 +107,48 @@ function CoordenacaoPage() {
             {menuAberto ? <X className="size-4" /> : <ChevronRight className="size-4" />}
           </Button>
         </div>
-        <aside id="menu-coordenacao" className={`${menuAberto ? "block" : "hidden"} shrink-0 border-b border-border bg-muted/20 px-4 py-6 md:block md:w-72 md:border-b-0 md:border-r md:px-5 md:py-8`}>
+        <aside
+          id="menu-coordenacao"
+          className={`${menuAberto ? "block" : "hidden"} shrink-0 border-border bg-muted/20 py-4 md:block md:border-b-0 md:border-r md:py-8 ${
+            recolhido ? "md:w-16" : "md:w-72"
+          }`}
+        >
           <nav aria-label="Menu da coordenação">
-            <p className="mb-4 px-3 text-xs font-semibold uppercase text-muted-foreground">Coordenação</p>
+            <div className={`mb-4 flex items-center px-3 ${recolhido ? "md:justify-center md:px-0" : "justify-between"}`}>
+              <p className={`text-xs font-semibold uppercase text-muted-foreground ${recolhido ? "md:hidden" : ""}`}>
+                Coordenação
+              </p>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={alternarMenu}
+                aria-expanded={!recolhido}
+                aria-controls="menu-coordenacao"
+                aria-label={isMobile ? "Fechar menu" : recolhido ? "Abrir menu" : "Esconder menu"}
+                title={isMobile ? "Fechar menu" : recolhido ? "Abrir menu" : "Esconder menu"}
+                className="size-8 shrink-0 text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                {recolhido ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+              </Button>
+            </div>
             <div className="space-y-1">
               {ATALHOS.map((a) => (
                 <Link
                   key={a.to}
                   to={a.to}
                   onClick={() => setMenuAberto(false)}
-                  className="group flex min-h-12 items-center gap-3 rounded-md px-3 py-3 text-sm font-medium leading-snug text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-2 focus-visible:outline-primary"
+                  title={recolhido ? a.label : undefined}
+                  className={`group flex min-h-12 items-center gap-3 rounded-md px-3 py-3 text-sm font-medium leading-snug text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-2 focus-visible:outline-primary ${
+                    recolhido ? "md:justify-center md:gap-0 md:px-2" : ""
+                  }`}
                 >
                   <a.icon className="size-5 shrink-0 text-primary" />
-                  <span className="min-w-0 flex-1">{a.label}</span>
-                  <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                  <span className={`min-w-0 flex-1 ${recolhido ? "md:hidden" : ""}`}>{a.label}</span>
+                  <ChevronRight
+                    className={`size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 ${
+                      recolhido ? "md:hidden" : ""
+                    }`}
+                  />
                 </Link>
               ))}
             </div>
