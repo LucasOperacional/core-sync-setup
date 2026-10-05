@@ -80,9 +80,13 @@ type LinhaNextiPessoa = {
   career_name: string | null;
 };
 
+/** Pessoas retiradas manualmente dos cards (a NEXTI ainda as mostra como ativas). */
+const NOMES_EXCLUIDOS_CARDS = new Set(["ELISANGELA DE PAULA CAMPOS"]);
+
 /** Considera apenas quem continua trabalhando na NEXTI. */
 function trabalhandoNaNexti(p: LinhaNextiPessoa): boolean {
   if (p.demission_date) return false;
+  if (NOMES_EXCLUIDOS_CARDS.has(texto(p.nome).trim().toUpperCase())) return false;
   const situacao = normalizar(texto(p.situacao));
   if (situacao) return situacao.startsWith("trabalhando");
   return p.situacao_id !== 2;
