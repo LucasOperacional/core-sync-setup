@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { normalizarNome } from "@/lib/coordenadores";
+import { normalizarNome } from "@/lib/gerentes-area-a";
 
 /**
  * REGRA: postos com "noturno" no nome só aparecem para:
