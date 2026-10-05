@@ -31,11 +31,13 @@ export const Route = createFileRoute("/_authenticated/supervisao-visitas-postos"
 });
 
 type Semaforo = "verde" | "amarelo" | "vermelho";
-const semaforoDe = (v: number): Semaforo => (v >= 2 ? "verde" : v === 1 ? "amarelo" : "vermelho");
+// Regra pedida: 2 visitas = verde, 3 visitas = amarelo, 5 visitas = vermelho.
+// Fica: até 2 = verde, 3 ou 4 = amarelo, 5 ou mais = vermelho.
+const semaforoDe = (v: number): Semaforo => (v >= 5 ? "vermelho" : v >= 3 ? "amarelo" : "verde");
 const CORES: Record<Semaforo, { dot: string; row: string; rotulo: string }> = {
-  verde: { dot: "bg-green-500", row: "border-l-green-500 bg-green-500/5", rotulo: "Em dia (2+)" },
-  amarelo: { dot: "bg-yellow-500", row: "border-l-yellow-500 bg-yellow-500/5", rotulo: "Atenção (1)" },
-  vermelho: { dot: "bg-red-500", row: "border-l-red-500 bg-red-500/5", rotulo: "Sem visita" },
+  verde: { dot: "bg-green-500", row: "border-l-green-500 bg-green-500/5", rotulo: "Verde (até 2)" },
+  amarelo: { dot: "bg-yellow-500", row: "border-l-yellow-500 bg-yellow-500/5", rotulo: "Amarelo (3 a 4)" },
+  vermelho: { dot: "bg-red-500", row: "border-l-red-500 bg-red-500/5", rotulo: "Vermelho (5+)" },
 };
 
 // Tabela criada fora dos tipos gerados
@@ -125,7 +127,7 @@ function VisitasPostosPage() {
             <TrafficCone className="size-5 text-primary" /> Quantidade de visitas por posto
           </CardTitle>
           <CardDescription>
-            Edite a quantidade de visitas de cada posto. A cor muda sozinha: verde 2 ou mais, amarelo 1, vermelho nenhuma.
+            Edite a quantidade de visitas de cada posto. A cor muda sozinha: verde até 2, amarelo de 3 a 4, vermelho 5 ou mais.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
