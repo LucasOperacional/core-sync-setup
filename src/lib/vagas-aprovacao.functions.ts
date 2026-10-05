@@ -44,28 +44,33 @@ type ResultadoEmail =
       detalhe?: string | undefined;
     };
 
-/** E-mail configurado no painel admin para receber as vagas aprovadas. */
-async function destinoConfigurado(): Promise<string> {
+/** E-mails configurados no painel admin para receber as vagas aprovadas. */
+async function destinosConfigurados(): Promise<string[]> {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { dividirEmails } = await import("@/lib/app-config.functions");
     const { data } = await supabaseAdmin
       .from("app_config")
       .select("valor")
       .eq("chave", "vagas_email_destino")
       .maybeSingle();
-    return String(data?.valor ?? "").trim();
+    return dividirEmails(String(data?.valor ?? ""));
   } catch {
-    return "";
+    return [];
   }
 }
 
-/** Envia o e-mail da vaga aprovada com o link do PDF. */
+/** Envia o e-mail da vaga aprovada com o link do PDF para todos os destinatários. */
 async function enviarEmailAprovacao(
   vaga: VagaSolicitacao,
   chaveEnvio?: string,
 ): Promise<ResultadoEmail> {
-  const destino = (await destinoConfigurado()) || String(vaga.email_destino ?? "").trim();
-  if (!destino) return { enviado: false, motivo: "sem_destinatario" };
+  const configurados = await destinosConfigurados();
+  const destinos =
+    configurados.length > 0
+      ? configurados
+      : [String(vaga.email_destino ?? "").trim()].filter(Boolean);
+  if (destinos.length === 0) return { enviado: false, motivo: "sem_destinatario" };
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
@@ -79,25 +84,28 @@ async function enviarEmailAprovacao(
   }
 
   try {
-    const resultado = await sendTemplateEmail("solicitacao-vaga", destino, {
-      idempotencyKey: chaveEnvio ?? `vaga-aprovada-${vaga.id}`,
-      templateData: {
-        cargo: vaga.cargo,
-        posto: vaga.posto,
-        localidade: vaga.localidade,
-        salario: vaga.salario,
-        horario: vaga.horario,
-        dataInicio: vaga.data_inicio,
-        solicitante: vaga.solicitante,
-        tipo: vaga.tipo,
-        justificativa: vaga.justificativa,
-        atividade: vaga.atividade,
-        perfil: vaga.perfil,
-        linkPdf,
-        arquivo: vaga.arquivo,
-      },
-    });
-    if (!resultado.sent) return { enviado: false, motivo: "destinatario_bloqueado" };
+    const chaveBase = chaveEnvio ?? `vaga-aprovada-${vaga.id}`;
+    for (const destino of destinos) {
+      const resultado = await sendTemplateEmail("solicitacao-vaga", destino, {
+        idempotencyKey: `${chaveBase}-${destino}`,
+        templateData: {
+          cargo: vaga.cargo,
+          posto: vaga.posto,
+          localidade: vaga.localidade,
+          salario: vaga.salario,
+          horario: vaga.horario,
+          dataInicio: vaga.data_inicio,
+          solicitante: vaga.solicitante,
+          tipo: vaga.tipo,
+          justificativa: vaga.justificativa,
+          atividade: vaga.atividade,
+          perfil: vaga.perfil,
+          linkPdf,
+          arquivo: vaga.arquivo,
+        },
+      });
+      if (!resultado.sent) return { enviado: false, motivo: "destinatario_bloqueado" };
+    }
     return { enviado: true };
   } catch (erro) {
     const codigo = (erro as { code?: string } | null)?.code;
@@ -132,7 +140,8 @@ export const reenviarEmailVaga = createServerFn({ method: "POST" })
     if (!vagaData) throw new Error("Vaga não encontrada.");
 
     const vaga = vagaData as unknown as VagaSolicitacao;
-    const destino = (await destinoConfigurado()) || String(vaga.email_destino ?? "").trim();
+    const configurados = await destinosConfigurados();
+    const destino = configurados[0] ?? String(vaga.email_destino ?? "").trim();
     const envio = await enviarEmailAprovacao(vaga, `vaga-reenvio-${vaga.id}-${Date.now()}`);
     if (!envio.enviado) {
       const motivos: Record<string, string> = {
