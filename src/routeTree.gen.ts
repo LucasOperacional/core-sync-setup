@@ -90,6 +90,7 @@ import { Route as AssinarCrtTokenRouteImport } from './routes/assinar-crt.$token
 import { Route as AssinarMovimentacaoTokenRouteImport } from './routes/assinar-movimentacao.$token'
 import { Route as AssinarTokenRouteImport } from './routes/assinar.$token'
 import { Route as AuthenticatedCategoriaCatRouteImport } from './routes/_authenticated/categoria.$cat'
+import { Route as AuthenticatedCoordenacaoPainelCoordRouteImport } from './routes/_authenticated/coordenacao-painel.$coord'
 import { Route as AuthenticatedGerentesIndexRouteImport } from './routes/_authenticated/gerentes.index'
 import { Route as AuthenticatedGerentesSlugRouteImport } from './routes/_authenticated/gerentes.$slug'
 import { Route as AuthenticatedMesaOperacionalIndexRouteImport } from './routes/_authenticated/mesa-operacional.index'
@@ -575,6 +576,12 @@ const AuthenticatedCategoriaCatRoute =
     path: '/categoria/$cat',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCoordenacaoPainelCoordRoute =
+  AuthenticatedCoordenacaoPainelCoordRouteImport.update({
+    id: '/coordenacao-painel/$coord',
+    path: '/coordenacao-painel/$coord',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedGerentesIndexRoute =
   AuthenticatedGerentesIndexRouteImport.update({
     id: '/gerentes/',
@@ -812,6 +819,7 @@ export interface FileRoutesByFullPath {
   '/assinar-movimentacao/$token': typeof AssinarMovimentacaoTokenRoute
   '/assinar/$token': typeof AssinarTokenRoute
   '/categoria/$cat': typeof AuthenticatedCategoriaCatRoute
+  '/coordenacao-painel/$coord': typeof AuthenticatedCoordenacaoPainelCoordRoute
   '/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
   '/mesa-operacional/$gerente': typeof AuthenticatedMesaOperacionalGerenteRoute
   '/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
@@ -921,6 +929,7 @@ export interface FileRoutesByTo {
   '/assinar/$token': typeof AssinarTokenRoute
   '/': typeof AuthenticatedIndexRoute
   '/categoria/$cat': typeof AuthenticatedCategoriaCatRoute
+  '/coordenacao-painel/$coord': typeof AuthenticatedCoordenacaoPainelCoordRoute
   '/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
   '/mesa-operacional/$gerente': typeof AuthenticatedMesaOperacionalGerenteRoute
   '/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
@@ -1032,6 +1041,7 @@ export interface FileRoutesById {
   '/assinar/$token': typeof AssinarTokenRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/categoria/$cat': typeof AuthenticatedCategoriaCatRoute
+  '/_authenticated/coordenacao-painel/$coord': typeof AuthenticatedCoordenacaoPainelCoordRoute
   '/_authenticated/gerentes/$slug': typeof AuthenticatedGerentesSlugRoute
   '/_authenticated/mesa-operacional/$gerente': typeof AuthenticatedMesaOperacionalGerenteRoute
   '/_authenticated/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
@@ -1143,6 +1153,7 @@ export interface FileRouteTypes {
     | '/assinar-movimentacao/$token'
     | '/assinar/$token'
     | '/categoria/$cat'
+    | '/coordenacao-painel/$coord'
     | '/gerentes/$slug'
     | '/mesa-operacional/$gerente'
     | '/relatorios-gerente/$slug'
@@ -1252,6 +1263,7 @@ export interface FileRouteTypes {
     | '/assinar/$token'
     | '/'
     | '/categoria/$cat'
+    | '/coordenacao-painel/$coord'
     | '/gerentes/$slug'
     | '/mesa-operacional/$gerente'
     | '/relatorios-gerente/$slug'
@@ -1362,6 +1374,7 @@ export interface FileRouteTypes {
     | '/assinar/$token'
     | '/_authenticated/'
     | '/_authenticated/categoria/$cat'
+    | '/_authenticated/coordenacao-painel/$coord'
     | '/_authenticated/gerentes/$slug'
     | '/_authenticated/mesa-operacional/$gerente'
     | '/_authenticated/relatorios-gerente/$slug'
@@ -1993,6 +2006,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCategoriaCatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/coordenacao-painel/$coord': {
+      id: '/_authenticated/coordenacao-painel/$coord'
+      path: '/coordenacao-painel/$coord'
+      fullPath: '/coordenacao-painel/$coord'
+      preLoaderRoute: typeof AuthenticatedCoordenacaoPainelCoordRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/gerentes/': {
       id: '/_authenticated/gerentes/'
       path: '/gerentes'
@@ -2258,6 +2278,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVerificadorAtestadosRoute: typeof AuthenticatedVerificadorAtestadosRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedCategoriaCatRoute: typeof AuthenticatedCategoriaCatRoute
+  AuthenticatedCoordenacaoPainelCoordRoute: typeof AuthenticatedCoordenacaoPainelCoordRoute
   AuthenticatedGerentesSlugRoute: typeof AuthenticatedGerentesSlugRoute
   AuthenticatedMesaOperacionalGerenteRoute: typeof AuthenticatedMesaOperacionalGerenteRoute
   AuthenticatedRelatoriosGerenteSlugRoute: typeof AuthenticatedRelatoriosGerenteSlugRoute
@@ -2345,6 +2366,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedVerificadorAtestadosRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedCategoriaCatRoute: AuthenticatedCategoriaCatRoute,
+  AuthenticatedCoordenacaoPainelCoordRoute:
+    AuthenticatedCoordenacaoPainelCoordRoute,
   AuthenticatedGerentesSlugRoute: AuthenticatedGerentesSlugRoute,
   AuthenticatedMesaOperacionalGerenteRoute:
     AuthenticatedMesaOperacionalGerenteRoute,

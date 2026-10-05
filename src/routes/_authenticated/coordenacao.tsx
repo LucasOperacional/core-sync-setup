@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowRightLeft,
+  BarChart3,
   ChevronRight,
   ClipboardCheck,
   ClipboardList,
@@ -157,7 +158,24 @@ function CoordenacaoPage() {
         <section className="flex min-h-64 flex-1 flex-col justify-center px-6 py-12 md:px-12" aria-labelledby="titulo-central">
           <ShieldCheck className="mb-6 size-10 text-primary" strokeWidth={1.5} />
           <h2 id="titulo-central" className="font-display text-2xl font-semibold text-foreground">Central da Coordenação</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Selecione uma área no menu lateral.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Selecione uma área no menu lateral ou abra o painel de um coordenador.</p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {(["vanderlei", "jefferson"] as const).map((c) => (
+              <Link
+                key={c}
+                to="/coordenacao-painel/$coord"
+                params={{ coord: c }}
+                className="panel group flex items-center gap-3 p-5 transition-colors hover:border-primary"
+              >
+                <BarChart3 className="size-6 text-primary" />
+                <div className="flex-1">
+                  <p className="font-semibold">Coordenador {c === "vanderlei" ? "Vanderlei" : "Jefferson"}</p>
+                  <p className="text-xs text-muted-foreground">Visitas, qualidade por supervisor e mapa</p>
+                </div>
+                <ChevronRight className="size-4 text-muted-foreground group-hover:translate-x-0.5" />
+              </Link>
+            ))}
+          </div>
         </section>
       </div>
     </main>
