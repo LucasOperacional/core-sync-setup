@@ -7,6 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { verificarBatidasMesGerente } from "@/lib/batidas-mes-gerente.functions";
 
+const ESTILO = {
+  ok: { rotulo: "Com batida", cls: "bg-primary/15 text-primary" },
+  folga: { rotulo: "Folga", cls: "bg-muted text-muted-foreground" },
+  falta: { rotulo: "Falta", cls: "bg-accent text-accent-foreground ring-1 ring-border" },
+  atestado: { rotulo: "Atestado", cls: "bg-secondary text-secondary-foreground ring-1 ring-primary/40" },
+  ausente: { rotulo: "Batida ausente", cls: "bg-destructive/15 text-destructive" },
+} as const;
+
 export function BatidasMesGerente({ postos, dia }: { postos: string[]; dia: string }) {
   const mes = dia.slice(0, 7);
   const [soPendentes, setSoPendentes] = useState(true);
@@ -57,9 +65,16 @@ export function BatidasMesGerente({ postos, dia }: { postos: string[]; dia: stri
         ) : (
           <>
             <p className="text-sm">
-              <Badge variant={totalSem ? "destructive" : "secondary"}>{totalSem}</Badge> colaborador(es) com algum dia sem batida
+              <Badge variant={totalSem ? "destructive" : "secondary"}>{totalSem}</Badge> colaborador(es) com batida ausente
               {r.diasComFalha ? ` · ${r.diasComFalha} dia(s) não puderam ser consultados` : ""}
             </p>
+            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+              {Object.entries(ESTILO).map(([k, v]) => (
+                <span key={k} className="flex items-center gap-1">
+                  <span className={`size-3 rounded ${v.cls}`} /> {v.rotulo}
+                </span>
+              ))}
+            </div>
             {r.postos.map((p) => {
               const cols = soPendentes ? p.colaboradores.filter((c) => c.semBatida.length) : p.colaboradores;
               if (!cols.length) return null;
@@ -68,22 +83,30 @@ export function BatidasMesGerente({ postos, dia }: { postos: string[]; dia: stri
                   <h4 className="text-sm font-semibold">{p.posto}</h4>
                   {cols.map((c) => (
                     <div key={c.nome} className="rounded-md border p-2">
-                      <div className="mb-1 flex items-center justify-between text-xs">
+                      <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs">
                         <span className="font-medium">{c.nome}</span>
                         <span className="text-muted-foreground">
-                          {c.dias.length} com batida · {c.semBatida.length} sem
+                          {c.dias.length} com batida · {c.folgas.length} folga · {c.faltas.length} falta ·{" "}
+                          {c.atestados.length} atestado · {c.semBatida.length} batida ausente
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {dias.map((d) => {
-                          const ok = c.dias.includes(d);
+                          const tipo: keyof typeof ESTILO = c.dias.includes(d)
+                            ? "ok"
+                            : c.atestados.includes(d)
+                              ? "atestado"
+                              : c.faltas.includes(d)
+                                ? "falta"
+                                : c.folgas.includes(d)
+                                  ? "folga"
+                                  : "ausente";
+                          const e = ESTILO[tipo];
                           return (
                             <span
                               key={d}
-                              title={ok ? `Dia ${d}: com batida` : `Dia ${d}: sem batida`}
-                              className={`flex size-6 items-center justify-center rounded text-[10px] font-medium ${
-                                ok ? "bg-primary/15 text-primary" : "bg-destructive/15 text-destructive"
-                              }`}
+                              title={`Dia ${d}: ${e.rotulo.toLowerCase()}`}
+                              className={`flex size-6 items-center justify-center rounded text-[10px] font-medium ${e.cls}`}
                             >
                               {d}
                             </span>

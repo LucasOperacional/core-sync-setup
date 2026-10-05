@@ -21,7 +21,16 @@ function lista(payload: unknown): Rec[] {
 const chave = (s: string) =>
   s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]+/g, " ").trim();
 
-export type ColaboradorBatidas = { nome: string; dias: number[]; semBatida: number[] };
+type Classe = "folga" | "falta" | "atestado";
+export type ColaboradorBatidas = {
+  nome: string;
+  dias: number[];
+  /** Dias sem batida e sem nenhum lançamento que explique (batida ausente). */
+  semBatida: number[];
+  folgas: number[];
+  faltas: number[];
+  atestados: number[];
+};
 export type PostoBatidas = { posto: string; colaboradores: ColaboradorBatidas[] };
 export type BatidasMesResultado = {
   ok: boolean;
@@ -109,12 +118,80 @@ export const verificarBatidasMesGerente = createServerFn({ method: "POST" })
       for (let i = 0; i < dias.length; i += 6) await Promise.all(dias.slice(i, i + 6).map(consultarDia));
       if (falhas === ultimoDia) return { ...base, erro: "Não foi possível consultar as batidas na NEXTI." };
 
+      // Lançamentos de ausência na NEXTI no mês: classifica em folga, falta ou atestado.
+      const situacoes = new Map<number, string>();
+      for (const endpoint of ["/api/absencesituations/all", "/absencesituations/all"]) {
+        try {
+          const r = await requestNexti({ config, endpoint, method: "GET" });
+          for (const s of lista(r.data)) {
+            const id = Number(s["id"] ?? s["nextiId"]);
+            if (Number.isFinite(id)) situacoes.set(id, String(s["name"] ?? s["description"] ?? ""));
+          }
+          if (situacoes.size) break;
+        } catch {
+          // tenta o próximo caminho
+        }
+      }
+      const classificar = (nomeSit: string, cid: unknown): Classe => {
+        const n = chave(nomeSit);
+        if ((typeof cid === "string" && cid.trim()) || /ATESTADO|MEDIC|LICENCA|INSS|AFAST/.test(n)) return "atestado";
+        if (/FOLGA|DSR|DESCANSO|FERIAS|COMPENS|FERIADO|BANCO/.test(n)) return "folga";
+        return "falta";
+      };
+      const ausencias = new Map<number, Map<number, Classe>>();
+      const prioridade: Record<Classe, number> = { atestado: 3, falta: 2, folga: 1 };
+      const ini = `01${mm}${ano}000000`;
+      const fim = `${String(ultimoDia).padStart(2, "0")}${mm}${ano}235959`;
+      for (const endpoint of [`/api/absences/start/${ini}/finish/${fim}`, `/absences/start/${ini}/finish/${fim}`]) {
+        try {
+          const r = await requestNexti({ config, endpoint, method: "GET" });
+          const itens = lista(r.data);
+          for (const a of itens) {
+            if (a["removed"] === true) continue;
+            let id = Number(a["personId"] ?? a["idPerson"]);
+            if (!idsAlvo.has(id) && typeof a["personName"] === "string") id = nomesAlvo.get(chave(a["personName"])) ?? id;
+            if (!idsAlvo.has(id)) continue;
+            const idSit = Number(a["absenceSituationId"] ?? a["situationId"]);
+            const nomeSit = String(a["absenceSituationName"] ?? a["situationName"] ?? situacoes.get(idSit) ?? "");
+            const classe = classificar(nomeSit, a["cidCode"]);
+            const diaDe = (v: unknown, padrao: number) => {
+              const s = String(v ?? "");
+              let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+              if (m) return Number(m[1]) === ano && Number(m[2]) === mes ? Number(m[3]) : padrao;
+              m = s.match(/^(\d{2})(\d{2})(\d{4})/);
+              if (m) return Number(m[3]) === ano && Number(m[2]) === mes ? Number(m[1]) : padrao;
+              return padrao;
+            };
+            const d1 = Math.max(1, diaDe(a["startDateTime"] ?? a["startDate"], 1));
+            const d2 = Math.min(ultimoDia, diaDe(a["finishDateTime"] ?? a["finishDate"], ultimoDia));
+            const mapa = ausencias.get(id) ?? new Map<number, Classe>();
+            for (let d = d1; d <= d2; d++) {
+              const atual = mapa.get(d);
+              if (!atual || prioridade[classe] > prioridade[atual]) mapa.set(d, classe);
+            }
+            ausencias.set(id, mapa);
+          }
+          break;
+        } catch {
+          // tenta o próximo caminho
+        }
+      }
+
       const porPosto = new Map<string, PostoBatidas>();
       for (const p of pessoas) {
         const com = Array.from(diasPorPessoa.get(p.id) ?? []).sort((a, b) => a - b);
-        const sem = dias.filter((d) => !com.includes(d));
+        const aus = ausencias.get(p.id) ?? new Map<number, Classe>();
+        const folgas: number[] = [], faltas: number[] = [], atestados: number[] = [], sem: number[] = [];
+        for (const d of dias) {
+          if (com.includes(d)) continue;
+          const c = aus.get(d);
+          if (c === "folga") folgas.push(d);
+          else if (c === "falta") faltas.push(d);
+          else if (c === "atestado") atestados.push(d);
+          else sem.push(d);
+        }
         const item = porPosto.get(p.posto) ?? { posto: p.posto, colaboradores: [] };
-        item.colaboradores.push({ nome: p.nome, dias: com, semBatida: sem });
+        item.colaboradores.push({ nome: p.nome, dias: com, semBatida: sem, folgas, faltas, atestados });
         porPosto.set(p.posto, item);
       }
       const postos = Array.from(porPosto.values()).sort((a, b) => a.posto.localeCompare(b.posto));
