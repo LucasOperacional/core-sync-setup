@@ -97,6 +97,7 @@ import { Route as AuthenticatedMesaOperacionalGerenteRouteImport } from './route
 import { Route as AuthenticatedRelatoriosGerenteSlugRouteImport } from './routes/_authenticated/relatorios-gerente.$slug'
 import { Route as AuthenticatedRelatoriosVisitaIdRouteImport } from './routes/_authenticated/relatorios-visita.$id'
 import { Route as ApiPublicEvolutionWebhookRouteImport } from './routes/api/public/evolution-webhook'
+import { Route as ApiPublicLembretesWhatsappRouteImport } from './routes/api/public/lembretes-whatsapp'
 import { Route as ApiPublicMonitorRouteImport } from './routes/api/public/monitor'
 import { Route as ApiPublicMonitorErrorRouteImport } from './routes/api/public/monitor-error'
 import { Route as ApiPublicMonitorHeartbeatRouteImport } from './routes/api/public/monitor-heartbeat'
@@ -616,6 +617,12 @@ const ApiPublicEvolutionWebhookRoute =
     path: '/api/public/evolution-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicLembretesWhatsappRoute =
+  ApiPublicLembretesWhatsappRouteImport.update({
+    id: '/api/public/lembretes-whatsapp',
+    path: '/api/public/lembretes-whatsapp',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicMonitorRoute = ApiPublicMonitorRouteImport.update({
   id: '/api/public/monitor',
   path: '/api/public/monitor',
@@ -810,6 +817,7 @@ export interface FileRoutesByFullPath {
   '/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
   '/relatorios-visita/$id': typeof AuthenticatedRelatoriosVisitaIdRoute
   '/api/public/evolution-webhook': typeof ApiPublicEvolutionWebhookRoute
+  '/api/public/lembretes-whatsapp': typeof ApiPublicLembretesWhatsappRoute
   '/api/public/monitor': typeof ApiPublicMonitorRoute
   '/api/public/monitor-error': typeof ApiPublicMonitorErrorRoute
   '/api/public/monitor-heartbeat': typeof ApiPublicMonitorHeartbeatRoute
@@ -918,6 +926,7 @@ export interface FileRoutesByTo {
   '/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
   '/relatorios-visita/$id': typeof AuthenticatedRelatoriosVisitaIdRoute
   '/api/public/evolution-webhook': typeof ApiPublicEvolutionWebhookRoute
+  '/api/public/lembretes-whatsapp': typeof ApiPublicLembretesWhatsappRoute
   '/api/public/monitor': typeof ApiPublicMonitorRoute
   '/api/public/monitor-error': typeof ApiPublicMonitorErrorRoute
   '/api/public/monitor-heartbeat': typeof ApiPublicMonitorHeartbeatRoute
@@ -1028,6 +1037,7 @@ export interface FileRoutesById {
   '/_authenticated/relatorios-gerente/$slug': typeof AuthenticatedRelatoriosGerenteSlugRoute
   '/_authenticated/relatorios-visita/$id': typeof AuthenticatedRelatoriosVisitaIdRoute
   '/api/public/evolution-webhook': typeof ApiPublicEvolutionWebhookRoute
+  '/api/public/lembretes-whatsapp': typeof ApiPublicLembretesWhatsappRoute
   '/api/public/monitor': typeof ApiPublicMonitorRoute
   '/api/public/monitor-error': typeof ApiPublicMonitorErrorRoute
   '/api/public/monitor-heartbeat': typeof ApiPublicMonitorHeartbeatRoute
@@ -1138,6 +1148,7 @@ export interface FileRouteTypes {
     | '/relatorios-gerente/$slug'
     | '/relatorios-visita/$id'
     | '/api/public/evolution-webhook'
+    | '/api/public/lembretes-whatsapp'
     | '/api/public/monitor'
     | '/api/public/monitor-error'
     | '/api/public/monitor-heartbeat'
@@ -1246,6 +1257,7 @@ export interface FileRouteTypes {
     | '/relatorios-gerente/$slug'
     | '/relatorios-visita/$id'
     | '/api/public/evolution-webhook'
+    | '/api/public/lembretes-whatsapp'
     | '/api/public/monitor'
     | '/api/public/monitor-error'
     | '/api/public/monitor-heartbeat'
@@ -1355,6 +1367,7 @@ export interface FileRouteTypes {
     | '/_authenticated/relatorios-gerente/$slug'
     | '/_authenticated/relatorios-visita/$id'
     | '/api/public/evolution-webhook'
+    | '/api/public/lembretes-whatsapp'
     | '/api/public/monitor'
     | '/api/public/monitor-error'
     | '/api/public/monitor-heartbeat'
@@ -1389,6 +1402,7 @@ export interface RootRouteChildren {
   AssinarMovimentacaoTokenRoute: typeof AssinarMovimentacaoTokenRoute
   AssinarTokenRoute: typeof AssinarTokenRoute
   ApiPublicEvolutionWebhookRoute: typeof ApiPublicEvolutionWebhookRoute
+  ApiPublicLembretesWhatsappRoute: typeof ApiPublicLembretesWhatsappRoute
   ApiPublicMonitorRoute: typeof ApiPublicMonitorRoute
   ApiPublicMonitorErrorRoute: typeof ApiPublicMonitorErrorRoute
   ApiPublicMonitorHeartbeatRoute: typeof ApiPublicMonitorHeartbeatRoute
@@ -2028,6 +2042,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEvolutionWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/lembretes-whatsapp': {
+      id: '/api/public/lembretes-whatsapp'
+      path: '/api/public/lembretes-whatsapp'
+      fullPath: '/api/public/lembretes-whatsapp'
+      preLoaderRoute: typeof ApiPublicLembretesWhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/monitor': {
       id: '/api/public/monitor'
       path: '/api/public/monitor'
@@ -2349,6 +2370,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssinarMovimentacaoTokenRoute: AssinarMovimentacaoTokenRoute,
   AssinarTokenRoute: AssinarTokenRoute,
   ApiPublicEvolutionWebhookRoute: ApiPublicEvolutionWebhookRoute,
+  ApiPublicLembretesWhatsappRoute: ApiPublicLembretesWhatsappRoute,
   ApiPublicMonitorRoute: ApiPublicMonitorRoute,
   ApiPublicMonitorErrorRoute: ApiPublicMonitorErrorRoute,
   ApiPublicMonitorHeartbeatRoute: ApiPublicMonitorHeartbeatRoute,
