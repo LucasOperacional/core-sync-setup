@@ -38,6 +38,7 @@ import {
   type GeoCaptura,
 } from "@/lib/foto-carimbo";
 import {
+  dadosEmpresaClientePosto,
   enviarRelatorioRoteiro,
   listarRoteirosVisita,
   postosProximosSupervisao,
@@ -201,10 +202,13 @@ function formatarDuracao(total: number) {
 
 const RASCUNHO_KEY = "roteiro-visita-campo:rascunho";
 
+type DadosPosto = { cliente: string; empresa: string };
+
 type RascunhoRoteiro = {
   funcao: FuncaoRoteiro;
   dataVisita: string;
   postoNexti: PostoNexti | null;
+  postoDados?: DadosPosto | null;
   observacaoGeral: string;
   planoAcao: string;
   respostas: Record<string, RespostaValor>;
@@ -241,6 +245,10 @@ export function RoteiroVisitaCampo() {
   const [dataVisita, setDataVisita] = useState(rascunhoInicial.current?.dataVisita ?? hoje);
   const [postoNexti, setPostoNexti] = useState<PostoNexti | null>(
     rascunhoInicial.current?.postoNexti ?? null,
+  );
+  // Empresa e cliente do posto escolhido (vêm do cadastro da NEXTI).
+  const [postoDados, setPostoDados] = useState<DadosPosto | null>(
+    rascunhoInicial.current?.postoDados ?? null,
   );
   const [observacaoGeral, setObservacaoGeral] = useState(
     rascunhoInicial.current?.observacaoGeral ?? "",
@@ -304,6 +312,7 @@ export function RoteiroVisitaCampo() {
         funcao,
         dataVisita,
         postoNexti,
+        postoDados,
         observacaoGeral,
         planoAcao,
         respostas,
@@ -319,6 +328,7 @@ export function RoteiroVisitaCampo() {
     funcao,
     dataVisita,
     postoNexti,
+    postoDados,
     observacaoGeral,
     planoAcao,
     respostas,
@@ -556,6 +566,35 @@ export function RoteiroVisitaCampo() {
       ),
     [proximos, postosPermitidos],
   );
+
+  // Preenche empresa e cliente do posto escolhido: primeiro tenta a lista de
+  // postos próximos (que já traz esses dados); se não achar, consulta o
+  // cadastro da NEXTI pelo id/nome do posto.
+  const buscarDadosPosto = useServerFn(dadosEmpresaClientePosto);
+  useEffect(() => {
+    if (!postoNexti) {
+      setPostoDados(null);
+      return;
+    }
+    const proximo = postosProximos?.find((p) => p.id === postoNexti.id);
+    if (proximo && (proximo.cliente || proximo.empresa)) {
+      setPostoDados({ cliente: proximo.cliente, empresa: proximo.empresa });
+      return;
+    }
+    let vivo = true;
+    void buscarDadosPosto({
+      data: { postoId: postoNexti.id || null, nome: postoNexti.nome },
+    })
+      .then((d) => {
+        if (vivo && d) setPostoDados({ cliente: d.cliente, empresa: d.empresa });
+      })
+      .catch(() => {
+        /* sem os dados, o relatório sai com "não registrada" */
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [postoNexti, postosProximos, buscarDadosPosto]);
   const mensagemErroProximos =
     proximos && !proximos.ok
       ? proximos.erro || "Não foi possível carregar os postos próximos."
@@ -588,8 +627,8 @@ export function RoteiroVisitaCampo() {
           posto: postoNexti?.nome ?? "",
           postoNextiId: postoNexti?.id ?? null,
           postoExternalId: postoNexti?.externalId ?? "",
-          cliente: "",
-          empresa: "",
+          cliente: postoDados?.cliente ?? "",
+          empresa: postoDados?.empresa ?? "",
           funcao,
           colaborador: "",
           supervisor: nomeAvaliador,
@@ -667,8 +706,8 @@ export function RoteiroVisitaCampo() {
             endereco: enderecoEscrito,
             dataVisita,
             posto: postoNexti?.nome ?? "",
-            cliente: "",
-            empresa: "",
+            cliente: postoDados?.cliente ?? "",
+            empresa: postoDados?.empresa ?? "",
             funcao,
             colaborador: "",
             supervisor: nomeAvaliador,
