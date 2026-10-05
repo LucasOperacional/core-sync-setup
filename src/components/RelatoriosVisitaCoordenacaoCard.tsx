@@ -84,37 +84,52 @@ export function RelatoriosVisitaCoordenacaoCard() {
 
   return (
     <Card className="shadow-lg border-border/50">
-      <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="size-5 text-primary" /> Relatórios de Visita de Campo
-            </CardTitle>
-            <CardDescription>
-              Supervisões finalizadas. Faça download do PDF com evidências fotográficas e não conformidades.
-            </CardDescription>
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        aria-expanded={aberto}
+        className="block w-full text-left"
+      >
+        <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <FileText className="size-5 text-primary" /> Relatórios de Visita de Campo
+                {aberto ? (
+                  <ChevronUp className="ms-auto size-5 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="ms-auto size-5 text-muted-foreground" />
+                )}
+              </CardTitle>
+              <CardDescription>
+                Supervisões finalizadas. Faça download do PDF com evidências fotográficas e não
+                conformidades. Clique para {aberto ? "fechar" : "abrir"}.
+              </CardDescription>
+            </div>
+            {aberto && ehAdmin && relatorios.length > 0 ? (
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={limparMut.isPending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!window.confirm("Apagar TODOS os relatórios de visita de campo? Esta ação não pode ser desfeita.")) return;
+                  limparMut.mutate();
+                }}
+              >
+                {limparMut.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+                Limpar todos
+              </Button>
+            ) : null}
           </div>
-          {ehAdmin && relatorios.length > 0 ? (
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={limparMut.isPending}
-              onClick={() => {
-                if (!window.confirm("Apagar TODOS os relatórios de visita de campo? Esta ação não pode ser desfeita.")) return;
-                limparMut.mutate();
-              }}
-            >
-              {limparMut.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Trash2 className="size-4" />
-              )}
-              Limpar todos
-            </Button>
-          ) : null}
-        </div>
-      </CardHeader>
+        </CardHeader>
+      </button>
 
+      {aberto && (
       <CardContent className="p-0">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center p-10 text-muted-foreground">
