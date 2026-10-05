@@ -18,11 +18,21 @@ export const listarVinculosGerentes = createServerFn({ method: "GET" })
     if (!(await ehAdmin(ctx))) return { ok: false as const, admin: false, vinculos: [], usuarios: [] };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: vinc } = await supabaseAdmin.from("gerente_usuario_vinculo" as never).select("gerente_nome,user_id");
-    const { data: perfis } = await supabaseAdmin.from("profiles").select("id,nome,email").order("nome");
-    const usuarios = ((perfis ?? []) as { id: string; nome: string | null; email: string | null }[]).map((p) => ({
-      id: p.id,
-      rotulo: [p.nome, p.email].filter(Boolean).join(" · ") || p.id,
-    }));
+    // Lista TODOS os usuários (auth.users), inclusive contas sem perfil cadastrado.
+    const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+    const nomes = new Map<string, string | null>();
+    const { data: perfis } = await supabaseAdmin.from("profiles").select("id,nome");
+    for (const p of (perfis ?? []) as { id: string; nome: string | null }[]) nomes.set(p.id, p.nome);
+    const usuarios = ((authErr ? [] : (authData?.users ?? [])) as { id: string; email?: string | null; user_metadata?: Record<string, unknown> }[])
+      .map((u) => {
+        const metaNome = typeof u.user_metadata?.nome === "string" ? (u.user_metadata.nome as string) : null;
+        const nome = nomes.get(u.id) ?? metaNome ?? null;
+        return {
+          id: u.id,
+          rotulo: [nome, u.email].filter(Boolean).join(" · ") || u.email || u.id,
+        };
+      })
+      .sort((a, b) => a.rotulo.localeCompare(b.rotulo, "pt-BR"));
     return {
       ok: true as const,
       admin: true,
