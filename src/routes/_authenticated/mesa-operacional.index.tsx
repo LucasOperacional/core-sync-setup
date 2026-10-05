@@ -452,33 +452,36 @@ function MesaOperacionalPage() {
                       const total = grupo.lista.length;
                       const pct = total ? Math.round((grupo.feitos / total) * 100) : 0;
                       return (
-                        <Card key={grupo.gerente} className="group">
-                          <CardHeader className="pb-3">
-                            <CardTitle className="flex items-center justify-between gap-2 text-sm">
-                              <Link
-                                to="/mesa-operacional/$gerente"
-                                params={{ gerente: grupo.gerente }}
-                                className="flex flex-1 items-center gap-2 transition-colors hover:text-primary"
-                              >
-                                <ArrowRight className="size-4 shrink-0 text-muted-foreground group-hover:text-primary" />
-                                <UserRound className="size-4 shrink-0" />
-                                <span className="truncate">{grupo.gerente}</span>
-                              </Link>
-                              <span className="flex items-center gap-1.5">
-                                <Badge variant={pct === 100 && total > 0 ? "default" : "secondary"}>
-                                  {grupo.feitos}/{total}
-                                </Badge>
-                                <Badge
-                                  variant={pct === 100 && total > 0 ? "default" : "outline"}
-                                  className="font-semibold"
-                                >
-                                  {pct}%
-                                </Badge>
-                              </span>
-                            </CardTitle>
-                            <Progress value={pct} className="h-1.5" />
-                          </CardHeader>
-                        </Card>
+                        <Link
+                          key={grupo.gerente}
+                          to="/mesa-operacional/$gerente"
+                          params={{ gerente: grupo.gerente }}
+                          className="group block cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
+                        >
+                          <Card className="group transition hover:border-primary/40 hover:bg-primary/5 hover:shadow-md">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="flex items-center justify-between gap-2 text-sm">
+                                <span className="flex flex-1 items-center gap-2 truncate">
+                                  <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                                  <UserRound className="size-4 shrink-0" />
+                                  <span className="truncate">{grupo.gerente}</span>
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                  <Badge variant={pct === 100 && total > 0 ? "default" : "secondary"}>
+                                    {grupo.feitos}/{total}
+                                  </Badge>
+                                  <Badge
+                                    variant={pct === 100 && total > 0 ? "default" : "outline"}
+                                    className="font-semibold"
+                                  >
+                                    {pct}%
+                                  </Badge>
+                                </span>
+                              </CardTitle>
+                              <Progress value={pct} className="h-1.5" />
+                            </CardHeader>
+                          </Card>
+                        </Link>
                       );
                     })}
                   </div>
