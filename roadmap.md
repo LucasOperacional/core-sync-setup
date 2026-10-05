@@ -17,3 +17,5 @@
 - [x] Substituir o vídeo da página de autenticação pelo arquivo enviado
 
 - [x] Trocar os mapas visuais de postos e rastreio e seus links por OpenStreetMap, preservando dados NEXTI.
+
+- [ ] Painel do coordenador: clicar no nome do supervisor abre a lista de postos que ele visitou.

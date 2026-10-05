@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, BarChart3, ClipboardCheck, Star, Users } from "lucide-react";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { ArrowLeft, BarChart3, ChevronDown, ChevronRight, ClipboardCheck, Star, Users } from "lucide-react";
 
 import { KpiCard } from "@/components/KpiCard";
 import { PostosServicoMapaCard } from "@/components/PostosServicoMapaCard";
@@ -78,16 +78,21 @@ function PainelCoordenador() {
     };
   }, []);
 
+  const [aberto, setAberto] = useState<string | null>(null);
+
   const { linhas, total, media, postos } = useMemo(() => {
     const doCoord = visitas.filter((v) => coordDaVisita(v) === alvo);
-    const mapa = new Map<string, { visitas: number; soma: number; comNota: number; postos: Set<string> }>();
+    const mapa = new Map<
+      string,
+      { visitas: number; soma: number; comNota: number; postos: Map<string, number> }
+    >();
     const todosPostos = new Set<string>();
     let somaGeral = 0;
     let comNotaGeral = 0;
     for (const v of doCoord) {
       const nome = (v.supervisor ?? "").trim() || "Não informado";
       const posto = (v.posto || v.cliente || "").trim();
-      const s = mapa.get(nome) ?? { visitas: 0, soma: 0, comNota: 0, postos: new Set<string>() };
+      const s = mapa.get(nome) ?? { visitas: 0, soma: 0, comNota: 0, postos: new Map<string, number>() };
       s.visitas++;
       if (typeof v.percentual_conformidade === "number") {
         s.soma += v.percentual_conformidade;
@@ -96,7 +101,7 @@ function PainelCoordenador() {
         comNotaGeral++;
       }
       if (posto) {
-        s.postos.add(posto);
+        s.postos.set(posto, (s.postos.get(posto) ?? 0) + 1);
         todosPostos.add(posto);
       }
       mapa.set(nome, s);
@@ -107,6 +112,9 @@ function PainelCoordenador() {
         visitas: s.visitas,
         postos: s.postos.size,
         qualidade: s.comNota ? Math.round(s.soma / s.comNota) : 0,
+        listaPostos: Array.from(s.postos.entries())
+          .map(([posto, qtd]) => ({ posto, qtd }))
+          .sort((a, b) => b.qtd - a.qtd || a.posto.localeCompare(b.posto)),
       }))
       .sort((a, b) => b.visitas - a.visitas);
     return {
@@ -157,8 +165,22 @@ function PainelCoordenador() {
               </thead>
               <tbody>
                 {linhas.map((l) => (
-                  <tr key={l.nome} className="border-b border-border/50 last:border-0">
-                    <td className="py-2 pr-3 font-medium">{l.nome}</td>
+                  <Fragment key={l.nome}>
+                  <tr className="border-b border-border/50 last:border-0">
+                    <td className="py-2 pr-3 font-medium">
+                      <button
+                        type="button"
+                        onClick={() => setAberto(aberto === l.nome ? null : l.nome)}
+                        className="inline-flex items-center gap-1.5 text-left font-medium text-primary hover:underline"
+                      >
+                        {aberto === l.nome ? (
+                          <ChevronDown className="size-3.5 shrink-0" />
+                        ) : (
+                          <ChevronRight className="size-3.5 shrink-0" />
+                        )}
+                        {l.nome}
+                      </button>
+                    </td>
                     <td className="py-2 pr-3">
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-32 rounded bg-muted">
@@ -177,6 +199,33 @@ function PainelCoordenador() {
                       </div>
                     </td>
                   </tr>
+                  {aberto === l.nome && (
+                    <tr className="border-b border-border/50 bg-muted/30">
+                      <td colSpan={4} className="px-4 py-3">
+                        <p className="mb-2 text-xs font-semibold text-muted-foreground">
+                          Postos visitados por {l.nome} ({l.listaPostos.length})
+                        </p>
+                        {l.listaPostos.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">Nenhum posto identificado nas visitas.</p>
+                        ) : (
+                          <ul className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
+                            {l.listaPostos.map((p) => (
+                              <li
+                                key={p.posto}
+                                className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-xs"
+                              >
+                                <span className="truncate font-medium">{p.posto}</span>
+                                <span className="shrink-0 tabular-nums text-muted-foreground">
+                                  {p.qtd} {p.qtd === 1 ? "visita" : "visitas"}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
