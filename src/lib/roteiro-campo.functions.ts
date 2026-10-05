@@ -298,6 +298,7 @@ export type PostoProximo = {
   nome: string;
   externalId: string;
   cliente: string;
+  empresa: string;
   cidade: string;
   distanciaKm: number;
 };
@@ -330,7 +331,8 @@ export const postosProximosSupervisao = createServerFn({ method: "POST" })
         return { ok: false, erro: "Localização inválida.", postos: [] as PostoProximo[] };
       }
 
-      const COLUNAS = "nexti_id,name,external_id,client_name,city,latitude,longitude,active";
+      const COLUNAS =
+        "nexti_id,name,external_id,client_name,company_name,city,latitude,longitude,active";
 
       let query = await context.supabase
         .from("nexti_workplaces")
@@ -362,6 +364,7 @@ export const postosProximosSupervisao = createServerFn({ method: "POST" })
           nome: String(linha.name ?? "Posto"),
           externalId: String(linha.external_id ?? ""),
           cliente: String(linha.client_name ?? ""),
+          empresa: String(linha.company_name ?? ""),
           cidade: String(linha.city ?? ""),
           distanciaKm: distanciaKm(
             data.latitude,
