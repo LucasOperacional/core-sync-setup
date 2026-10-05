@@ -227,6 +227,9 @@ function lerRascunho(): RascunhoRoteiro | null {
 export function RoteiroVisitaCampo() {
   const { user } = useSessao();
   const nomeAvaliador = nomeDoUsuario(user);
+  // Para o superadmin a visita nunca começa sozinha: só inicia ao tocar em "Iniciar".
+  const inicioAutomaticoOff =
+    user?.email?.toLowerCase().trim() === "lucasdallan@gmail.com";
 
   const hoje = new Date().toISOString().slice(0, 10);
   // Restaura o rascunho salvo no aparelho para não perder nada se a página
@@ -758,6 +761,7 @@ export function RoteiroVisitaCampo() {
     }
 
     function agendarInicio() {
+      if (inicioAutomaticoOff) return;
       if (timerPermanencia.current || refEstado.current.iniciadoEm !== null) return;
       const desde = geoTracking.current.dentroDesde ?? Date.now();
       const restante = Math.max(0, PERMANENCIA_MS - (Date.now() - desde));
@@ -802,7 +806,7 @@ export function RoteiroVisitaCampo() {
       geoTracking.current.dentroDesde = null;
       encerrarPorSaida();
     }
-  }, [postoNexti, postosProximos, geo.status]);
+  }, [postoNexti, postosProximos, geo.status, inicioAutomaticoOff]);
 
   useEffect(
     () => () => {
