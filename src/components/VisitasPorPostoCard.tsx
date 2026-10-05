@@ -61,7 +61,7 @@ export function VisitasPorPostoCard() {
   });
 
   const postos = useMemo(() => {
-    const todos: PostoMapa[] = data?.postos ?? [];
+    const todos: PostoMapa[] = data ?? [];
     return todos
       .filter((p) => empresaPermitidaNoMapa(p) && !ocultarNoMapa(p))
       .map((p) => ({ ...p, cor: semaforoDe(p.visitasRealizadas || 0) }))
