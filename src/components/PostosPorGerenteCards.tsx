@@ -51,6 +51,30 @@ export function PostosPorGerenteCards() {
     }
   }
   const [abertos, setAbertos] = useState<Record<string, boolean>>({});
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [novoNome, setNovoNome] = useState("");
+  const [salvandoId, setSalvandoId] = useState<string | null>(null);
+  const renomearFn = useServerFn(renomearPostoDoGerente);
+
+  async function salvarNome(id: string) {
+    const nome = novoNome.trim();
+    if (!nome) {
+      toast.warning("Digite o novo nome do posto.");
+      return;
+    }
+    setSalvandoId(id);
+    try {
+      const r = await renomearFn({ data: { id, postoNome: nome } });
+      if (!r.ok) throw new Error(r.erro);
+      await qc.invalidateQueries({ queryKey: ["postos-gerente"] });
+      toast.success("Nome do posto atualizado.");
+      setEditandoId(null);
+    } catch (e) {
+      toast.error("Falha ao renomear: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setSalvandoId(null);
+    }
+  }
 
   // As quantidades só são baixadas quando algum card de gerente está aberto.
   const { buscar, carregando } = useVisitasPorNomePosto(Object.values(abertos).some(Boolean));
