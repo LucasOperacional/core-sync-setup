@@ -2360,6 +2360,27 @@ export type Database = {
         }
         Relationships: []
       }
+      gerente_usuario_vinculo: {
+        Row: {
+          created_at: string
+          gerente_nome: string
+          user_id: string
+          vinculado_por: string | null
+        }
+        Insert: {
+          created_at?: string
+          gerente_nome: string
+          user_id: string
+          vinculado_por?: string | null
+        }
+        Update: {
+          created_at?: string
+          gerente_nome?: string
+          user_id?: string
+          vinculado_por?: string | null
+        }
+        Relationships: []
+      }
       gerentes: {
         Row: {
           cargo: string
