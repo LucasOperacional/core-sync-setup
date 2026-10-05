@@ -163,21 +163,15 @@ function PainelCoordenador() {
               </thead>
               <tbody>
                 {linhas.map((l) => (
-                  <Fragment key={l.nome}>
-                  <tr className="border-b border-border/50 last:border-0">
+                  <tr key={l.nome} className="border-b border-border/50 last:border-0">
                     <td className="py-2 pr-3 font-medium">
-                      <button
-                        type="button"
-                        onClick={() => setAberto(aberto === l.nome ? null : l.nome)}
-                        className="inline-flex items-center gap-1.5 text-left font-medium text-primary hover:underline"
+                      <Link
+                        to="/coordenacao-painel/$coord/supervisor/$nome"
+                        params={{ coord, nome: l.nome }}
+                        className="font-medium text-primary hover:underline"
                       >
-                        {aberto === l.nome ? (
-                          <ChevronDown className="size-3.5 shrink-0" />
-                        ) : (
-                          <ChevronRight className="size-3.5 shrink-0" />
-                        )}
                         {l.nome}
-                      </button>
+                      </Link>
                     </td>
                     <td className="py-2 pr-3">
                       <div className="flex items-center gap-2">
