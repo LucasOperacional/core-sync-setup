@@ -78,6 +78,7 @@ import { Route as AuthenticatedQualidadeTempoRouteImport } from './routes/_authe
 import { Route as AuthenticatedRealizadoresRouteImport } from './routes/_authenticated/realizadores'
 import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
 import { Route as AuthenticatedSupervisaoCampoRouteImport } from './routes/_authenticated/supervisao-campo'
+import { Route as AuthenticatedSupervisaoVisitasPostosRouteImport } from './routes/_authenticated/supervisao-visitas-postos'
 import { Route as AuthenticatedSupervisorRouteImport } from './routes/_authenticated/supervisor'
 import { Route as AuthenticatedSupervisorCampoRouteImport } from './routes/_authenticated/supervisor-campo'
 import { Route as AuthenticatedSupervisorCrtRouteImport } from './routes/_authenticated/supervisor-crt'
@@ -509,6 +510,12 @@ const AuthenticatedSupervisaoCampoRoute =
     path: '/supervisao-campo',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSupervisaoVisitasPostosRoute =
+  AuthenticatedSupervisaoVisitasPostosRouteImport.update({
+    id: '/supervisao-visitas-postos',
+    path: '/supervisao-visitas-postos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSupervisorRoute = AuthenticatedSupervisorRouteImport.update({
   id: '/supervisor',
   path: '/supervisor',
@@ -814,6 +821,7 @@ export interface FileRoutesByFullPath {
   '/realizadores': typeof AuthenticatedRealizadoresRoute
   '/rh': typeof AuthenticatedRhRoute
   '/supervisao-campo': typeof AuthenticatedSupervisaoCampoRoute
+  '/supervisao-visitas-postos': typeof AuthenticatedSupervisaoVisitasPostosRoute
   '/supervisor': typeof AuthenticatedSupervisorRoute
   '/supervisor-campo': typeof AuthenticatedSupervisorCampoRoute
   '/supervisor-crt': typeof AuthenticatedSupervisorCrtRoute
@@ -924,6 +932,7 @@ export interface FileRoutesByTo {
   '/realizadores': typeof AuthenticatedRealizadoresRoute
   '/rh': typeof AuthenticatedRhRoute
   '/supervisao-campo': typeof AuthenticatedSupervisaoCampoRoute
+  '/supervisao-visitas-postos': typeof AuthenticatedSupervisaoVisitasPostosRoute
   '/supervisor': typeof AuthenticatedSupervisorRoute
   '/supervisor-campo': typeof AuthenticatedSupervisorCampoRoute
   '/supervisor-crt': typeof AuthenticatedSupervisorCrtRoute
@@ -1037,6 +1046,7 @@ export interface FileRoutesById {
   '/_authenticated/realizadores': typeof AuthenticatedRealizadoresRoute
   '/_authenticated/rh': typeof AuthenticatedRhRoute
   '/_authenticated/supervisao-campo': typeof AuthenticatedSupervisaoCampoRoute
+  '/_authenticated/supervisao-visitas-postos': typeof AuthenticatedSupervisaoVisitasPostosRoute
   '/_authenticated/supervisor': typeof AuthenticatedSupervisorRoute
   '/_authenticated/supervisor-campo': typeof AuthenticatedSupervisorCampoRoute
   '/_authenticated/supervisor-crt': typeof AuthenticatedSupervisorCrtRoute
@@ -1151,6 +1161,7 @@ export interface FileRouteTypes {
     | '/realizadores'
     | '/rh'
     | '/supervisao-campo'
+    | '/supervisao-visitas-postos'
     | '/supervisor'
     | '/supervisor-campo'
     | '/supervisor-crt'
@@ -1261,6 +1272,7 @@ export interface FileRouteTypes {
     | '/realizadores'
     | '/rh'
     | '/supervisao-campo'
+    | '/supervisao-visitas-postos'
     | '/supervisor'
     | '/supervisor-campo'
     | '/supervisor-crt'
@@ -1373,6 +1385,7 @@ export interface FileRouteTypes {
     | '/_authenticated/realizadores'
     | '/_authenticated/rh'
     | '/_authenticated/supervisao-campo'
+    | '/_authenticated/supervisao-visitas-postos'
     | '/_authenticated/supervisor'
     | '/_authenticated/supervisor-campo'
     | '/_authenticated/supervisor-crt'
@@ -1935,6 +1948,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSupervisaoCampoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/supervisao-visitas-postos': {
+      id: '/_authenticated/supervisao-visitas-postos'
+      path: '/supervisao-visitas-postos'
+      fullPath: '/supervisao-visitas-postos'
+      preLoaderRoute: typeof AuthenticatedSupervisaoVisitasPostosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/supervisor': {
       id: '/_authenticated/supervisor'
       path: '/supervisor'
@@ -2303,6 +2323,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRealizadoresRoute: typeof AuthenticatedRealizadoresRoute
   AuthenticatedRhRoute: typeof AuthenticatedRhRoute
   AuthenticatedSupervisaoCampoRoute: typeof AuthenticatedSupervisaoCampoRoute
+  AuthenticatedSupervisaoVisitasPostosRoute: typeof AuthenticatedSupervisaoVisitasPostosRoute
   AuthenticatedSupervisorRoute: typeof AuthenticatedSupervisorRoute
   AuthenticatedSupervisorCampoRoute: typeof AuthenticatedSupervisorCampoRoute
   AuthenticatedSupervisorCrtRoute: typeof AuthenticatedSupervisorCrtRoute
@@ -2390,6 +2411,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRealizadoresRoute: AuthenticatedRealizadoresRoute,
   AuthenticatedRhRoute: AuthenticatedRhRoute,
   AuthenticatedSupervisaoCampoRoute: AuthenticatedSupervisaoCampoRoute,
+  AuthenticatedSupervisaoVisitasPostosRoute:
+    AuthenticatedSupervisaoVisitasPostosRoute,
   AuthenticatedSupervisorRoute: AuthenticatedSupervisorRoute,
   AuthenticatedSupervisorCampoRoute: AuthenticatedSupervisorCampoRoute,
   AuthenticatedSupervisorCrtRoute: AuthenticatedSupervisorCrtRoute,
