@@ -191,33 +191,6 @@ function PainelCoordenador() {
                       </div>
                     </td>
                   </tr>
-                  {aberto === l.nome && (
-                    <tr className="border-b border-border/50 bg-muted/30">
-                      <td colSpan={4} className="px-4 py-3">
-                        <p className="mb-2 text-xs font-semibold text-muted-foreground">
-                          Postos visitados por {l.nome} ({l.listaPostos.length})
-                        </p>
-                        {l.listaPostos.length === 0 ? (
-                          <p className="text-xs text-muted-foreground">Nenhum posto identificado nas visitas.</p>
-                        ) : (
-                          <ul className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
-                            {l.listaPostos.map((p) => (
-                              <li
-                                key={p.posto}
-                                className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-xs"
-                              >
-                                <span className="truncate font-medium">{p.posto}</span>
-                                <span className="shrink-0 tabular-nums text-muted-foreground">
-                                  {p.qtd} {p.qtd === 1 ? "visita" : "visitas"}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </td>
-                    </tr>
-                  )}
-                  </Fragment>
                 ))}
               </tbody>
             </table>
