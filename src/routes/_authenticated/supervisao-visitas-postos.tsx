@@ -96,7 +96,10 @@ function VisitasPostosPage() {
         ? await tabela().delete().eq("posto_id", id)
         : await tabela().upsert({ posto_id: id, quantidade: Math.max(0, valor), updated_at: new Date().toISOString() });
     setSalvando(null);
-    if (error) return toast.error("Não foi possível salvar: " + error.message);
+    if (error) {
+      toast.error("Não foi possível salvar: " + error.message);
+      return;
+    }
     setRascunho((r) => {
       const n = { ...r };
       delete n[id];
