@@ -386,3 +386,53 @@ export const postosProximosSupervisao = createServerFn({ method: "POST" })
       };
     }
   });
+
+export type DadosEmpresaClientePosto = { cliente: string; empresa: string };
+
+/** Busca empresa e cliente do posto no cadastro da NEXTI (por id ou por nome). */
+export const dadosEmpresaClientePosto = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { postoId?: number | null; nome?: string }) => ({
+    postoId: Number.isFinite(Number(input?.postoId)) ? Number(input?.postoId) : null,
+    nome: typeof input?.nome === "string" ? input.nome.slice(0, 200) : "",
+  }))
+  .handler(async ({ data, context }): Promise<DadosEmpresaClientePosto> => {
+    const vazio = { cliente: "", empresa: "" };
+    try {
+      const COLUNAS = "nexti_id,name,client_name,company_name";
+      const buscar = async (supabase: any) => {
+        if (data.postoId) {
+          const r = await supabase
+            .from("nexti_workplaces")
+            .select(COLUNAS)
+            .eq("nexti_id", data.postoId)
+            .limit(1)
+            .maybeSingle();
+          if (!r.error && r.data) return r.data;
+        }
+        const nome = data.nome.trim();
+        if (!nome) return null;
+        const r = await supabase
+          .from("nexti_workplaces")
+          .select(COLUNAS)
+          .ilike("name", nome)
+          .limit(1)
+          .maybeSingle();
+        if (!r.error && r.data) return r.data;
+        return null;
+      };
+
+      let linha = await buscar(context.supabase);
+      if (!linha) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        linha = await buscar(supabaseAdmin);
+      }
+      if (!linha) return vazio;
+      return {
+        cliente: String(linha.client_name ?? ""),
+        empresa: String(linha.company_name ?? ""),
+      };
+    } catch {
+      return vazio;
+    }
+  });
