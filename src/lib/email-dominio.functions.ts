@@ -6,7 +6,7 @@ export const DOMINIO_EMAIL = "notify.cyber.nxsplus.xyz";
 export const DOMINIO_RAIZ = "cyber.nxsplus.xyz";
 export const REMETENTE = `noreply@${DOMINIO_EMAIL}`;
 export const TOKEN_PADRAO =
-  "lovable_email_verify=ab42bff5ab61eedef0b01cd0192e9ce9b6d6862278e5c8c67198b8b2fda3dfbd";
+  "lovable_email_verify=6fde7038b19cbbe506a195757c979b0f95bd92e79455f3a5533af6b0cf500068";
 
 export const CHAVE_DOMINIO_EMAIL = "email_dominio_envio";
 export const CHAVE_TOKEN_EMAIL = "email_token_verificacao";
