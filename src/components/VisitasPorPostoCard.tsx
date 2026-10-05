@@ -13,8 +13,8 @@ export function VisitasPorPostoCard() {
             <ChevronRight className="ms-auto size-5 text-muted-foreground" />
           </CardTitle>
           <CardDescription>
-            Abre a página com todos os postos para ver e editar a quantidade de visitas: verde em
-            dia, amarelo com atenção e vermelho sem visita.
+            Abre a página com todos os postos para ver e editar a quantidade de visitas: verde até 2,
+            amarelo de 3 a 4 e vermelho 5 ou mais.
           </CardDescription>
         </CardHeader>
       </Card>
