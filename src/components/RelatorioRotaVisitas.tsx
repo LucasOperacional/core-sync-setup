@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 import { MapPinned, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fotoSupervisorPorNome } from "@/lib/rastreamento.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { PontoRota } from "@/components/MapaRotaVisitas";
@@ -35,22 +36,7 @@ export function RelatorioRotaVisitas({ supervisor }: { supervisor: string }) {
   async function gerar() {
     setCarregando(true);
     // Foto do supervisor (bucket privado user-avatars, URL assinada de 1h).
-    const { data: perfil } = await supabase
-      .from("user_profiles")
-      .select("avatar_url")
-      .eq("display_name", supervisor)
-      .maybeSingle();
-    let foto: string | null = null;
-    const caminho = (perfil as { avatar_url?: string | null } | null)?.avatar_url ?? null;
-    if (caminho) {
-      if (/^https?:\/\//i.test(caminho)) foto = caminho;
-      else {
-        const { data: assinada } = await supabase.storage
-          .from("user-avatars")
-          .createSignedUrl(caminho, 60 * 60);
-        foto = assinada?.signedUrl ?? null;
-      }
-    }
+    const foto = await fotoSupervisorPorNome({ data: { nome: supervisor } }).catch(() => null);
     setFotoUrl(foto);
     const { data } = await supabase
       .from("roteiros_visita_campo")
