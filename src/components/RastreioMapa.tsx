@@ -26,6 +26,10 @@ function linkLocal(lat: number, lng: number) {
   return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`;
 }
 
+function linkStreetView(lat: number, lng: number) {
+  return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+}
+
 /** Mapa aberto dos postos da NEXTI e das posições enviadas pelos supervisores. */
 export default function RastreioMapa({
   posicoes,
@@ -94,7 +98,7 @@ export default function RastreioMapa({
       const lat = p.latitude as number;
       const lng = p.longitude as number;
       vistos.add(p.id);
-      const rotulo = `<strong>${escapar(p.nome)}</strong>${p.cliente ? `<br/>${escapar(p.cliente)}` : ""}${p.enderecoCompleto ? `<br/>${escapar(p.enderecoCompleto)}` : ""}${p.telefone ? `<br/>Tel.: ${escapar(p.telefone)}` : ""}<br/><a href="${linkLocal(lat, lng)}" target="_blank" rel="noopener noreferrer">Abrir no OpenStreetMap</a>`;
+      const rotulo = `<strong>${escapar(p.nome)}</strong>${p.cliente ? `<br/>${escapar(p.cliente)}` : ""}${p.enderecoCompleto ? `<br/>${escapar(p.enderecoCompleto)}` : ""}${p.telefone ? `<br/>Tel.: ${escapar(p.telefone)}` : ""}<br/><a href="${linkLocal(lat, lng)}" target="_blank" rel="noopener noreferrer">Abrir no OpenStreetMap</a><br/><a href="${linkStreetView(lat, lng)}" target="_blank" rel="noopener noreferrer">Ver no Street View</a>`;
       const corPosto = (p as PostoMapa & { corMapa?: string }).corMapa ?? "#f59e0b";
       let marcador = postosRef.current.get(p.id);
       if (marcador) {
@@ -129,7 +133,7 @@ export default function RastreioMapa({
       if (!Number.isFinite(p.latitude) || !Number.isFinite(p.longitude)) continue;
       vistos.add(p.userId);
       const cor = corDoUsuario(p.userId);
-      const rotulo = `<strong>${escapar(p.nome)}</strong><br/>${new Date(p.capturadoEm).toLocaleString("pt-BR")}${p.tipoSinal ? `<br/>Sinal: ${escapar(p.tipoSinal.toUpperCase())}` : ""}<br/><a href="${linkLocal(p.latitude, p.longitude)}" target="_blank" rel="noopener noreferrer">Abrir no OpenStreetMap</a>`;
+      const rotulo = `<strong>${escapar(p.nome)}</strong><br/>${new Date(p.capturadoEm).toLocaleString("pt-BR")}${p.tipoSinal ? `<br/>Sinal: ${escapar(p.tipoSinal.toUpperCase())}` : ""}<br/><a href="${linkLocal(p.latitude, p.longitude)}" target="_blank" rel="noopener noreferrer">Abrir no OpenStreetMap</a><br/><a href="${linkStreetView(p.latitude, p.longitude)}" target="_blank" rel="noopener noreferrer">Ver no Street View</a>`;
       let marcador = marcadoresRef.current.get(p.userId);
       if (marcador) {
         marcador.setLatLng([p.latitude, p.longitude]).setStyle({ fillColor: cor }).setPopupContent(rotulo);
