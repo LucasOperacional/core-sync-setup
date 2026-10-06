@@ -404,7 +404,7 @@ export function RoteiroVisitaCampo() {
     } else if (busca.iniciar) {
       toast.info(`Posto ${busca.nome} selecionado — toque em Iniciar para começar a visita.`);
     }
-  }, [busca, inicioAutomaticoOff]);
+  }, [busca, inicioAutomaticoOff, carregandoSessao]);
 
   
   const [geo, setGeo] = useState<GeoCaptura>({
