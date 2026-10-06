@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
+import { gerarPdfDeslocamento } from "@/lib/pdf-deslocamento";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, Loader2, Route as RouteIcon, Search } from "lucide-react";
+import { Download, FileDown, Loader2, Route as RouteIcon, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { corDoUsuario } from "@/lib/cores-rastreio";
 import { relatorioAcompanhamento, type LinhaAcompanhamento } from "@/lib/rastreamento.functions";
+
+const MapaTrajetoGps = lazy(() => import("@/components/MapaTrajetoGps"));
 
 function hoje() {
   const d = new Date();
@@ -34,6 +38,16 @@ export function RelatorioAcompanhamentoCard() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [aberto, setAberto] = useState<string | null>(null);
+  const [gerandoPdf, setGerandoPdf] = useState<string | null>(null);
+
+  const pdf = async (alvo: LinhaAcompanhamento[], chave: string) => {
+    setGerandoPdf(chave);
+    try {
+      await gerarPdfDeslocamento(alvo, de, ate);
+    } finally {
+      setGerandoPdf(null);
+    }
+  };
 
   const buscar = useCallback(async () => {
     setCarregando(true);
@@ -119,9 +133,19 @@ export function RelatorioAcompanhamentoCard() {
           <RouteIcon className="size-4 text-primary" />
           Relatório de acompanhamento
         </h2>
-        <Button size="sm" variant="outline" onClick={exportarCsv} disabled={linhas.length === 0}>
-          <Download className="size-4" /> Exportar
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            onClick={() => void pdf(linhas, "todos")}
+            disabled={linhas.length === 0 || gerandoPdf !== null}
+          >
+            {gerandoPdf === "todos" ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}
+            PDF de todos
+          </Button>
+          <Button size="sm" variant="outline" onClick={exportarCsv} disabled={linhas.length === 0}>
+            <Download className="size-4" /> Exportar
+          </Button>
+        </div>
       </div>
 
       <p className="mt-1 text-xs text-muted-foreground">
@@ -192,6 +216,26 @@ export function RelatorioAcompanhamentoCard() {
             </button>
 
             {aberto === l.userId ? (
+              <div className="space-y-3 border-t border-border p-3">
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={gerandoPdf !== null}
+                    onClick={() => void pdf([l], l.userId)}
+                  >
+                    {gerandoPdf === l.userId ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}
+                    Baixar PDF do trajeto
+                  </Button>
+                </div>
+                <ClientOnly fallback={<div className="h-[380px] w-full rounded-lg bg-muted" />}>
+                  <Suspense fallback={<div className="h-[380px] w-full rounded-lg bg-muted" />}>
+                    <MapaTrajetoGps linha={l} />
+                  </Suspense>
+                </ClientOnly>
+              </div>
+            ) : null}
+            {aberto === l.userId ? (
               <ul className="divide-y divide-border border-t border-border">
                 {l.paradas.map((p, i) => (
                   <li
@@ -199,7 +243,7 @@ export function RelatorioAcompanhamentoCard() {
                     className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-xs"
                   >
                     <span className="font-medium">
-                      {hora(p.inicio)} — {hora(p.fim)}
+                      {i + 1}. {p.posto ?? "Local sem posto"} · {hora(p.inicio)} — {hora(p.fim)}
                     </span>
                     <span className="text-muted-foreground">permaneceu {duracao(p.minutos)}</span>
                     <a
