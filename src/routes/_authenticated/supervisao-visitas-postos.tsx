@@ -54,7 +54,7 @@ function VisitasPostosPage() {
   const [salvando, setSalvando] = useState<string | null>(null);
 
   const listar = useServerFn(listarPostosMapa);
-  const postosQ = useQuery({ queryKey: ["visitas-por-posto"], queryFn: () => listar(), staleTime: 10 * 60_000, enabled: aberto });
+  const postosQ = useQuery({ queryKey: ["visitas-por-posto"], queryFn: () => listar(), staleTime: 30_000, refetchInterval: 60_000, enabled: aberto });
   const ajustesQ = useQuery({
     queryKey: ["postos-visitas-ajuste"],
     enabled: aberto,
