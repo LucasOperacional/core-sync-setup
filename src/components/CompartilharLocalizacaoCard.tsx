@@ -268,8 +268,8 @@ export function CompartilharLocalizacaoCard() {
 
   /**
    * Regra automática: a cada posição enviada, confere se o supervisor está a
-   * menos de 200 m de um posto dele. Estando, avisa no celular e no WhatsApp e
-   * abre a Supervisão de Campo já com o posto e o cronômetro iniciados.
+   * menos de 150 m de um posto dele (na porta). Estando, avisa no celular e no
+   * WhatsApp e abre a Supervisão de Campo já com o posto e o cronômetro iniciados.
    */
   const checarChegada = useCallback(
     async (p: PosicaoGps) => {

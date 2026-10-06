@@ -3,8 +3,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { areaGerenteCanonica } from "@/lib/areas-gerentes";
 import { normalizarNome } from "@/lib/gerentes-area-a";
 
-/** Distância, em metros, para considerar que o supervisor chegou ao posto (regra unificada 900m). */
-export const RAIO_CHEGADA_METROS = 900;
+/** Distância, em metros, para considerar que o supervisor chegou à porta do posto. */
+export const RAIO_CHEGADA_METROS = 150;
 /** Tempo mínimo entre dois avisos do mesmo posto (evita mensagens repetidas). */
 const INTERVALO_AVISO_HORAS = 4;
 
@@ -95,8 +95,8 @@ export const salvarTelefoneAviso = createServerFn({ method: "POST" })
 
 /**
  * Regra automática: com a posição do celular, verifica se o supervisor está a
- * menos de 200 m de um posto dele. Se estiver, registra a chegada e dispara o
- * aviso no WhatsApp — uma vez a cada 4 horas por posto.
+ * menos de 150 m de um posto dele (na porta). Se estiver, registra a chegada e
+ * dispara o aviso no WhatsApp — uma vez a cada 4 horas por posto.
  */
 export const verificarChegadaPosto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
