@@ -414,7 +414,7 @@ export const postosProximosSupervisao = createServerFn({ method: "POST" })
             Number(linha.longitude),
           ),
         }))
-        .filter((p) => Number.isFinite(p.id) && Number.isFinite(p.distanciaKm) && !nomeIniciaTs(p.nome))
+        .filter((p) => Number.isFinite(p.id) && Number.isFinite(p.distanciaKm) && !nomeIniciaTs(p.nome) && !nomePostoOcultoSupervisao(p.nome))
         .filter((p) => !permitidos || permitidos.has(normalizar(p.nome)))
         .sort((a, b) => a.distanciaKm - b.distanciaKm)
         .slice(0, 8);
