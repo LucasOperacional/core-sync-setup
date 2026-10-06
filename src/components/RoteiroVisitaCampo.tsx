@@ -230,7 +230,7 @@ function lerRascunho(): RascunhoRoteiro | null {
 }
 
 export function RoteiroVisitaCampo() {
-  const { user } = useSessao();
+  const { user, carregando: carregandoSessao } = useSessao();
   const nomeAvaliador = nomeDoUsuario(user);
   // Para o superadmin e o João Carlos a visita nunca começa sozinha: só inicia
   // ao tocar em "Iniciar" (contador sempre zerado ao abrir a página).
