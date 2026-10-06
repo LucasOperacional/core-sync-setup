@@ -4,7 +4,7 @@ import type { LeadMaps } from "@/lib/prospeccao-maps.functions";
 
 function escapar(texto: string) {
   return texto.replace(/[&<>"']/g, (c) =>
-    ({ "&": "&", "<": "<", ">": ">", '"': """, "'": "&#39;" })[c] ?? c,
+    ({ "&": "\x26amp;", "<": "\x26lt;", ">": "\x26gt;", '"': "\x26quot;", "'": "\x26#39;" })[c] ?? c,
   );
 }
 
