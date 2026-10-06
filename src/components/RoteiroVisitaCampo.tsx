@@ -392,6 +392,8 @@ export function RoteiroVisitaCampo() {
   useEffect(() => {
     if (chegadaAplicada.current) return;
     if (!busca?.nome) return;
+    // Espera a sessão carregar para respeitar quem tem início manual.
+    if (carregandoSessao) return;
     chegadaAplicada.current = true;
     const postoChegada = { id: busca.posto ?? 0, nome: busca.nome, externalId: "" };
     setPostoNexti(postoChegada);
