@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type ChangeEvent } from "react";
 import {
   Users,
   Plus,
@@ -17,6 +17,8 @@ import {
   UserCheck,
   CalendarPlus,
   Pencil,
+  Camera,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,12 +59,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import {
   listarUsuarios,
   criarUsuario,
   alterarPapel,
   alterarDepartamento,
+  salvarFotoUsuario,
+  removerFotoUsuario,
   redefinirSenha,
   excluirUsuario,
   type UsuarioAdmin,
@@ -184,6 +189,11 @@ function UsuariosPage() {
   const [deptUser, setDeptUser] = useState<UsuarioAdmin | null>(null);
   const [deptValue, setDeptValue] = useState("");
   const [savingDept, setSavingDept] = useState(false);
+
+  // Profile photo
+  const [photoUser, setPhotoUser] = useState<UsuarioAdmin | null>(null);
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const [savingPhoto, setSavingPhoto] = useState(false);
 
   // Password reset
   const [resetUser, setResetUser] = useState<UsuarioAdmin | null>(null);
@@ -321,6 +331,56 @@ function UsuariosPage() {
       toast.error(e.message || "Erro ao alterar departamento.");
     } finally {
       setSavingDept(false);
+    }
+  }
+
+  function handlePhotoSelect(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!(["image/jpeg", "image/png", "image/webp"] as string[]).includes(file.type)) {
+      toast.error("Escolha uma imagem JPG, PNG ou WEBP.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("A foto deve ter no máximo 2 MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setPhotoDataUrl(typeof reader.result === "string" ? reader.result : null);
+    reader.onerror = () => toast.error("Não foi possível ler a foto.");
+    reader.readAsDataURL(file);
+  }
+
+  async function handlePhotoSave() {
+    if (!photoUser?.id || !photoDataUrl) return;
+    try {
+      setSavingPhoto(true);
+      await salvarFotoUsuario({ data: { userId: photoUser.id, dataUrl: photoDataUrl } });
+      toast.success("Foto atualizada.");
+      setPhotoUser(null);
+      setPhotoDataUrl(null);
+      await fetchData();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao atualizar foto.");
+    } finally {
+      setSavingPhoto(false);
+    }
+  }
+
+  async function handlePhotoRemove() {
+    if (!photoUser?.id) return;
+    try {
+      setSavingPhoto(true);
+      await removerFotoUsuario({ data: { userId: photoUser.id } });
+      toast.success("Foto removida.");
+      setPhotoUser(null);
+      setPhotoDataUrl(null);
+      await fetchData();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao remover foto.");
+    } finally {
+      setSavingPhoto(false);
     }
   }
 
@@ -497,9 +557,12 @@ function UsuariosPage() {
                         <TableRow key={u.id} className="transition-colors hover:bg-muted/35">
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-3">
-                              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                                {(u.fullName || u.email).trim().slice(0, 1).toUpperCase()}
-                              </span>
+                              <Avatar className="size-8 border border-border">
+                                <AvatarImage src={u.avatarUrl ?? undefined} alt={u.fullName || u.email} className="object-cover" />
+                                <AvatarFallback className="bg-primary/10 text-xs font-bold text-primary">
+                                  {(u.fullName || u.email).trim().slice(0, 1).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
                               <span>{u.fullName || "—"}</span>
                             </div>
                           </TableCell>
@@ -535,6 +598,17 @@ function UsuariosPage() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Alterar foto"
+                                onClick={() => {
+                                  setPhotoUser(u);
+                                  setPhotoDataUrl(null);
+                                }}
+                              >
+                                <Camera className="size-4" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -946,6 +1020,69 @@ function UsuariosPage() {
               {savingPerms && <Loader2 className="mr-1.5 size-4 animate-spin" />}
               Salvar
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Editar departamento */}
+      <Dialog
+        open={!!photoUser}
+        onOpenChange={(open) => {
+          if (!open && !savingPhoto) {
+            setPhotoUser(null);
+            setPhotoDataUrl(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Foto do usuário</DialogTitle>
+            <DialogDescription>{photoUser?.fullName || photoUser?.email}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-3">
+            <Avatar className="size-28 border border-border">
+              <AvatarImage
+                src={photoDataUrl ?? photoUser?.avatarUrl ?? undefined}
+                alt={photoUser?.fullName || photoUser?.email || "Usuário"}
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-primary/10 text-3xl font-bold text-primary">
+                {(photoUser?.fullName || photoUser?.email || "U").trim().slice(0, 1).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <Label
+              htmlFor="user-photo"
+              className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium shadow-sm hover:bg-accent"
+            >
+              <Upload className="mr-2 size-4" />
+              Escolher foto
+            </Label>
+            <Input
+              id="user-photo"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              onChange={handlePhotoSelect}
+              disabled={savingPhoto}
+            />
+            <p className="text-center text-xs text-muted-foreground">JPG, PNG ou WEBP, até 2 MB.</p>
+          </div>
+          <DialogFooter className="sm:justify-between">
+            {photoUser?.avatarUrl ? (
+              <Button variant="destructive" onClick={handlePhotoRemove} disabled={savingPhoto}>
+                <Trash2 className="mr-1.5 size-4" />
+                Remover foto
+              </Button>
+            ) : <span />}
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setPhotoUser(null)} disabled={savingPhoto}>
+                Cancelar
+              </Button>
+              <Button onClick={handlePhotoSave} disabled={savingPhoto || !photoDataUrl}>
+                {savingPhoto && <Loader2 className="mr-1.5 size-4 animate-spin" />}
+                Salvar foto
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -51,6 +51,7 @@ export type UsuarioAdmin = {
   lastSignInAt: string | null;
   fullName?: string;
   department?: string;
+  avatarUrl?: string | null;
 };
 
 export const meuPapel = createServerFn({ method: "GET" })
@@ -81,15 +82,32 @@ export const listarUsuarios = createServerFn({ method: "GET" })
 
     const { data: profiles } = await (supabaseAdmin as any)
       .from("user_profiles")
-      .select("id, display_name, department");
-    const profileMap = new Map<string, { fullName: string; department: string }>(
-      (profiles ?? []).map(
-        (p: { id: string; display_name?: string | null; department?: string | null }) => [
+      .select("id, display_name, department, avatar_url");
+    const perfisComFoto = await Promise.all(
+      (profiles ?? []).map(async (p: {
+        id: string;
+        display_name?: string | null;
+        department?: string | null;
+        avatar_url?: string | null;
+      }) => {
+        let avatarUrl = p.avatar_url ?? null;
+        if (avatarUrl && !/^https?:\/\//i.test(avatarUrl)) {
+          const { data: signed } = await supabaseAdmin.storage
+            .from("user-avatars")
+            .createSignedUrl(avatarUrl, 60 * 60);
+          avatarUrl = signed?.signedUrl ?? null;
+        }
+        return [
           p.id,
-          { fullName: p.display_name ?? "", department: p.department ?? "" },
-        ],
-      ),
+          {
+            fullName: p.display_name ?? "",
+            department: p.department ?? "",
+            avatarUrl,
+          },
+        ] as const;
+      }),
     );
+    const profileMap = new Map(perfisComFoto);
 
     // Somente o superadmin pode ver a própria conta na listagem.
     const visibleUsers = callerIsSuper
@@ -106,6 +124,7 @@ export const listarUsuarios = createServerFn({ method: "GET" })
         lastSignInAt: u.last_sign_in_at ?? null,
         fullName: profile?.fullName ?? "",
         department: profile?.department ?? "",
+        avatarUrl: profile?.avatarUrl ?? null,
       };
     });
   });
@@ -232,6 +251,91 @@ export const alterarDepartamento = createServerFn({ method: "POST" })
       .from("user_profiles")
       .upsert({ id: data.userId, department: data.department }, { onConflict: "id" });
     if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+const AVATAR_MIME_TYPES = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+} as const;
+
+export const salvarFotoUsuario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { userId: string; dataUrl: string }) => {
+    if (!input.userId) throw new Error("Usuário inválido.");
+    const match = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(input.dataUrl);
+    if (!match) throw new Error("Escolha uma imagem JPG, PNG ou WEBP.");
+    const mimeType = match[1] as keyof typeof AVATAR_MIME_TYPES;
+    const base64 = match[2];
+    if (!base64 || Buffer.byteLength(base64, "base64") > 2 * 1024 * 1024) {
+      throw new Error("A foto deve ter no máximo 2 MB.");
+    }
+    return { userId: input.userId, mimeType, base64 };
+  })
+  .handler(async ({ data, context }) => {
+    await enforceRateLimit(context as unknown as ServerGuardContext, "usuarios.salvarFoto", 10, 60);
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (await alvoEhSuperadminProtegido(supabaseAdmin, context.userId, data.userId)) {
+      throw new Error("Somente o superadmin pode gerenciar esta conta.");
+    }
+
+    const extension = AVATAR_MIME_TYPES[data.mimeType];
+    const caminho = `${data.userId}/perfil.${extension}`;
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from("user-avatars")
+      .upload(caminho, Buffer.from(data.base64, "base64"), {
+        contentType: data.mimeType,
+        upsert: true,
+      });
+    if (uploadError) throw new Error(uploadError.message);
+
+    const { data: profile } = await (supabaseAdmin as any)
+      .from("user_profiles")
+      .select("avatar_url")
+      .eq("id", data.userId)
+      .maybeSingle();
+    const fotoAnterior = profile?.avatar_url as string | null | undefined;
+    const { error: profileError } = await (supabaseAdmin as any)
+      .from("user_profiles")
+      .upsert({ id: data.userId, avatar_url: caminho }, { onConflict: "id" });
+    if (profileError) {
+      await supabaseAdmin.storage.from("user-avatars").remove([caminho]);
+      throw new Error(profileError.message);
+    }
+    if (fotoAnterior && fotoAnterior !== caminho && !/^https?:\/\//i.test(fotoAnterior)) {
+      await supabaseAdmin.storage.from("user-avatars").remove([fotoAnterior]);
+    }
+    return { ok: true as const };
+  });
+
+export const removerFotoUsuario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { userId: string }) => {
+    if (!input.userId) throw new Error("Usuário inválido.");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    await enforceRateLimit(context as unknown as ServerGuardContext, "usuarios.removerFoto", 10, 60);
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (await alvoEhSuperadminProtegido(supabaseAdmin, context.userId, data.userId)) {
+      throw new Error("Somente o superadmin pode gerenciar esta conta.");
+    }
+    const { data: profile } = await (supabaseAdmin as any)
+      .from("user_profiles")
+      .select("avatar_url")
+      .eq("id", data.userId)
+      .maybeSingle();
+    const caminho = profile?.avatar_url as string | null | undefined;
+    const { error } = await (supabaseAdmin as any)
+      .from("user_profiles")
+      .upsert({ id: data.userId, avatar_url: null }, { onConflict: "id" });
+    if (error) throw new Error(error.message);
+    if (caminho && !/^https?:\/\//i.test(caminho)) {
+      await supabaseAdmin.storage.from("user-avatars").remove([caminho]);
+    }
     return { ok: true as const };
   });
 
