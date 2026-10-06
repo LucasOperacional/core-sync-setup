@@ -8,6 +8,12 @@ function escapar(texto: string) {
   );
 }
 
+/** Texto preto, sempre legível sobre o fundo branco da janela de informações. */
+const ESTILO_CAIXA =
+  "color:#000000;font-family:'Manrope',Arial,sans-serif;font-size:13px;line-height:1.5;";
+const ESTILO_TITULO = "color:#000000;font-size:14px;font-weight:700;";
+const ESTILO_LINK = "color:#000000;text-decoration:underline;";
+
 /** Mapa do Google com os leads encontrados na busca de prospecção. */
 export default function ProspeccaoMapsMapa({ leads }: { leads: LeadMaps[] }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -57,23 +63,26 @@ export default function ProspeccaoMapsMapa({ leads }: { leads: LeadMaps[] }) {
           map: mapa,
           title: l.nome,
         });
-        const conteudo = [
-          `<strong>${escapar(l.nome)}</strong>`,
-          l.categoria ? escapar(l.categoria) : "",
-          l.endereco ? escapar(l.endereco) : "",
-          l.telefone ? `Tel.: ${escapar(l.telefone)}` : "",
-          l.nota !== null
-            ? `Nota: ${l.nota.toFixed(1)} (${l.avaliacoes ?? 0})`
-            : "",
-          l.mapsUrl
-            ? `<a href="${escapar(l.mapsUrl)}" target="_blank" rel="noreferrer">Ver no Maps</a>`
-            : "",
-          l.site
-            ? `<a href="${escapar(l.site)}" target="_blank" rel="noreferrer">Site</a>`
-            : "",
-        ]
-          .filter(Boolean)
-          .join("<br/>");
+        const conteudo =
+          `<div style="${ESTILO_CAIXA}">` +
+          [
+            `<strong style="${ESTILO_TITULO}">${escapar(l.nome)}</strong>`,
+            l.categoria ? escapar(l.categoria) : "",
+            l.endereco ? escapar(l.endereco) : "",
+            l.telefone ? `Tel.: ${escapar(l.telefone)}` : "",
+            l.nota !== null
+              ? `Nota: ${l.nota.toFixed(1)} (${l.avaliacoes ?? 0})`
+              : "",
+            l.mapsUrl
+              ? `<a href="${escapar(l.mapsUrl)}" target="_blank" rel="noreferrer" style="${ESTILO_LINK}">Ver no Maps</a>`
+              : "",
+            l.site
+              ? `<a href="${escapar(l.site)}" target="_blank" rel="noreferrer" style="${ESTILO_LINK}">Site</a>`
+              : "",
+          ]
+            .filter(Boolean)
+            .join("<br/>") +
+          "</div>";
         marcador.addListener("click", () => {
           if (!info) return;
           info.setContent(conteudo);
