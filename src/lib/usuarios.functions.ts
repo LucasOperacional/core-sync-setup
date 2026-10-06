@@ -107,7 +107,10 @@ export const listarUsuarios = createServerFn({ method: "GET" })
         ] as const;
       }),
     );
-    const profileMap = new Map(perfisComFoto);
+    const profileMap = new Map<
+      string,
+      { fullName: string; department: string; avatarUrl: string | null }
+    >(perfisComFoto);
 
     // Somente o superadmin pode ver a própria conta na listagem.
     const visibleUsers = callerIsSuper
@@ -268,7 +271,8 @@ export const salvarFotoUsuario = createServerFn({ method: "POST" })
     if (!match) throw new Error("Escolha uma imagem JPG, PNG ou WEBP.");
     const mimeType = match[1] as keyof typeof AVATAR_MIME_TYPES;
     const base64 = match[2];
-    if (!base64 || Buffer.byteLength(base64, "base64") > 2 * 1024 * 1024) {
+    const tamanhoEstimado = Math.floor((base64?.length ?? 0) * 0.75);
+    if (!base64 || tamanhoEstimado > 2 * 1024 * 1024) {
       throw new Error("A foto deve ter no máximo 2 MB.");
     }
     return { userId: input.userId, mimeType, base64 };
