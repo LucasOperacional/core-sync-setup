@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { ClientOnly } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Download, Loader2, MapPin, Phone, Search, Star } from "lucide-react";
@@ -7,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buscarLeadsMaps, type LeadMaps } from "@/lib/prospeccao-maps.functions";
+
+const ProspeccaoMapsMapa = lazy(() => import("@/components/ProspeccaoMapsMapa"));
 
 export const Route = createFileRoute("/_authenticated/prospeccao-maps")({
   head: () => ({
@@ -170,6 +173,26 @@ function ProspeccaoMapsPage() {
             )}
           </CardContent>
         </Card>
+
+        {leads.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Mapa das empresas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-hidden rounded-lg border border-border">
+                <ClientOnly fallback={<div className="h-[420px] w-full bg-muted" />}>
+                  <Suspense fallback={<div className="h-[420px] w-full bg-muted" />}>
+                    <ProspeccaoMapsMapa leads={leads} />
+                  </Suspense>
+                </ClientOnly>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Clique em um marcador para ver os dados da empresa.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {leads.length > 0 && (
           <Card>
