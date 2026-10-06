@@ -1049,7 +1049,7 @@ export function RoteiroVisitaCampo() {
             </p>
           ) : (
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {postosProximos.map((p) => {
+            {postosProximos.map((p) => {
                 const selecionado = postoNexti?.id === p.id;
                 return (
                   <button
@@ -1064,7 +1064,18 @@ export function RoteiroVisitaCampo() {
                         : "border-border bg-background hover:border-primary/50"
                     }`}
                   >
-                    <span className="block font-semibold">{p.nome}</span>
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="font-semibold">{p.nome}</span>
+                      {p.qtdVisitas > 0 ? (
+                        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold">
+                          <span
+                            className="inline-block size-2.5 rounded-full"
+                            style={{ backgroundColor: COR_MAPA[semaforoDe(p.qtdVisitas)] }}
+                          />
+                          {p.qtdVisitas} {p.qtdVisitas === 1 ? "visita" : "visitas"} a fazer
+                        </span>
+                      ) : null}
+                    </span>
                     <span
                       className={
                         selecionado ? "text-primary-foreground/80" : "text-muted-foreground"
