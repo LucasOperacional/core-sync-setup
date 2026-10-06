@@ -408,7 +408,7 @@ export const postosProximosSupervisao = createServerFn({ method: "POST" })
         const { data: ajustes } = await context.supabase
           .from("postos_visitas_ajuste")
           .select("posto_id, quantidade")
-          .in("posto_id", ids);
+          .in("posto_id", ids.map(String));
         const metas = new Map<number, number>();
         for (const a of ajustes ?? [])
           metas.set(Number(a.posto_id), Math.max(0, Number(a.quantidade) || 0));
