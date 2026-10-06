@@ -393,12 +393,16 @@ export function RoteiroVisitaCampo() {
     if (chegadaAplicada.current) return;
     if (!busca?.nome) return;
     chegadaAplicada.current = true;
-    setPostoNexti({ id: busca.posto ?? 0, nome: busca.nome, externalId: "" });
-    // O início fica a cargo da localização: só começa quando estiver dentro do posto.
-    if (busca.iniciar) {
-      toast.info(`Posto ${busca.nome} selecionado — a visita começa sozinha ao entrar no posto.`);
+    const postoChegada = { id: busca.posto ?? 0, nome: busca.nome, externalId: "" };
+    setPostoNexti(postoChegada);
+    // Chegada confirmada pelo servidor: a visita já começa com o tempo
+    // contando (exceto para quem tem início manual).
+    if (busca.iniciar && !inicioAutomaticoOff) {
+      if (inicioPreenchimento.current === null) iniciarPreenchimento(postoChegada);
+    } else if (busca.iniciar) {
+      toast.info(`Posto ${busca.nome} selecionado — toque em Iniciar para começar a visita.`);
     }
-  }, [busca]);
+  }, [busca, inicioAutomaticoOff]);
 
   
   const [geo, setGeo] = useState<GeoCaptura>({
@@ -567,9 +571,13 @@ export function RoteiroVisitaCampo() {
   const postosProximos = useMemo(
     () =>
       (proximos?.ok ? proximos.postos : []).filter(
-        (p) => !postosPermitidos || postosPermitidos.has(normalizarNome(p.nome)),
+        (p) =>
+          !postosPermitidos ||
+          postosPermitidos.has(normalizarNome(p.nome)) ||
+          // O posto escolhido (ex.: pela chegada automática) nunca some da lista.
+          (postoNexti !== null && p.id === postoNexti.id),
       ),
-    [proximos, postosPermitidos],
+    [proximos, postosPermitidos, postoNexti],
   );
 
   // Preenche empresa e cliente do posto escolhido: primeiro tenta a lista de
