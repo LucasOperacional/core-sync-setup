@@ -146,6 +146,13 @@ export function isSuperAdmin(email: string): boolean {
   return SUPERADMIN_EMAILS.includes(email.toLowerCase().trim());
 }
 
+/**
+ * Telas cujas funções de servidor são exclusivas de administradores
+ * (gestão de usuários, importações/configurações, monitoramento e LGPD).
+ * O diretor recebe visão completa das demais áreas.
+ */
+const PAGINAS_SO_ADMIN = new Set<string>(["admin", "usuarios", "ia-operacional", "lgpd"]);
+
 export const listarPermissoes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { userId: string }) => {
@@ -284,6 +291,19 @@ export const minhasPermissoes = createServerFn({ method: "GET" })
             ...AVAILABLE_PAGES.map((p: (typeof AVAILABLE_PAGES)[number]) => ({
               pageKey: p.key as string,
               allowed: true,
+            })),
+            ...SIDEBAR_CATEGORIES.map((c) => ({ pageKey: c.key as string, allowed: true })),
+          ];
+        }
+
+        // Diretor: enxerga todas as áreas que cordenadores, supervisores e
+        // demais usuários veem. Só ficam de fora as telas de administração do
+        // sistema, que o servidor libera exclusivamente para administradores.
+        if (roleData?.role === "diretor") {
+          return [
+            ...AVAILABLE_PAGES.map((p: (typeof AVAILABLE_PAGES)[number]) => ({
+              pageKey: p.key as string,
+              allowed: !PAGINAS_SO_ADMIN.has(p.key),
             })),
             ...SIDEBAR_CATEGORIES.map((c) => ({ pageKey: c.key as string, allowed: true })),
           ];
