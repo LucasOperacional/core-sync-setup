@@ -53,6 +53,7 @@ import { useSearch } from "@tanstack/react-router";
 import { nomeDoUsuario, useSessao } from "@/hooks/use-sessao";
 import { evolutionGoEnviarTexto } from "@/lib/evolution-go.functions";
 import { notificarFimControl, notificarInicioControl } from "@/lib/control-notificacao.functions";
+import { semaforoDe, COR_MAPA } from "@/lib/visitas-semaforo";
 
 const OPCOES: { valor: RespostaValor; label: string; icon: typeof CheckCircle2; classe: string }[] =
   [
