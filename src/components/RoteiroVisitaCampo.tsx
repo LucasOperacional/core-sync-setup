@@ -356,19 +356,20 @@ export function RoteiroVisitaCampo() {
     })();
   }
 
-  function iniciarPreenchimento() {
+  function iniciarPreenchimento(postoOverride?: PostoNexti | null) {
+    const posto = postoOverride ?? postoNexti;
     iniciadoPeloToque.current = true;
     const inicio = Date.now();
     inicioPreenchimento.current = inicio;
     setIniciadoEm(inicio);
     setAgora(inicio);
 
-    avisarControlIniciado(postoNexti?.nome ?? "", postoNexti?.id ?? 0);
+    avisarControlIniciado(posto?.nome ?? "", posto?.id ?? 0);
 
 
     const numero = (window.localStorage.getItem("evolution-go-numero-notificacao") ?? "").replace(/\D/g, "");
     if (numero) {
-      const textoChegada = `📍 Supervisor chegou ao posto.\nPosto: ${postoNexti?.nome ?? "Não informado"}\nInício: ${new Date(inicio).toLocaleString("pt-BR")}`;
+      const textoChegada = `📍 Supervisor chegou ao posto.\nPosto: ${posto?.nome ?? "Não informado"}\nInício: ${new Date(inicio).toLocaleString("pt-BR")}`;
       void (async () => {
         try {
           await enviarMensagemEvolution({ data: { numero, texto: textoChegada } });
