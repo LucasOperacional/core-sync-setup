@@ -150,6 +150,12 @@ const POSTOS_OCULTOS_NOME = [
   "AFASTADOS CONSERVACAO",
 ];
 
+/** REGRA: true quando o nome do posto é administrativo/interno e nunca deve aparecer (mapa, listas, postos próximos). */
+export function nomePostoOculto(nome: string): boolean {
+  const n = normalizarNomePosto(nome ?? "");
+  return POSTOS_OCULTOS_NOME.some((o) => n.includes(o));
+}
+
 function normalizarNomePosto(texto: string): string {
   return texto
     .normalize("NFD")
