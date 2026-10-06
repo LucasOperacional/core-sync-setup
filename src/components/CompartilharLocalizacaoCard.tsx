@@ -14,6 +14,7 @@ import {
   verificarChegadaPosto,
 } from "@/lib/chegada-posto.functions";
 import { avisarNoCelular, pedirPermissaoAviso } from "@/lib/aviso-chegada";
+import { ehAppNativo, iniciarGpsNativo } from "@/lib/gps-nativo";
 
 const BEM_VINDO_KEY = "bem_vindo_visto_em";
 /** Intervalo do batimento que mantém o envio mesmo em segundo plano. */
@@ -364,6 +365,20 @@ export function CompartilharLocalizacaoCard() {
 
   const iniciar = useCallback(() => {
     if (watchRef.current !== null) return;
+    // App Android: GPS em segundo plano com aviso fixo "Rastreamento ativo".
+    if (ehAppNativo()) {
+      watchRef.current = -1;
+      void iniciarGpsNativo(
+        (pos) => void enviar(pos),
+        (msg) => {
+          setErro(msg);
+          watchRef.current = null;
+          setAtivo(false);
+        },
+      );
+      setAtivo(true);
+      return;
+    }
     if (!("geolocation" in navigator)) return;
     watchRef.current = navigator.geolocation.watchPosition(
       (pos) => void enviar(pos),
