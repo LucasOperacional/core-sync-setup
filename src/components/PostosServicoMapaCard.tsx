@@ -143,17 +143,19 @@ export function PostosServicoMapaCard() {
       filtrados
         .filter((p) => p.latitude !== null && p.longitude !== null && !ocultarNoMapa(p, verNoturno))
         .map((p) => {
-          // Cor da bolinha = quantidade editada em "Visitas por posto" (ou a automática).
-          const total = ajustes[String(p.id)] ?? (p.visitasRealizadas || 0);
+          // Cor da bolinha = meta editada em "Visitas por posto" (ou a automática).
+          const meta = ajustes[String(p.id)];
+          const feitas = p.visitasRealizadas || 0;
+          const total = meta ?? feitas;
+          const partes = [
+            p.gerenteArea ? `Gerente: ${p.gerenteArea}` : null,
+            meta !== undefined ? `${feitas} de ${meta} visitas feitas` : `${feitas} ${feitas === 1 ? "visita feita" : "visitas feitas"}`,
+            p.ultimaVisita ? `última ${formatarDataVisita(p.ultimaVisita)}` : null,
+          ].filter(Boolean);
           return {
             ...p,
             corMapa: COR_MAPA[semaforoDe(total)],
-            nome:
-              total > 0
-                ? `${p.nome} (${total} ${total === 1 ? "visita" : "visitas"}${
-                    p.ultimaVisita ? ` · última ${formatarDataVisita(p.ultimaVisita)}` : ""
-                  })`
-                : p.nome,
+            nome: `${p.nome} (${partes.join(" · ")})`,
           };
         }),
     [filtrados, verNoturno, ajustes],
@@ -235,6 +237,7 @@ export function PostosServicoMapaCard() {
               <tr className="text-left text-xs uppercase text-muted-foreground">
                 <th className="px-2 py-2">Posto</th>
                 <th className="px-2 py-2">Cliente</th>
+                <th className="px-2 py-2">Gerente de área</th>
                 <th className="px-2 py-2">Endereço completo</th>
                 <th className="px-2 py-2 text-center">Visitas</th>
                 <th className="px-2 py-2"></th>
@@ -245,9 +248,16 @@ export function PostosServicoMapaCard() {
                 <tr key={p.id} className="border-t border-border">
                   <td className="px-2 py-2 font-medium">{p.nome}</td>
                   <td className="px-2 py-2 text-muted-foreground">{p.cliente || "—"}</td>
+                  <td className="px-2 py-2 text-muted-foreground">{p.gerenteArea || "—"}</td>
                   <td className="px-2 py-2 text-muted-foreground">{p.enderecoCompleto || "—"}</td>
                   <td className="px-2 py-2 text-center">
-                    <span className="font-bold text-primary">{p.visitasRealizadas || 0}</span>
+                    <span className="font-bold text-primary">
+                      {p.visitasRealizadas || 0}
+                      {ajustes[String(p.id)] !== undefined ? ` / ${ajustes[String(p.id)]}` : ""}
+                    </span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      {ajustes[String(p.id)] !== undefined ? "feitas / a fazer" : "feitas"}
+                    </span>
                     {p.ultimaVisita ? (
                       <span className="block text-[11px] text-muted-foreground">
                         última {formatarDataVisita(p.ultimaVisita)}
