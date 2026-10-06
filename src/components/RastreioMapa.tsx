@@ -41,7 +41,7 @@ export default function RastreioMapa({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapaRef = useRef<L.Map | null>(null);
   const camadaRef = useRef<L.TileLayer | null>(null);
-  const marcadoresRef = useRef<Map<string, L.CircleMarker>>(new Map());
+  const marcadoresRef = useRef<Map<string, L.Marker>>(new Map());
   const postosRef = useRef<Map<number, L.CircleMarker>>(new Map());
   const [tema, setTema] = useState<TemaMapa>("claro");
   const [pronto, setPronto] = useState(false);
@@ -133,14 +133,22 @@ export default function RastreioMapa({
       if (!Number.isFinite(p.latitude) || !Number.isFinite(p.longitude)) continue;
       vistos.add(p.userId);
       const cor = corDoUsuario(p.userId);
-      const rotulo = `<strong>${escapar(p.nome)}</strong><br/>${new Date(p.capturadoEm).toLocaleString("pt-BR")}${p.tipoSinal ? `<br/>Sinal: ${escapar(p.tipoSinal.toUpperCase())}` : ""}<br/><a href="${linkLocal(p.latitude, p.longitude)}" target="_blank" rel="noopener noreferrer">Abrir no OpenStreetMap</a><br/><a href="${linkStreetView(p.latitude, p.longitude)}" target="_blank" rel="noopener noreferrer">Ver no Street View</a>`;
+      const inicial = escapar((p.nome || "?").trim().charAt(0).toUpperCase() || "?");
+      const fotoTag = p.fotoUrl
+        ? `<img src="${escapar(p.fotoUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.remove()"/>`
+        : inicial;
+      const icone = L.divIcon({
+        className: "",
+        html: `<div style="width:38px;height:38px;border-radius:50%;border:3px solid ${cor};background:${cor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,.45)">${fotoTag}</div>`,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19],
+      });
+      const rotulo = `${p.fotoUrl ? `<img src="${escapar(p.fotoUrl)}" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;margin-bottom:6px"/>` : ""}<br/><strong>${escapar(p.nome)}</strong><br/>${new Date(p.capturadoEm).toLocaleString("pt-BR")}${p.tipoSinal ? `<br/>Sinal: ${escapar(p.tipoSinal.toUpperCase())}` : ""}<br/><a href="${linkLocal(p.latitude, p.longitude)}" target="_blank" rel="noopener noreferrer">Abrir no OpenStreetMap</a><br/><a href="${linkStreetView(p.latitude, p.longitude)}" target="_blank" rel="noopener noreferrer">Ver no Street View</a>`;
       let marcador = marcadoresRef.current.get(p.userId);
       if (marcador) {
-        marcador.setLatLng([p.latitude, p.longitude]).setStyle({ fillColor: cor }).setPopupContent(rotulo);
+        marcador.setLatLng([p.latitude, p.longitude]).setIcon(icone).setPopupContent(rotulo);
       } else {
-        marcador = L.circleMarker([p.latitude, p.longitude], {
-          radius: 9, color: "#ffffff", weight: 2, fillColor: cor, fillOpacity: 0.9,
-        }).addTo(mapa).bindPopup(rotulo);
+        marcador = L.marker([p.latitude, p.longitude], { icon: icone }).addTo(mapa).bindPopup(rotulo);
         marcadoresRef.current.set(p.userId, marcador);
       }
     }
