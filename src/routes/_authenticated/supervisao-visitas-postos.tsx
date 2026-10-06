@@ -95,7 +95,7 @@ function VisitasPostosPage() {
     return postos.filter((p) => {
       if (filtroCor && p.cor !== filtroCor) return false;
       if (!t) return true;
-      return [p.nome, p.cliente, p.cidade].some((x) => (x ?? "").toLowerCase().includes(t));
+      return [p.nome, p.cliente, p.cidade, p.gerenteArea].some((x) => (x ?? "").toLowerCase().includes(t));
     });
   }, [postos, busca, filtroCor]);
 
@@ -209,7 +209,15 @@ function VisitasPostosPage() {
                         </p>
                         <p className="truncate text-xs text-muted-foreground">
                           {[p.cliente, p.cidade, p.uf].filter(Boolean).join(" · ") || "—"}
-                          {p.editado && ` · editado (automático: ${p.auto})`}
+                        </p>
+                        <p className="truncate text-xs">
+                          <span className="font-semibold text-primary">
+                            Gerente: {p.gerenteArea || "sem gerente"}
+                          </span>
+                          {" · "}
+                          <span className="font-semibold">
+                            {p.editado ? `${p.auto} de ${p.total} visitas feitas` : `${p.auto} visitas feitas`}
+                          </span>
                         </p>
                       </div>
                       <div className="flex items-center gap-1">
