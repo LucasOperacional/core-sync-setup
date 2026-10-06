@@ -122,7 +122,9 @@ export const listarLocalizacoesAtuais = createServerFn({ method: "GET" })
     // Foto de perfil de cada pessoa (bucket privado user-avatars, URL assinada de 1h).
     const ids = [...porPessoa.keys()];
     if (ids.length > 0) {
-      const { data: perfis } = await supabase
+      // Gestor já verificado acima; usa acesso privilegiado só para ler as fotos.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: perfis } = await supabaseAdmin
         .from("user_profiles")
         .select("id, avatar_url")
         .in("id", ids);
@@ -132,7 +134,7 @@ export const listarLocalizacoesAtuais = createServerFn({ method: "GET" })
         if (/^https?:\/\//i.test(perfil.avatar_url)) {
           pos.fotoUrl = perfil.avatar_url;
         } else {
-          const { data: assinada } = await supabase.storage
+          const { data: assinada } = await supabaseAdmin.storage
             .from("user-avatars")
             .createSignedUrl(perfil.avatar_url, 60 * 60);
           pos.fotoUrl = assinada?.signedUrl ?? null;
