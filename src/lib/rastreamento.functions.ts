@@ -122,7 +122,9 @@ export const listarLocalizacoesAtuais = createServerFn({ method: "GET" })
     // Foto de perfil de cada pessoa (bucket privado user-avatars, URL assinada de 1h).
     const ids = [...porPessoa.keys()];
     if (ids.length > 0) {
-      const { data: perfis } = await supabase
+      // Gestor já verificado acima; usa acesso privilegiado só para ler as fotos.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: perfis } = await supabaseAdmin
         .from("user_profiles")
         .select("id, avatar_url")
         .in("id", ids);
@@ -132,7 +134,7 @@ export const listarLocalizacoesAtuais = createServerFn({ method: "GET" })
         if (/^https?:\/\//i.test(perfil.avatar_url)) {
           pos.fotoUrl = perfil.avatar_url;
         } else {
-          const { data: assinada } = await supabase.storage
+          const { data: assinada } = await supabaseAdmin.storage
             .from("user-avatars")
             .createSignedUrl(perfil.avatar_url, 60 * 60);
           pos.fotoUrl = assinada?.signedUrl ?? null;
@@ -282,4 +284,26 @@ export const relatorioAcompanhamento = createServerFn({ method: "POST" })
     }
 
     return resultado.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  });
+
+/** Foto de perfil de um supervisor pelo nome exibido (gestores). */
+export const fotoSupervisorPorNome = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { nome: string }) => ({ nome: String(d?.nome ?? "").slice(0, 200) }))
+  .handler(async ({ data, context }): Promise<string | null> => {
+    const { supabase, userId } = context;
+    let autorizado = false;
+    for (const papel of PAPEIS_GESTOR) {
+      const { data: ok } = await supabase.rpc("has_role", { _user_id: userId, _role: papel });
+      if (ok === true) { autorizado = true; break; }
+    }
+    if (!autorizado || !data.nome) return null;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: perfis } = await supabaseAdmin
+      .from("user_profiles").select("avatar_url").ilike("display_name", data.nome).limit(1);
+    const caminho = perfis?.[0]?.avatar_url ?? null;
+    if (!caminho) return null;
+    if (/^https?:\/\//i.test(caminho)) return caminho;
+    const { data: s } = await supabaseAdmin.storage.from("user-avatars").createSignedUrl(caminho, 3600);
+    return s?.signedUrl ?? null;
   });
