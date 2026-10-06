@@ -147,6 +147,26 @@ function VisitasPostosPage() {
             </CardDescription>
           </CardHeader>
         </button>
+        <div className="flex items-center gap-2 border-b border-border/50 bg-muted/20 px-4 py-3">
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={busca}
+              onChange={(e) => {
+                setBusca(e.target.value);
+                if (e.target.value.trim()) setAberto(true);
+              }}
+              placeholder="Pesquisar posto pelo nome, cliente ou cidade..."
+              className="pl-9"
+              aria-label="Pesquisar posto"
+            />
+          </div>
+          {busca && (
+            <Button size="sm" variant="ghost" className="h-8 shrink-0" onClick={() => setBusca("")}>
+              Limpar
+            </Button>
+          )}
+        </div>
         {aberto && (
         <CardContent className="space-y-4 pt-4">
           {carregando ? (
@@ -170,10 +190,6 @@ function VisitasPostosPage() {
                     {CORES[cor].rotulo}: {contagem[cor]}
                   </button>
                 ))}
-                <div className="relative ms-auto w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar posto, cliente ou cidade..." className="pl-9" />
-                </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">{visiveis.length} de {postos.length} postos exibidos.</p>
