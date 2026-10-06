@@ -177,6 +177,26 @@ function ProspeccaoMapsPage() {
         {leads.length > 0 && (
           <Card>
             <CardHeader>
+              <CardTitle className="text-base">Mapa das empresas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-hidden rounded-lg border border-border">
+                <ClientOnly fallback={<div className="h-[420px] w-full bg-muted" />}>
+                  <Suspense fallback={<div className="h-[420px] w-full bg-muted" />}>
+                    <ProspeccaoMapsMapa leads={leads} />
+                  </Suspense>
+                </ClientOnly>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Clique em um marcador para ver os dados da empresa.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {leads.length > 0 && (
+          <Card>
+            <CardHeader>
               <CardTitle className="text-base">
                 {leads.length} empresa(s) encontrada(s)
               </CardTitle>
