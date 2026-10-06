@@ -25,7 +25,7 @@ export default function MapaRotaVisitas({ pontos }: { pontos: PontoRota[] }) {
         iconAnchor: [13, 13],
       });
       L.marker([p.lat, p.lng], { icon })
-        .bindPopup(`<b>${p.ordem}. ${p.posto}</b><br/>${p.data}`)
+        .bindPopup(`<b>${p.ordem}. ${p.posto}</b><br/>${p.data}<br/><a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat},${p.lng}" target="_blank" rel="noopener noreferrer">Ver no Street View</a>`)
         .addTo(map);
     });
     if (latlngs.length) map.fitBounds(L.latLngBounds(latlngs), { padding: [30, 30], maxZoom: 15 });
