@@ -28,7 +28,7 @@ export default function ProspeccaoMapsMapa({ leads }: { leads: LeadMaps[] }) {
         });
         infoRef.current = new maps.InfoWindow();
         // Redesenha assim que o mapa estiver pronto, mesmo que os leads já tenham chegado.
-        setImmediate(() => window.dispatchEvent(new Event("leads-maps-pronto")));
+        window.dispatchEvent(new Event("leads-maps-pronto"));
       })
       .catch((e) => console.error("Falha ao carregar o Google Maps:", e));
     return () => {
