@@ -30,6 +30,7 @@ export function RelatorioRotaVisitas({ supervisor }: { supervisor: string }) {
   const [pontos, setPontos] = useState<PontoRota[] | null>(null);
   const [semLocal, setSemLocal] = useState<string[]>([]);
   const [carregando, setCarregando] = useState(false);
+  const [fotoUrl, setFotoUrl] = useState<string | null>(null);
 
   async function gerar() {
     setCarregando(true);

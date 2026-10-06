@@ -43,6 +43,6 @@ export default function MapaRotaVisitas({ pontos, supervisorNome, supervisorFoto
     return () => {
       map.remove();
     };
-  }, [pontos]);
+  }, [pontos, supervisorNome, supervisorFotoUrl]);
   return <div ref={ref} className="h-[480px] w-full rounded-lg border border-border" />;
 }
