@@ -1094,8 +1094,17 @@ export function RoteiroVisitaCampo() {
           {postoNexti ? (
             <p className="mt-3 text-xs text-muted-foreground">
               Posto selecionado:{" "}
-              <span className="font-semibold text-foreground">{postoNexti.nome}</span> — responda o
-              questionário abaixo.
+              <span className="font-semibold text-foreground">{postoNexti.nome}</span>
+              {(() => {
+                const meta = postosProximos.find((p) => p.id === postoNexti.id)?.qtdVisitas ?? 0;
+                return meta > 0 ? (
+                  <span className="font-semibold text-foreground">
+                    {" "}
+                    · meta de {meta} {meta === 1 ? "visita" : "visitas"}
+                  </span>
+                ) : null;
+              })()}
+              {" "}— responda o questionário abaixo.
             </p>
           ) : null}
         </div>
