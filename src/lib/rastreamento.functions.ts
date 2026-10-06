@@ -13,6 +13,7 @@ export interface PosicaoRastreio {
   tipoSinal: string | null;
   bateria: number | null;
   capturadoEm: string;
+  fotoUrl: string | null;
 }
 
 const PAPEIS_GESTOR = ["admin", "diretor", "cordenador"] as const;
@@ -114,7 +115,29 @@ export const listarLocalizacoesAtuais = createServerFn({ method: "GET" })
         tipoSinal: linha.tipo_sinal ?? null,
         bateria: linha.bateria === null ? null : Number(linha.bateria),
         capturadoEm: linha.capturado_em,
+        fotoUrl: null,
       });
+    }
+
+    // Foto de perfil de cada pessoa (bucket privado user-avatars, URL assinada de 1h).
+    const ids = [...porPessoa.keys()];
+    if (ids.length > 0) {
+      const { data: perfis } = await supabase
+        .from("user_profiles")
+        .select("id, avatar_url")
+        .in("id", ids);
+      for (const perfil of perfis ?? []) {
+        const pos = porPessoa.get(perfil.id);
+        if (!pos || !perfil.avatar_url) continue;
+        if (/^https?:\/\//i.test(perfil.avatar_url)) {
+          pos.fotoUrl = perfil.avatar_url;
+        } else {
+          const { data: assinada } = await supabase.storage
+            .from("user-avatars")
+            .createSignedUrl(perfil.avatar_url, 60 * 60);
+          pos.fotoUrl = assinada?.signedUrl ?? null;
+        }
+      }
     }
 
     return [...porPessoa.values()].sort(
