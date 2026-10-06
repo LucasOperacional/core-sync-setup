@@ -154,6 +154,7 @@ export interface ParadaAcompanhamento {
   latitude: number;
   longitude: number;
   pontos: number;
+  posto: string | null;
 }
 
 export interface LinhaAcompanhamento {
@@ -164,6 +165,8 @@ export interface LinhaAcompanhamento {
   ultimoEm: string;
   distanciaKm: number;
   paradas: ParadaAcompanhamento[];
+  /** Trajeto completo (amostrado) em ordem: [lat, lon]. */
+  trajeto: [number, number][];
 }
 
 function distanciaKm(aLat: number, aLon: number, bLat: number, bLon: number) {
@@ -258,6 +261,7 @@ export const relatorioAcompanhamento = createServerFn({ method: "POST" })
             latitude: primeiro.lat,
             longitude: primeiro.lon,
             pontos: grupo.length,
+            posto: null,
           });
         }
       };
@@ -280,7 +284,35 @@ export const relatorioAcompanhamento = createServerFn({ method: "POST" })
         ultimoEm: pts[pts.length - 1]!.em,
         distanciaKm: Math.round(km * 10) / 10,
         paradas,
+        trajeto: (() => {
+          const passo = Math.max(1, Math.ceil(pts.length / 600));
+          const t = pts.filter((_, i) => i % passo === 0 || i === pts.length - 1);
+          return t.map((p) => [p.lat, p.lon] as [number, number]);
+        })(),
       });
+    }
+
+    // Identifica o posto (NEXTI) de cada parada: o mais próximo em até 250 m.
+    const temParada = resultado.some((r) => r.paradas.length > 0);
+    if (temParada) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: postos } = await supabaseAdmin
+        .from("nexti_workplaces")
+        .select("name,latitude,longitude")
+        .eq("active", true)
+        .not("latitude", "is", null)
+        .not("longitude", "is", null)
+        .limit(5000);
+      for (const r of resultado) {
+        for (const pa of r.paradas) {
+          let melhor: { nome: string; d: number } | null = null;
+          for (const po of postos ?? []) {
+            const d = distanciaKm(pa.latitude, pa.longitude, Number(po.latitude), Number(po.longitude));
+            if (d <= 0.25 && (!melhor || d < melhor.d)) melhor = { nome: String(po.name ?? ""), d };
+          }
+          pa.posto = melhor?.nome || null;
+        }
+      }
     }
 
     return resultado.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
