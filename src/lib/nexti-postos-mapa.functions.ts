@@ -39,6 +39,8 @@ export interface PostoMapa {
   /** Data da visita mais recente feita pela Supervisão de Campo. */
   ultimaVisita?: string | null;
   ultimoSupervisor?: string | null;
+  /** Gerente de área dono do card onde o posto está. */
+  gerenteArea?: string | null;
 }
 
 type LinhaPosto = {
@@ -293,6 +295,20 @@ export const listarPostosMapa = createServerFn({ method: "GET" })
       if (roteiros.length < passo) break;
     }
 
+    // Gerente de área de cada posto (cards de postos por gerente).
+    const soG = (s: string) => norm(s).replace(/[^A-Z0-9]/g, "");
+    const { data: cardsG } = await supabase.from("areas_gerentes_postos").select("gerente_nome,posto_nome");
+    const listaG = ((cardsG ?? []) as { gerente_nome: string; posto_nome: string }[])
+      .map((c) => ({ g: c.gerente_nome, n: soG(c.posto_nome) }))
+      .filter((c) => c.n);
+    const gerentePorId = new Map<number, string>();
+    for (const p of postos) {
+      const n = soG(p.nome);
+      const ex = listaG.find((c) => c.n === n) ??
+        listaG.find((c) => c.n.length >= 3 && n.length >= 3 && (n.includes(c.n) || c.n.includes(n)));
+      if (ex) gerentePorId.set(p.id, ex.g);
+    }
+
     // Usuário vinculado a um card de gerente vê apenas os postos daquele card.
     let permitidos: string[] | null = null;
     const uid = (context as { userId?: string }).userId;
@@ -318,6 +334,7 @@ export const listarPostosMapa = createServerFn({ method: "GET" })
           visitasRealizadas: contagem.get(p.id) || 0,
           ultimaVisita: ultima.get(p.id)?.data ?? null,
           ultimoSupervisor: ultima.get(p.id)?.supervisor || null,
+          gerenteArea: gerentePorId.get(p.id) ?? null,
         }));
       }
     }
@@ -327,6 +344,7 @@ export const listarPostosMapa = createServerFn({ method: "GET" })
       visitasRealizadas: contagem.get(p.id) || 0,
       ultimaVisita: ultima.get(p.id)?.data ?? null,
       ultimoSupervisor: ultima.get(p.id)?.supervisor || null,
+      gerenteArea: gerentePorId.get(p.id) ?? null,
     }));
   });
 
