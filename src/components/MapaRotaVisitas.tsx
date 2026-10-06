@@ -4,7 +4,13 @@ import "leaflet/dist/leaflet.css";
 
 export type PontoRota = { lat: number; lng: number; posto: string; data: string; ordem: number };
 
-export default function MapaRotaVisitas({ pontos }: { pontos: PontoRota[] }) {
+interface Props {
+  pontos: PontoRota[];
+  supervisorNome?: string | null;
+  supervisorFotoUrl?: string | null;
+}
+
+export default function MapaRotaVisitas({ pontos, supervisorNome, supervisorFotoUrl }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!ref.current) return;
@@ -16,6 +22,10 @@ export default function MapaRotaVisitas({ pontos }: { pontos: PontoRota[] }) {
     if (latlngs.length > 1) {
       L.polyline(latlngs, { color: "#2563eb", weight: 4, opacity: 0.8, dashArray: "8 6" }).addTo(map);
     }
+    const fotoTag = supervisorFotoUrl
+      ? `<img src="${supervisorFotoUrl}" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;margin-bottom:4px"/><br/>`
+      : "";
+    const nomeTag = supervisorNome ? `<b>${supervisorNome}</b><br/>` : "";
     pontos.forEach((p, i) => {
       const cor = i === 0 ? "#22c55e" : i === pontos.length - 1 ? "#ef4444" : "#2563eb";
       const icon = L.divIcon({
@@ -25,7 +35,7 @@ export default function MapaRotaVisitas({ pontos }: { pontos: PontoRota[] }) {
         iconAnchor: [13, 13],
       });
       L.marker([p.lat, p.lng], { icon })
-        .bindPopup(`<b>${p.ordem}. ${p.posto}</b><br/>${p.data}<br/><a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat},${p.lng}" target="_blank" rel="noopener noreferrer">Ver no Street View</a>`)
+        .bindPopup(`${fotoTag}${nomeTag}<b>${p.ordem}. ${p.posto}</b><br/>${p.data}<br/><a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat},${p.lng}" target="_blank" rel="noopener noreferrer">Ver no Street View</a>`)
         .addTo(map);
     });
     if (latlngs.length) map.fitBounds(L.latLngBounds(latlngs), { padding: [30, 30], maxZoom: 15 });
