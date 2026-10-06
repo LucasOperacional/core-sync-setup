@@ -301,6 +301,8 @@ export type PostoProximo = {
   empresa: string;
   cidade: string;
   distanciaKm: number;
+  /** Meta de visitas definida pelo superadmin em "Quantidade de visitas por posto". */
+  qtdVisitas: number;
 };
 
 /** REGRA: postos com inicial "TS" (ex.: "TS - ...") não aparecem na supervisão. */
@@ -387,6 +389,7 @@ export const postosProximosSupervisao = createServerFn({ method: "POST" })
           cliente: String(linha.client_name ?? ""),
           empresa: String(linha.company_name ?? ""),
           cidade: String(linha.city ?? ""),
+          qtdVisitas: 0,
           distanciaKm: distanciaKm(
             data.latitude,
             data.longitude,
@@ -398,6 +401,19 @@ export const postosProximosSupervisao = createServerFn({ method: "POST" })
         .filter((p) => !permitidos || permitidos.has(normalizar(p.nome)))
         .sort((a, b) => a.distanciaKm - b.distanciaKm)
         .slice(0, 8);
+
+      // Meta de visitas de cada posto (tabela "Quantidade de visitas por posto").
+      const ids = postos.map((p) => p.id);
+      if (ids.length > 0) {
+        const { data: ajustes } = await context.supabase
+          .from("postos_visitas_ajuste")
+          .select("posto_id, quantidade")
+          .in("posto_id", ids);
+        const metas = new Map<number, number>();
+        for (const a of ajustes ?? [])
+          metas.set(Number(a.posto_id), Math.max(0, Number(a.quantidade) || 0));
+        for (const p of postos) p.qtdVisitas = metas.get(p.id) ?? 0;
+      }
 
       return { ok: true, erro: "", postos };
     } catch (e) {
