@@ -23,3 +23,4 @@
 - [x] Permitir remover um posto da lista de cada gerente direto no card, com confirmação antes de apagar.
 - [x] "Postos próximos a você": mostrar apenas postos do card vinculado ao usuário (ignorar os demais)
 - [x] Card "Quantidade de visitas por posto": campo de pesquisa sempre visível (abre o card sozinho ao digitar) e botão Limpar.
+- [x] Permitir adicionar, substituir e remover a foto de cada usuário na página Usuários.
