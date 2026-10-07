@@ -356,13 +356,32 @@ export function RoteiroVisitaCampo() {
     })();
   }
 
-  function iniciarPreenchimento(postoOverride?: PostoNexti | null) {
+  function iniciarPreenchimento(
+    postoOverride?: PostoNexti | null,
+    origem: "chegada" | "geofence" | "manual" = "manual",
+  ) {
     const posto = postoOverride ?? postoNexti;
     iniciadoPeloToque.current = true;
     const inicio = Date.now();
     inicioPreenchimento.current = inicio;
     setIniciadoEm(inicio);
     setAgora(inicio);
+
+    // Início automático: guarda horário e localização confirmada para conferência.
+    if (origem !== "manual") {
+      const latitude = origem === "chegada" ? (busca.lat ?? geo.latitude) : geo.latitude;
+      const longitude = origem === "chegada" ? (busca.lng ?? geo.longitude) : geo.longitude;
+      void registrarInicio({
+        data: {
+          postoNextiId: posto?.id ?? null,
+          postoNome: posto?.nome ?? "",
+          latitude,
+          longitude,
+          precisaoMetros: geo.precisao,
+          origem,
+        },
+      }).catch(() => undefined);
+    }
 
     avisarControlIniciado(posto?.nome ?? "", posto?.id ?? 0);
 
