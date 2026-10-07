@@ -53,6 +53,7 @@ import { useSearch } from "@tanstack/react-router";
 import { nomeDoUsuario, useSessao } from "@/hooks/use-sessao";
 import { evolutionGoEnviarTexto } from "@/lib/evolution-go.functions";
 import { notificarFimControl, notificarInicioControl } from "@/lib/control-notificacao.functions";
+import { registrarInicioAutomatico } from "@/lib/inicios-automaticos.functions";
 import { semaforoDe, COR_MAPA } from "@/lib/visitas-semaforo";
 
 const OPCOES: { valor: RespostaValor; label: string; icon: typeof CheckCircle2; classe: string }[] =
@@ -344,6 +345,7 @@ export function RoteiroVisitaCampo() {
   const enviarMensagemEvolution = useServerFn(evolutionGoEnviarTexto);
   const avisarInicioControl = useServerFn(notificarInicioControl);
   const avisarFimControl = useServerFn(notificarFimControl);
+  const registrarInicio = useServerFn(registrarInicioAutomatico);
 
   /** Avisa no WhatsApp de notificação que um control foi iniciado. */
   function avisarControlIniciado(nomePosto: string, idPosto: number) {
@@ -356,13 +358,32 @@ export function RoteiroVisitaCampo() {
     })();
   }
 
-  function iniciarPreenchimento(postoOverride?: PostoNexti | null) {
+  function iniciarPreenchimento(
+    postoOverride?: PostoNexti | null,
+    origem: "chegada" | "geofence" | "manual" = "manual",
+  ) {
     const posto = postoOverride ?? postoNexti;
     iniciadoPeloToque.current = true;
     const inicio = Date.now();
     inicioPreenchimento.current = inicio;
     setIniciadoEm(inicio);
     setAgora(inicio);
+
+    // Início automático: guarda horário e localização confirmada para conferência.
+    if (origem !== "manual") {
+      const latitude = origem === "chegada" ? (busca.lat ?? geo.latitude) : geo.latitude;
+      const longitude = origem === "chegada" ? (busca.lng ?? geo.longitude) : geo.longitude;
+      void registrarInicio({
+        data: {
+          postoNextiId: posto?.id ?? null,
+          postoNome: posto?.nome ?? "",
+          latitude,
+          longitude,
+          precisaoMetros: geo.precisao,
+          origem,
+        },
+      }).catch(() => undefined);
+    }
 
     avisarControlIniciado(posto?.nome ?? "", posto?.id ?? 0);
 
@@ -387,6 +408,8 @@ export function RoteiroVisitaCampo() {
     posto?: number;
     nome?: string;
     iniciar?: boolean;
+    lat?: number;
+    lng?: number;
   };
   const chegadaAplicada = useRef(false);
   useEffect(() => {
@@ -400,7 +423,7 @@ export function RoteiroVisitaCampo() {
     // Chegada confirmada pelo servidor: a visita já começa com o tempo
     // contando (exceto para quem tem início manual).
     if (busca.iniciar && !inicioAutomaticoOff) {
-      if (inicioPreenchimento.current === null) iniciarPreenchimento(postoChegada);
+      if (inicioPreenchimento.current === null) iniciarPreenchimento(postoChegada, "chegada");
     } else if (busca.iniciar) {
       toast.info(`Posto ${busca.nome} selecionado — toque em Iniciar para começar a visita.`);
     }
@@ -836,7 +859,7 @@ export function RoteiroVisitaCampo() {
           geoTracking.current.estavaDentro &&
           refEstado.current.iniciadoEm === null
         ) {
-          iniciarPreenchimento();
+          iniciarPreenchimento(null, "geofence");
         }
       }, restante);
     }

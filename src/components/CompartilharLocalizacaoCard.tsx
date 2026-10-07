@@ -288,6 +288,8 @@ export function CompartilharLocalizacaoCard() {
             posto: r.posto.id ?? undefined,
             nome: r.posto.nome,
             iniciar: true,
+            lat: p.latitude,
+            lng: p.longitude,
           },
         });
       } catch {
