@@ -49,7 +49,7 @@ export const registrarInicioAutomatico = createServerFn({ method: "POST" })
       .eq("id", context.userId)
       .maybeSingle();
 
-    const { error } = await context.supabase.from("inicios_automaticos_visita").insert({
+    const { error } = await (context.supabase.from("inicios_automaticos_visita" as never) as any).insert({
       user_id: context.userId,
       supervisor_nome: (perfil?.display_name as string | null) ?? "",
       posto_nexti_id: data.postoNextiId,
@@ -71,8 +71,7 @@ export const registrarInicioAutomatico = createServerFn({ method: "POST" })
 export const listarIniciosAutomaticos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<InicioAutomatico[]> => {
-    const { data, error } = await context.supabase
-      .from("inicios_automaticos_visita")
+    const { data, error } = await (context.supabase.from("inicios_automaticos_visita" as never) as any)
       .select(
         "id,user_id,supervisor_nome,posto_nexti_id,posto_nome,latitude,longitude,precisao_metros,origem,created_at",
       )
@@ -80,7 +79,7 @@ export const listarIniciosAutomaticos = createServerFn({ method: "GET" })
       .limit(300);
     if (error) throw new Error(error.message);
 
-    return (data ?? []).map((linha) => ({
+    return (data ?? []).map((linha: any) => ({
       id: linha.id,
       userId: linha.user_id,
       supervisorNome: (linha.supervisor_nome as string | null) ?? "",
