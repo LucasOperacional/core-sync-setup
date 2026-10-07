@@ -408,6 +408,8 @@ export function RoteiroVisitaCampo() {
     posto?: number;
     nome?: string;
     iniciar?: boolean;
+    lat?: number;
+    lng?: number;
   };
   const chegadaAplicada = useRef(false);
   useEffect(() => {
@@ -421,7 +423,7 @@ export function RoteiroVisitaCampo() {
     // Chegada confirmada pelo servidor: a visita já começa com o tempo
     // contando (exceto para quem tem início manual).
     if (busca.iniciar && !inicioAutomaticoOff) {
-      if (inicioPreenchimento.current === null) iniciarPreenchimento(postoChegada);
+      if (inicioPreenchimento.current === null) iniciarPreenchimento(postoChegada, "chegada");
     } else if (busca.iniciar) {
       toast.info(`Posto ${busca.nome} selecionado — toque em Iniciar para começar a visita.`);
     }
@@ -857,7 +859,7 @@ export function RoteiroVisitaCampo() {
           geoTracking.current.estavaDentro &&
           refEstado.current.iniciadoEm === null
         ) {
-          iniciarPreenchimento();
+          iniciarPreenchimento(null, "geofence");
         }
       }, restante);
     }

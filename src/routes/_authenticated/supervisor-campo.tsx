@@ -7,6 +7,8 @@ export type BuscaSupervisaoCampo = {
   posto?: number | undefined;
   nome?: string | undefined;
   iniciar?: boolean | undefined;
+  lat?: number | undefined;
+  lng?: number | undefined;
 };
 
 export const Route = createFileRoute("/_authenticated/supervisor-campo")({
@@ -15,6 +17,8 @@ export const Route = createFileRoute("/_authenticated/supervisor-campo")({
     posto: Number.isFinite(Number(busca["posto"])) ? Number(busca["posto"]) : undefined,
     nome: typeof busca["nome"] === "string" ? busca["nome"] : undefined,
     iniciar: busca["iniciar"] === true || busca["iniciar"] === "true" ? true : undefined,
+    lat: Number.isFinite(Number(busca["lat"])) ? Number(busca["lat"]) : undefined,
+    lng: Number.isFinite(Number(busca["lng"])) ? Number(busca["lng"]) : undefined,
   }),
   head: () => ({
     meta: [
