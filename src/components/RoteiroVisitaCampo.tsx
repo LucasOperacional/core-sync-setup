@@ -53,6 +53,7 @@ import { useSearch } from "@tanstack/react-router";
 import { nomeDoUsuario, useSessao } from "@/hooks/use-sessao";
 import { evolutionGoEnviarTexto } from "@/lib/evolution-go.functions";
 import { notificarFimControl, notificarInicioControl } from "@/lib/control-notificacao.functions";
+import { registrarInicioAutomatico } from "@/lib/inicios-automaticos.functions";
 import { semaforoDe, COR_MAPA } from "@/lib/visitas-semaforo";
 
 const OPCOES: { valor: RespostaValor; label: string; icon: typeof CheckCircle2; classe: string }[] =
@@ -344,6 +345,7 @@ export function RoteiroVisitaCampo() {
   const enviarMensagemEvolution = useServerFn(evolutionGoEnviarTexto);
   const avisarInicioControl = useServerFn(notificarInicioControl);
   const avisarFimControl = useServerFn(notificarFimControl);
+  const registrarInicio = useServerFn(registrarInicioAutomatico);
 
   /** Avisa no WhatsApp de notificação que um control foi iniciado. */
   function avisarControlIniciado(nomePosto: string, idPosto: number) {
